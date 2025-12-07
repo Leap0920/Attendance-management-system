@@ -1,6 +1,12 @@
 <?php
 require_once 'config/session.php';
 $flash = Session::getFlash();
+
+// Redirect if already logged in
+if (Session::isLoggedIn()) {
+    $user = Session::getUser();
+    redirect($user['role'] . '/dashboard.php');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,64 +21,177 @@ $flash = Session::getFlash();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
-        .login-container {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             min-height: 100vh;
+            display: flex;
+            background: var(--bg-dark);
+        }
+
+        /* Left Side - Image Section (60-70%) */
+        .auth-image-section {
+            flex: 0 0 65%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            overflow: hidden;
         }
 
-        .login-card {
-            width: 100%;
-            max-width: 440px;
-            padding: 48px;
-            animation: fadeInUp 0.6s ease;
+        .auth-image-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('image/QCU.svg') center center / cover no-repeat;
+            opacity: 0.15;
         }
 
-        .login-logo {
+        .auth-image-content {
+            position: relative;
+            z-index: 2;
             text-align: center;
-            margin-bottom: 40px;
+            padding: 40px;
+            max-width: 600px;
         }
 
-        .login-logo .logo-icon {
-            width: 72px;
-            height: 72px;
+        .auth-image-content .logo-large {
+            width: 120px;
+            height: 120px;
             background: linear-gradient(135deg, var(--primary), var(--purple));
-            border-radius: 20px;
+            border-radius: 30px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 56px;
             color: white;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 32px rgba(66, 133, 244, 0.4);
+            margin-bottom: 32px;
+            box-shadow: 0 20px 60px rgba(66, 133, 244, 0.4);
+            animation: float 6s ease-in-out infinite;
         }
 
-        .login-logo h1 {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.7));
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .auth-image-content h1 {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.8));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 16px;
         }
 
-        .login-logo p {
+        .auth-image-content p {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .features-list {
+            text-align: left;
+            display: inline-block;
+        }
+
+        .features-list .feature {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .features-list .feature i {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        /* Right Side - Form Section (30-40%) */
+        .auth-form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: var(--bg-dark);
+            overflow-y: auto;
+        }
+
+        .auth-form-container {
+            width: 100%;
+            max-width: 420px;
+            animation: slideInRight 0.6s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .auth-form-header {
+            margin-bottom: 32px;
+        }
+
+        .auth-form-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .auth-form-header p {
             color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
             font-size: 14px;
-            margin-top: 4px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
         }
 
-        .login-form .form-input {
-            padding-left: 48px;
-        }
-
-        .input-icon {
+        .input-icon-wrapper {
             position: relative;
         }
 
-        .input-icon i {
+        .input-icon-wrapper i {
             position: absolute;
             left: 16px;
             top: 50%;
@@ -81,34 +200,36 @@ $flash = Session::getFlash();
             font-size: 16px;
         }
 
-        .input-icon .toggle-password {
+        .input-icon-wrapper .toggle-password {
             left: auto;
             right: 16px;
             cursor: pointer;
             transition: var(--transition);
         }
 
-        .input-icon .toggle-password:hover {
+        .input-icon-wrapper .toggle-password:hover {
             color: var(--primary);
         }
 
-        .login-form .btn-primary {
+        .input-icon-wrapper .form-input {
+            padding-left: 48px;
+        }
+
+        .form-input {
             width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            margin-top: 8px;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: var(--transition);
         }
 
-        .login-footer {
-            text-align: center;
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .login-footer a {
-            color: var(--primary);
-            font-weight: 500;
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
         }
 
         .remember-forgot {
@@ -124,6 +245,7 @@ $flash = Session::getFlash();
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            color: var(--text-secondary);
         }
 
         .checkbox-wrapper input {
@@ -132,12 +254,65 @@ $flash = Session::getFlash();
             accent-color: var(--primary);
         }
 
-        .demo-accounts {
-            margin-top: 24px;
+        .remember-forgot a {
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .remember-forgot a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-submit {
+            width: 100%;
             padding: 16px;
-            background: rgba(66, 133, 244, 0.1);
-            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-muted);
             font-size: 13px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .auth-divider span {
+            padding: 0 16px;
+        }
+
+        .demo-accounts {
+            padding: 16px;
+            background: rgba(66, 133, 244, 0.08);
+            border: 1px solid rgba(66, 133, 244, 0.2);
+            border-radius: var(--radius);
+            margin-bottom: 24px;
         }
 
         .demo-accounts h4 {
@@ -146,6 +321,9 @@ $flash = Session::getFlash();
             letter-spacing: 1px;
             color: var(--primary);
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .demo-accounts .account {
@@ -153,6 +331,7 @@ $flash = Session::getFlash();
             justify-content: space-between;
             padding: 6px 0;
             color: var(--text-secondary);
+            font-size: 13px;
         }
 
         .demo-accounts .account span:first-child {
@@ -160,107 +339,150 @@ $flash = Session::getFlash();
             color: var(--text-primary);
         }
 
-        .floating-shapes {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: -1;
+        .auth-footer {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 14px;
         }
 
-        .floating-shapes .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.1;
-            animation: float 20s infinite ease-in-out;
+        .auth-footer a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
         }
 
-        .floating-shapes .shape:nth-child(1) {
-            width: 200px;
-            height: 200px;
-            background: var(--primary);
-            top: 10%;
-            left: 10%;
+        .auth-footer a:hover {
+            text-decoration: underline;
         }
 
-        .floating-shapes .shape:nth-child(2) {
-            width: 150px;
-            height: 150px;
-            background: var(--purple);
-            top: 60%;
-            right: 15%;
-            animation-delay: -5s;
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
         }
 
-        .floating-shapes .shape:nth-child(3) {
-            width: 100px;
-            height: 100px;
-            background: var(--success);
-            bottom: 20%;
-            left: 20%;
-            animation-delay: -10s;
+        .alert-error {
+            background: rgba(234, 67, 53, 0.1);
+            border: 1px solid rgba(234, 67, 53, 0.3);
+            color: var(--danger);
         }
 
-        @keyframes float {
+        .alert-success {
+            background: rgba(52, 168, 83, 0.1);
+            border: 1px solid rgba(52, 168, 83, 0.3);
+            color: var(--success);
+        }
 
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg);
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .auth-image-section {
+                flex: 0 0 50%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
             }
 
-            25% {
-                transform: translate(30px, -30px) rotate(5deg);
+            .auth-image-section {
+                flex: 0 0 auto;
+                min-height: 200px;
+                padding: 40px 20px;
             }
 
-            50% {
-                transform: translate(-20px, 20px) rotate(-5deg);
+            .auth-image-content h1 {
+                font-size: 32px;
             }
 
-            75% {
-                transform: translate(20px, 10px) rotate(3deg);
+            .auth-image-content p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .auth-image-content .logo-large {
+                width: 80px;
+                height: 80px;
+                font-size: 36px;
+            }
+
+            .features-list {
+                display: none;
+            }
+
+            .auth-form-section {
+                padding: 30px 20px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+    <!-- Left Side - Image & Branding -->
+    <div class="auth-image-section">
+        <div class="auth-image-content">
+            <div class="logo-large">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1>AttendEase</h1>
+            <p>Modern attendance management system designed for educational institutions. Track, manage, and analyze
+                student attendance with ease.</p>
+            <div class="features-list">
+                <div class="feature">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Quick code-based attendance</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Real-time analytics & reports</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-users"></i>
+                    <span>Multi-role access control</span>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile-friendly interface</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="login-container">
-        <div class="login-card glass-card">
-            <div class="login-logo">
-                <div class="logo-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <h1>AttendEase</h1>
-                <p>Attendance Management System</p>
+    <!-- Right Side - Login Form -->
+    <div class="auth-form-section">
+        <div class="auth-form-container">
+            <div class="auth-form-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to continue to your dashboard</p>
             </div>
 
             <?php if ($flash): ?>
-                <div class="alert alert-<?php echo $flash['type']; ?>">
+                <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'error' : 'success'; ?>">
                     <i
                         class="fas fa-<?php echo $flash['type'] === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
                     <?php echo $flash['message']; ?>
                 </div>
             <?php endif; ?>
 
-            <form class="login-form" action="api/auth/login.php" method="POST">
+            <form action="api/auth/login.php" method="POST">
                 <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <div class="input-icon">
+                    <div class="input-icon-wrapper">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" name="email" class="form-input" placeholder="Enter your email" required>
+                        <input type="email" name="email" class="form-input" placeholder="Enter your email" required
+                            autofocus>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <div class="input-icon">
+                    <div class="input-icon-wrapper">
                         <i class="fas fa-lock"></i>
                         <input type="password" name="password" id="password" class="form-input"
                             placeholder="Enter your password" required>
@@ -276,29 +498,13 @@ $flash = Session::getFlash();
                     <a href="forgot_password.php">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn-submit">
                     <i class="fas fa-sign-in-alt"></i>
                     Sign In
                 </button>
             </form>
 
-            <div class="demo-accounts">
-                <h4><i class="fas fa-info-circle"></i> Demo Accounts</h4>
-                <div class="account">
-                    <span>Admin</span>
-                    <span>admin@lms.com / admin123</span>
-                </div>
-                <div class="account">
-                    <span>Teacher</span>
-                    <span>teacher@lms.com / teacher123</span>
-                </div>
-                <div class="account">
-                    <span>Student</span>
-                    <span>student1@lms.com / student123</span>
-                </div>
-            </div>
-
-            <div class="login-footer">
+            <div class="auth-footer">
                 <p>Don't have an account? <a href="register.php">Sign up</a></p>
             </div>
         </div>

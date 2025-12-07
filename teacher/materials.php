@@ -39,6 +39,12 @@ $stmt = $db->prepare($query);
 $stmt->execute($params);
 $materials = $stmt->fetchAll();
 
+// Count by type
+$typeStats = ['file' => 0, 'link' => 0, 'announcement' => 0, 'assignment' => 0];
+foreach ($materials as $m) {
+    $typeStats[$m['type']]++;
+}
+
 $flash = Session::getFlash();
 ?>
 <!DOCTYPE html>
@@ -66,7 +72,7 @@ $flash = Session::getFlash();
                 <div class="page-header">
                     <div>
                         <h1>Course Materials</h1>
-                        <p class="text-muted">Upload and manage course content</p>
+                        <p class="text-muted">Upload and manage course content for your students</p>
                     </div>
                     <div class="header-actions">
                         <button class="btn btn-primary" onclick="openModal('addMaterialModal')">
@@ -82,6 +88,42 @@ $flash = Session::getFlash();
                         <?php echo $flash['message']; ?>
                     </div>
                 <?php endif; ?>
+
+                <!-- Stats Cards -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(66, 133, 244, 0.2);"><i class="fas fa-file-alt"
+                                style="color: var(--primary);"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value"><?php echo $typeStats['file']; ?></span>
+                            <span class="stat-label">Files</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(52, 168, 83, 0.2);"><i class="fas fa-link"
+                                style="color: var(--success);"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value"><?php echo $typeStats['link']; ?></span>
+                            <span class="stat-label">Links</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(251, 188, 4, 0.2);"><i class="fas fa-bullhorn"
+                                style="color: var(--warning);"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value"><?php echo $typeStats['announcement']; ?></span>
+                            <span class="stat-label">Announcements</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(234, 67, 53, 0.2);"><i class="fas fa-tasks"
+                                style="color: var(--danger);"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value"><?php echo $typeStats['assignment']; ?></span>
+                            <span class="stat-label">Assignments</span>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Filters -->
                 <div class="card" style="margin-bottom: 24px;">
@@ -107,7 +149,9 @@ $flash = Session::getFlash();
                                 </select>
                                 <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i>
                                     Filter</button>
-                                <a href="materials.php" class="btn btn-ghost">Clear</a>
+                                <?php if ($courseFilter || $typeFilter): ?>
+                                    <a href="materials.php" class="btn btn-ghost">Clear</a>
+                                <?php endif; ?>
                             </div>
                         </form>
                     </div>
@@ -115,29 +159,19 @@ $flash = Session::getFlash();
 
                 <!-- Materials List -->
                 <div class="materials-list">
-                    <?php foreach ($materials as $m): ?>
+                    <?php foreach ($materials as $m):
+                        $typeColors = [
+                            'file' => ['bg' => 'rgba(66, 133, 244, 0.2)', 'color' => 'var(--primary)'],
+                            'link' => ['bg' => 'rgba(52, 168, 83, 0.2)', 'color' => 'var(--success)'],
+                            'announcement' => ['bg' => 'rgba(251, 188, 4, 0.2)', 'color' => 'var(--warning)'],
+                            'assignment' => ['bg' => 'rgba(234, 67, 53, 0.2)', 'color' => 'var(--danger)']
+                        ];
+                        $typeIcons = ['file' => 'file-alt', 'link' => 'link', 'announcement' => 'bullhorn', 'assignment' => 'tasks'];
+                        ?>
                         <div class="material-card <?php echo $m['is_pinned'] ? 'pinned' : ''; ?>">
-                            <div class="material-icon" style="background: <?php
-                            echo [
-                                'file' => 'rgba(66, 133, 244, 0.2)',
-                                'link' => 'rgba(52, 168, 83, 0.2)',
-                                'announcement' => 'rgba(251, 188, 4, 0.2)',
-                                'assignment' => 'rgba(234, 67, 53, 0.2)'
-                            ][$m['type']];
-                            ?>; color: <?php
-                            echo [
-                                'file' => 'var(--primary)',
-                                'link' => 'var(--success)',
-                                'announcement' => 'var(--warning)',
-                                'assignment' => 'var(--danger)'
-                            ][$m['type']];
-                            ?>;">
-                                <i class="fas fa-<?php echo [
-                                    'file' => 'file-alt',
-                                    'link' => 'link',
-                                    'announcement' => 'bullhorn',
-                                    'assignment' => 'tasks'
-                                ][$m['type']]; ?>"></i>
+                            <div class="material-icon"
+                                style="background: <?php echo $typeColors[$m['type']]['bg']; ?>; color: <?php echo $typeColors[$m['type']]['color']; ?>;">
+                                <i class="fas fa-<?php echo $typeIcons[$m['type']]; ?>"></i>
                             </div>
                             <div class="material-content">
                                 <div class="material-header">
@@ -146,12 +180,8 @@ $flash = Session::getFlash();
                                                 style="margin-right: 8px;"></i><?php endif; ?>
                                         <?php echo sanitize($m['title']); ?>
                                     </h4>
-                                    <span class="badge badge-<?php echo [
-                                        'file' => 'primary',
-                                        'link' => 'success',
-                                        'announcement' => 'warning',
-                                        'assignment' => 'danger'
-                                    ][$m['type']]; ?>">
+                                    <span
+                                        class="badge badge-<?php echo ['file' => 'primary', 'link' => 'success', 'announcement' => 'warning', 'assignment' => 'danger'][$m['type']]; ?>">
                                         <?php echo ucfirst($m['type']); ?>
                                     </span>
                                 </div>
@@ -166,6 +196,9 @@ $flash = Session::getFlash();
                                     <?php if ($m['type'] === 'file' && $m['file_size']): ?>
                                         <span><i class="fas fa-file"></i> <?php echo formatFileSize($m['file_size']); ?></span>
                                     <?php endif; ?>
+                                    <?php if ($m['type'] === 'file' && $m['file_name']): ?>
+                                        <span><i class="fas fa-paperclip"></i> <?php echo sanitize($m['file_name']); ?></span>
+                                    <?php endif; ?>
                                     <?php if ($m['due_date']): ?>
                                         <span class="text-danger"><i class="fas fa-calendar"></i> Due:
                                             <?php echo formatDateTime($m['due_date']); ?></span>
@@ -174,21 +207,27 @@ $flash = Session::getFlash();
                             </div>
                             <div class="material-actions">
                                 <?php if ($m['type'] === 'file' && $m['file_path']): ?>
-                                    <a href="../<?php echo $m['file_path']; ?>" class="btn btn-ghost btn-sm" download>
+                                    <a href="../<?php echo $m['file_path']; ?>" class="btn btn-ghost btn-sm" download
+                                        title="Download">
                                         <i class="fas fa-download"></i>
                                     </a>
                                 <?php elseif ($m['type'] === 'link' && $m['external_link']): ?>
                                     <a href="<?php echo sanitize($m['external_link']); ?>" class="btn btn-ghost btn-sm"
-                                        target="_blank">
+                                        target="_blank" title="Open Link">
                                         <i class="fas fa-external-link-alt"></i>
                                     </a>
                                 <?php endif; ?>
+                                <button class="btn btn-ghost btn-sm" onclick="togglePin(<?php echo $m['id']; ?>)"
+                                    title="<?php echo $m['is_pinned'] ? 'Unpin' : 'Pin'; ?>">
+                                    <i class="fas fa-thumbtack <?php echo $m['is_pinned'] ? 'text-warning' : ''; ?>"></i>
+                                </button>
                                 <button class="btn btn-ghost btn-sm"
-                                    onclick="editMaterial(<?php echo htmlspecialchars(json_encode($m)); ?>)">
+                                    onclick="editMaterial(<?php echo htmlspecialchars(json_encode($m)); ?>)" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-ghost btn-sm text-danger"
-                                    onclick="deleteMaterial(<?php echo $m['id']; ?>)">
+                                    onclick="deleteMaterial(<?php echo $m['id']; ?>, '<?php echo addslashes($m['title']); ?>')"
+                                    title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -199,7 +238,7 @@ $flash = Session::getFlash();
                         <div class="empty-state">
                             <i class="fas fa-folder-open"></i>
                             <h3>No Materials Yet</h3>
-                            <p>Add your first course material</p>
+                            <p>Add your first course material to share with students</p>
                             <button class="btn btn-primary" onclick="openModal('addMaterialModal')">
                                 <i class="fas fa-plus"></i> Add Material
                             </button>
@@ -218,68 +257,89 @@ $flash = Session::getFlash();
                 <button class="btn btn-icon btn-ghost" onclick="closeModal('addMaterialModal')"><i
                         class="fas fa-times"></i></button>
             </div>
-            <form action="../api/teacher/materials.php" method="POST" enctype="multipart/form-data">
+            <form action="../api/teacher/materials.php" method="POST" enctype="multipart/form-data"
+                id="addMaterialForm">
                 <input type="hidden" name="action" value="create">
                 <div class="modal-body">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Course *</label>
-                            <select name="course_id" class="form-input" required>
-                                <option value="">Select course...</option>
-                                <?php foreach ($courses as $c): ?>
-                                    <option value="<?php echo $c['id']; ?>">
-                                        <?php echo sanitize($c['course_code'] . ' - ' . $c['course_name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                    <?php if (empty($courses)): ?>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            You need to create a course first before adding materials.
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Type *</label>
-                            <select name="type" id="material_type" class="form-input" required
-                                onchange="toggleMaterialFields()">
-                                <option value="file">File Upload</option>
-                                <option value="link">External Link</option>
-                                <option value="announcement">Announcement</option>
-                                <option value="assignment">Assignment</option>
-                            </select>
+                    <?php else: ?>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Course *</label>
+                                <select name="course_id" class="form-input" required>
+                                    <option value="">Select course...</option>
+                                    <?php foreach ($courses as $c): ?>
+                                        <option value="<?php echo $c['id']; ?>">
+                                            <?php echo sanitize($c['course_code'] . ' - ' . $c['course_name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Type *</label>
+                                <select name="type" id="material_type" class="form-input" required
+                                    onchange="toggleMaterialFields()">
+                                    <option value="file">📁 File Upload</option>
+                                    <option value="link">🔗 External Link</option>
+                                    <option value="announcement">📢 Announcement</option>
+                                    <option value="assignment">📝 Assignment</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Title *</label>
-                        <input type="text" name="title" class="form-input" placeholder="Material title" required>
-                    </div>
+                        <div class="form-group">
+                            <label class="form-label">Title *</label>
+                            <input type="text" name="title" class="form-input" placeholder="e.g., Week 1 Lecture Notes"
+                                required>
+                        </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" class="form-input" rows="3"
-                            placeholder="Brief description..."></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-input" rows="3"
+                                placeholder="Brief description of this material..."></textarea>
+                        </div>
 
-                    <div class="form-group" id="file_field">
-                        <label class="form-label">Upload File</label>
-                        <input type="file" name="file" class="form-input"
-                            accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4,.zip">
-                        <small class="text-muted">Max 10MB. Allowed: PDF, PPT, DOC, XLS, Images, MP4, ZIP</small>
-                    </div>
+                        <div class="form-group" id="file_field">
+                            <label class="form-label">Upload File *</label>
+                            <div class="file-upload-area" onclick="document.getElementById('file_input').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to select a file or drag & drop</p>
+                                <small>Max 10MB • PDF, DOC, PPT, XLS, Images, MP4, ZIP</small>
+                            </div>
+                            <input type="file" name="file" id="file_input" class="form-input" style="display: none;"
+                                accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.zip,.rar,.txt,.csv"
+                                onchange="updateFileName(this)">
+                            <div id="file_name_display" style="margin-top: 8px; font-size: 14px; color: var(--primary);">
+                            </div>
+                        </div>
 
-                    <div class="form-group" id="link_field" style="display: none;">
-                        <label class="form-label">External URL</label>
-                        <input type="url" name="external_link" class="form-input" placeholder="https://...">
-                    </div>
+                        <div class="form-group" id="link_field" style="display: none;">
+                            <label class="form-label">External URL *</label>
+                            <input type="url" name="external_link" class="form-input"
+                                placeholder="https://example.com/resource">
+                        </div>
 
-                    <div class="form-group" id="due_date_field" style="display: none;">
-                        <label class="form-label">Due Date</label>
-                        <input type="datetime-local" name="due_date" class="form-input">
-                    </div>
+                        <div class="form-group" id="due_date_field" style="display: none;">
+                            <label class="form-label">Due Date</label>
+                            <input type="datetime-local" name="due_date" class="form-input">
+                        </div>
 
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" name="is_pinned" value="1">
-                        <span>Pin this material (shows at top)</span>
-                    </label>
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="is_pinned" value="1">
+                            <span>📌 Pin this material (shows at top for students)</span>
+                        </label>
+                    <?php endif; ?>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-ghost" onclick="closeModal('addMaterialModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Material</button>
+                    <?php if (!empty($courses)): ?>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Add Material
+                        </button>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>
@@ -316,7 +376,7 @@ $flash = Session::getFlash();
                     </div>
                     <label class="checkbox-wrapper">
                         <input type="checkbox" name="is_pinned" id="edit_material_pinned" value="1">
-                        <span>Pin this material</span>
+                        <span>📌 Pin this material</span>
                     </label>
                 </div>
                 <div class="modal-footer">
@@ -337,6 +397,17 @@ $flash = Session::getFlash();
             document.getElementById('due_date_field').style.display = type === 'assignment' ? 'block' : 'none';
         }
 
+        function updateFileName(input) {
+            const display = document.getElementById('file_name_display');
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                display.innerHTML = '<i class="fas fa-check-circle"></i> ' + file.name + ' (' + size + ' MB)';
+            } else {
+                display.innerHTML = '';
+            }
+        }
+
         function editMaterial(material) {
             document.getElementById('edit_material_id').value = material.id;
             document.getElementById('edit_material_title').value = material.title;
@@ -351,8 +422,8 @@ $flash = Session::getFlash();
             openModal('editMaterialModal');
         }
 
-        function deleteMaterial(id) {
-            if (confirm('Delete this material?')) {
+        function deleteMaterial(id, title) {
+            if (confirm('Delete "' + title + '"? This action cannot be undone.')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '../api/teacher/materials.php';
@@ -361,8 +432,88 @@ $flash = Session::getFlash();
                 form.submit();
             }
         }
+
+        function togglePin(id) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '../api/teacher/materials.php';
+            form.innerHTML = `<input type="hidden" name="action" value="toggle_pin"><input type="hidden" name="id" value="${id}">`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Drag and drop support
+        const dropArea = document.querySelector('.file-upload-area');
+        if (dropArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+            });
+
+            dropArea.addEventListener('drop', function (e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                document.getElementById('file_input').files = files;
+                updateFileName(document.getElementById('file_input'));
+            }, false);
+        }
     </script>
     <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
         .materials-list {
             display: flex;
             flex-direction: column;
@@ -382,10 +533,12 @@ $flash = Session::getFlash();
 
         .material-card:hover {
             background: var(--bg-card);
+            box-shadow: var(--shadow);
         }
 
         .material-card.pinned {
             border-left: 3px solid var(--warning);
+            background: rgba(251, 188, 4, 0.03);
         }
 
         .material-icon {
@@ -435,6 +588,7 @@ $flash = Session::getFlash();
             gap: 20px;
             font-size: 12px;
             color: var(--text-muted);
+            flex-wrap: wrap;
         }
 
         .material-meta span {
@@ -462,6 +616,51 @@ $flash = Session::getFlash();
 
         .modal-lg {
             max-width: 600px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload-area:hover,
+        .file-upload-area.highlight {
+            border-color: var(--primary);
+            background: rgba(66, 133, 244, 0.05);
+        }
+
+        .file-upload-area i {
+            font-size: 48px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .file-upload-area p {
+            margin: 0 0 8px;
+            color: var(--text-secondary);
+        }
+
+        .file-upload-area small {
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .material-card {
+                flex-direction: column;
+            }
+
+            .material-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
         }
     </style>
 </body>
