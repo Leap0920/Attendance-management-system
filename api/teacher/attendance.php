@@ -41,15 +41,11 @@ try {
             // Generate unique code
             $code = generateAttendanceCode($db);
 
-            // Calculate times
-            $startTime = date('Y-m-d H:i:s');
-            $endTime = date('Y-m-d H:i:s', strtotime("+$duration minutes"));
-
-            // Create session
+            // Create session using MySQL NOW() for consistent timing across teacher/student
             $stmt = $db->prepare("INSERT INTO attendance_sessions 
                 (course_id, teacher_id, session_title, attendance_code, duration_minutes, start_time, end_time, status, allow_late)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)");
-            $stmt->execute([$courseId, $userId, $sessionTitle ?: null, $code, $duration, $startTime, $endTime, $allowLate]);
+                VALUES (?, ?, ?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? MINUTE), 'active', ?)");
+            $stmt->execute([$courseId, $userId, $sessionTitle ?: null, $code, $duration, $duration, $allowLate]);
 
             $sessionId = $db->lastInsertId();
             logAudit($db, $userId, 'create_attendance_session', 'attendance_session', $sessionId);

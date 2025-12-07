@@ -7,6 +7,18 @@ Session::requireRole('student');
 $user = Session::getUser();
 $db = getDB();
 
+// Get ACTIVE attendance sessions for enrolled courses
+$stmt = $db->prepare("SELECT ats.*, c.course_name, c.course_code, c.cover_color
+    FROM attendance_sessions ats
+    JOIN courses c ON ats.course_id = c.id
+    JOIN enrollments e ON e.course_id = c.id
+    WHERE e.student_id = ? AND e.status = 'active' AND ats.status = 'active'
+    AND ats.end_time > NOW()
+    AND ats.id NOT IN (SELECT session_id FROM attendance_records WHERE student_id = ?)
+    ORDER BY ats.end_time ASC");
+$stmt->execute([$user['id'], $user['id']]);
+$activeSessions = $stmt->fetchAll();
+
 // Get all attendance records with course info
 $stmt = $db->prepare("SELECT ar.*, c.course_code, c.course_name, ats.session_title, ats.created_at as session_date
     FROM attendance_records ar
@@ -24,6 +36,8 @@ foreach ($records as $r) {
 }
 $total = array_sum($stats);
 $attendedRate = $total > 0 ? round((($stats['present'] + $stats['late']) / $total) * 100, 1) : 0;
+
+$flash = Session::getFlash();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,12 +64,68 @@ $attendedRate = $total > 0 ? round((($stats['present'] + $stats['late']) / $tota
                 <div class="page-header">
                     <div>
                         <h1>My Attendance</h1>
-                        <p class="text-muted">View your attendance records</p>
+                        <p class="text-muted">Submit attendance and view your records</p>
                     </div>
                 </div>
 
+                <?php if ($flash): ?>
+                    <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'error' : 'success'; ?>">
+                        <i
+                            class="fas fa-<?php echo $flash['type'] === 'success' ? 'check-circle' : 'exclamation-circle'; ?>"></i>
+                        <?php echo $flash['message']; ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- ACTIVE SESSIONS - Submit Attendance -->
+                <?php if (!empty($activeSessions)): ?>
+                    <div class="active-sessions-section animate-fade-in">
+                        <div class="section-header-alert">
+                            <i class="fas fa-bell"></i>
+                            <span>Active Attendance Sessions (<?php echo count($activeSessions); ?>)</span>
+                        </div>
+
+                        <div class="active-sessions-grid">
+                            <?php foreach ($activeSessions as $session): ?>
+                                <div class="active-session-card"
+                                    style="border-left: 4px solid <?php echo $session['cover_color']; ?>;">
+                                    <div class="session-info">
+                                        <div class="session-course">
+                                            <strong><?php echo sanitize($session['course_code']); ?></strong>
+                                            <span><?php echo sanitize($session['course_name']); ?></span>
+                                        </div>
+                                        <div class="session-title">
+                                            <?php echo sanitize($session['session_title'] ?? 'Attendance Session'); ?></div>
+                                        <div class="session-timer" data-end="<?php echo $session['end_time']; ?>">
+                                            <i class="fas fa-clock"></i>
+                                            <span class="timer-display">--:--</span> remaining
+                                        </div>
+                                    </div>
+                                    <form action="../api/student/attendance.php" method="POST" class="session-form">
+                                        <input type="hidden" name="action" value="submit">
+                                        <input type="hidden" name="session_id" value="<?php echo $session['id']; ?>">
+                                        <div class="code-input-group">
+                                            <input type="text" name="attendance_code" class="form-input code-input"
+                                                placeholder="CODE" maxlength="10" required
+                                                style="text-transform: uppercase; letter-spacing: 3px; font-size: 18px; text-align: center; width: 150px;">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-check"></i> Submit
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="no-active-sessions animate-fade-in">
+                        <i class="fas fa-calendar-check"></i>
+                        <p>No active attendance sessions right now</p>
+                        <small class="text-muted">Check back when your teacher starts a session</small>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Summary Stats -->
-                <div class="stats-grid">
+                <div class="stats-grid" style="margin-top: 24px;">
                     <div class="stat-card animate-fade-in">
                         <div class="stat-icon" style="background: rgba(52, 168, 83, 0.2); color: var(--success);"><i
                                 class="fas fa-check-circle"></i></div>
@@ -130,6 +200,152 @@ $attendedRate = $total > 0 ? round((($stats['present'] + $stats['late']) / $tota
         </main>
     </div>
     <script src="../assets/js/dashboard.js"></script>
+    <script>
+        // Update session timers
+        function updateTimers() {
+            document.querySelectorAll('.session-timer').forEach(timer => {
+                const endTime = new Date(timer.dataset.end).getTime();
+                const now = new Date().getTime();
+                const diff = endTime - now;
+                if (diff > 0) {
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    timer.querySelector('.timer-display').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                } else {
+                    timer.querySelector('.timer-display').textContent = 'Expired';
+                    timer.style.color = 'var(--danger)';
+                }
+            });
+        }
+        setInterval(updateTimers, 1000);
+        updateTimers();
+    </script>
+    <style>
+        .active-sessions-section {
+            margin-bottom: 24px;
+        }
+
+        .section-header-alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(52, 168, 83, 0.2), rgba(52, 168, 83, 0.05));
+            border: 1px solid rgba(52, 168, 83, 0.3);
+            border-radius: var(--radius) var(--radius) 0 0;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .section-header-alert i {
+            font-size: 18px;
+        }
+
+        .active-sessions-grid {
+            display: grid;
+            gap: 16px;
+            padding: 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 var(--radius) var(--radius);
+        }
+
+        .active-session-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            padding: 20px 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            flex-wrap: wrap;
+        }
+
+        .session-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .session-course strong {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+
+        .session-course span {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .session-title {
+            margin: 8px 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .session-timer {
+            font-size: 13px;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-display {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .session-form {
+            display: flex;
+            align-items: center;
+        }
+
+        .code-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .no-active-sessions {
+            text-align: center;
+            padding: 40px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+        }
+
+        .no-active-sessions i {
+            font-size: 48px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .no-active-sessions p {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .active-session-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .session-form {
+                width: 100%;
+            }
+
+            .code-input-group {
+                flex: 1;
+                width: 100%;
+            }
+
+            .code-input-group input {
+                flex: 1;
+            }
+        }
+    </style>
 </body>
 
 </html>
