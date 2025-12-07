@@ -30,6 +30,8 @@ CREATE TABLE users (
     student_id VARCHAR(50) DEFAULT NULL,
     department VARCHAR(100) DEFAULT NULL,
     status ENUM('active', 'inactive', 'pending') DEFAULT 'active',
+    reset_token VARCHAR(64) DEFAULT NULL,
+    reset_token_expiry DATETIME DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login DATETIME NULL,

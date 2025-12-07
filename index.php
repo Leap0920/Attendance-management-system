@@ -273,7 +273,7 @@ $flash = Session::getFlash();
                         <input type="checkbox" name="remember">
                         <span>Remember me</span>
                     </label>
-                    <a href="#">Forgot password?</a>
+                    <a href="forgot_password.php">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
