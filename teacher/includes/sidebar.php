@@ -29,6 +29,10 @@
                 class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'materials.php' ? 'active' : ''; ?>">
                 <i class="fas fa-file-alt"></i><span>Materials</span>
             </a>
+            <a href="reports.php"
+                class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i><span>Reports</span>
+            </a>
         </div>
 
         <div class="nav-section">
