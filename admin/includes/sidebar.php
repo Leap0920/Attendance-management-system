@@ -38,6 +38,15 @@
         </div>
 
         <div class="nav-section">
+            <div class="nav-section-title">Analytics</div>
+            <a href="reports.php"
+                class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
             <div class="nav-section-title">System</div>
             <a href="audit-log.php"
                 class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'audit-log.php' ? 'active' : ''; ?>">
@@ -59,7 +68,7 @@
             </div>
             <div class="user-info">
                 <div class="user-name"><?php echo $user['full_name']; ?></div>
-                <div class="user-role"><?php echo $user['role']; ?></div>
+                <div class="user-role">Administrator</div>
             </div>
             <a href="../api/auth/logout.php" class="btn btn-icon btn-ghost" title="Logout">
                 <i class="fas fa-sign-out-alt"></i>

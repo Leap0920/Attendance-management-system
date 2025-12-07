@@ -175,6 +175,20 @@ CREATE TABLE messages (
     INDEX idx_read (is_read)
 );
 
+-- Course Group Messages (Section Chat)
+CREATE TABLE course_messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    course_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    content TEXT NOT NULL,
+    is_pinned TINYINT(1) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_course (course_id),
+    INDEX idx_created (created_at)
+);
+
 -- Audit Log
 CREATE TABLE audit_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
