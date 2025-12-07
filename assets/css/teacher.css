@@ -1,0 +1,306 @@
+/* Teacher Dashboard Styles */
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.course-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.course-header {
+    padding: 24px;
+}
+
+.course-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.course-header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.section-badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.course-stats {
+    display: flex;
+    gap: 24px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.course-stats .stat {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.course-join-code {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.course-join-code .label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.course-join-code .code {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 2px;
+}
+
+.course-actions {
+    padding: 16px 24px;
+    display: flex;
+    gap: 12px;
+}
+
+/* Active Sessions */
+.active-sessions {
+    padding: 16px;
+}
+
+.session-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+}
+
+.session-card.active-session {
+    border-left: 4px solid var(--success);
+    animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+
+    0%,
+    100% {
+        border-left-color: var(--success);
+    }
+
+    50% {
+        border-left-color: rgba(52, 168, 83, 0.5);
+    }
+}
+
+.session-info {
+    flex: 1;
+}
+
+.session-info h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.session-info p {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.session-code {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.code-display {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--success);
+    letter-spacing: 4px;
+    background: rgba(52, 168, 83, 0.1);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+}
+
+.session-timer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--warning);
+}
+
+/* Empty State */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-glass);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius);
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+/* Form Row */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.section-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* QR Code Container */
+.qr-container {
+    text-align: center;
+    padding: 24px;
+}
+
+.qr-container canvas,
+.qr-container img {
+    max-width: 200px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Attendance Records */
+.attendance-table .status-present {
+    color: var(--success);
+}
+
+.attendance-table .status-late {
+    color: var(--warning);
+}
+
+.attendance-table .status-absent {
+    color: var(--danger);
+}
+
+.attendance-table .status-excused {
+    color: var(--purple);
+}
+
+/* Course Detail Page */
+.course-detail-header {
+    padding: 32px;
+    background: var(--bg-glass);
+    border-radius: var(--radius);
+    margin-bottom: 32px;
+    border-left: 4px solid var(--primary);
+}
+
+.course-detail-header h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.course-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-glass);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    background: var(--bg-glass);
+    border-bottom: 2px solid var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
