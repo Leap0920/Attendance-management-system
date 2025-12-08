@@ -168,8 +168,8 @@ $flash = Session::getFlash();
                         <?php foreach ($materials as $m): 
                             $isOverdue = $m['due_date'] && strtotime($m['due_date']) < time();
                         ?>
-                            <div class="material-item <?php echo $m['is_pinned'] ? 'pinned' : ''; ?> <?php echo $isOverdue ? 'overdue' : ''; ?>" 
-                                 onclick="viewMaterial(<?php echo htmlspecialchars(json_encode($m)); ?>)">
+                                <div class="material-item <?php echo $m['is_pinned'] ? 'pinned' : ''; ?> <?php echo $isOverdue ? 'overdue' : ''; ?>" 
+                                 onclick="viewMaterial(<?php echo json_encode($m, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>)">
                                 <?php if ($m['is_pinned']): ?>
                                     <div class="pin-indicator" title="Pinned by teacher"><i class="fas fa-thumbtack"></i></div>
                                 <?php endif; ?>
@@ -281,6 +281,17 @@ $flash = Session::getFlash();
                 </div>
                 
                 <div id="modal_action_area" class="modal-action-area"></div>
+                <!-- Comments and submission area -->
+                <div id="modal_comments_area" style="margin-top:18px;">
+                    <h4><i class="fas fa-comments"></i> Comments</h4>
+                    <div id="modal_comments_list" style="margin-top:12px; max-height:260px; overflow-y:auto;"></div>
+                    <form id="modal_comment_form" style="margin-top:12px; display:flex; gap:8px; align-items:flex-start;">
+                        <input type="hidden" name="material_id" id="comment_material_id">
+                        <input type="hidden" name="course_id" id="comment_course_id">
+                        <textarea name="content" id="comment_content" class="form-input" rows="2" placeholder="Write a comment..."></textarea>
+                        <button type="button" class="btn btn-primary" id="comment_submit_btn">Post</button>
+                    </form>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" onclick="closeModal('materialDetailModal')">Close</button>
@@ -368,8 +379,100 @@ $flash = Session::getFlash();
             }
             document.getElementById('modal_action_area').innerHTML = actionHtml;
             
+            // set hidden ids for comment form
+            document.getElementById('comment_material_id').value = material.id || '';
+            document.getElementById('comment_course_id').value = material.course_id || '';
+
+            // load comments via AJAX
+            loadComments(material.id);
+
+            // if assignment, add submit form area inside action area
+            if (material.type === 'assignment') {
+                const closed = material.is_closed == 1 || material.is_closed === true;
+                let submitHtml = '';
+                if (!closed) {
+                    submitHtml = `
+                        <form action="../api/student/materials.php" method="POST" enctype="multipart/form-data" id="assignment_submit_form" style="margin-top:12px; display:flex; gap:8px; flex-direction:column;">
+                            <input type="hidden" name="action" value="submit_assignment">
+                            <input type="hidden" name="material_id" value="${material.id}">
+                            <input type="hidden" name="course_id" value="${material.course_id}">
+                            <label class="form-label">Upload file (optional)</label>
+                            <input type="file" name="file" class="form-input">
+                            <label class="form-label">Additional notes (optional)</label>
+                            <textarea name="content" class="form-input" rows="3" placeholder="Write a note..."></textarea>
+                            <div style="display:flex; gap:8px;">
+                                <button type="submit" class="btn btn-success">Submit Assignment</button>
+                            </div>
+                        </form>
+                    `;
+                } else {
+                    submitHtml = '<div class="overdue-warning"><i class="fas fa-lock"></i> This assignment is currently closed by the teacher.</div>';
+                }
+                document.getElementById('modal_action_area').insertAdjacentHTML('beforeend', submitHtml);
+            }
+
             openModal('materialDetailModal');
         }
+
+        function loadComments(materialId) {
+            const list = document.getElementById('modal_comments_list');
+            list.innerHTML = '<div class="text-muted">Loading comments...</div>';
+            fetch('../api/comments.php?material_id=' + encodeURIComponent(materialId))
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        list.innerHTML = '<div class="text-muted">No comments yet</div>';
+                        return;
+                    }
+                    list.innerHTML = '';
+                    data.forEach(c => {
+                        const el = document.createElement('div');
+                        el.className = 'comment-item';
+                        el.style.padding = '8px 0';
+                        el.innerHTML = `<div style="font-weight:600">${escapeHtml(c.first_name + ' ' + c.last_name)} <span style="font-weight:400; font-size:12px; color:var(--text-muted)"> • ${new Date(c.created_at).toLocaleString()}</span></div><div style="margin-top:6px; color:var(--text-secondary)">${escapeHtml(c.content)}</div>`;
+                        list.appendChild(el);
+                    });
+                }).catch(err => {
+                    list.innerHTML = '<div class="text-muted">Failed to load comments</div>';
+                });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/[&"'<>]/g, function (a) {
+                return {'&':'&amp;','"':'&quot;',"'":"&#39;","<":"&lt;",">":"&gt;"}[a];
+            });
+        }
+
+        document.getElementById('comment_submit_btn').addEventListener('click', () => {
+            const materialId = document.getElementById('comment_material_id').value;
+            const courseId = document.getElementById('comment_course_id').value;
+            const content = document.getElementById('comment_content').value.trim();
+            if (!content) return;
+            const form = new FormData();
+            form.append('material_id', materialId);
+            form.append('course_id', courseId);
+            form.append('content', content);
+            form.append('ajax', '1');
+
+            fetch('../api/comments.php', {method:'POST', body: form})
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        // prepend new comment
+                        const c = res.comment;
+                        const list = document.getElementById('modal_comments_list');
+                        const el = document.createElement('div');
+                        el.className = 'comment-item';
+                        el.style.padding = '8px 0';
+                        el.innerHTML = `<div style="font-weight:600">${escapeHtml(c.first_name + ' ' + c.last_name)} <span style="font-weight:400; font-size:12px; color:var(--text-muted)"> • ${new Date(c.created_at).toLocaleString()}</span></div><div style="margin-top:6px; color:var(--text-secondary)">${escapeHtml(c.content)}</div>`;
+                        list.appendChild(el);
+                        document.getElementById('comment_content').value = '';
+                    } else {
+                        alert('Failed to post comment');
+                    }
+                }).catch(() => alert('Failed to post comment'));
+        });
     </script>
     <style>
         .quick-stats {

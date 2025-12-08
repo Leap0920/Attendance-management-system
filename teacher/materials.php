@@ -7,6 +7,17 @@ Session::requireRole('teacher');
 $user = Session::getUser();
 $db = getDB();
 
+// Check if the course_materials table has the is_closed column (migration may not have been run)
+try {
+    $colCheck = $db->prepare("SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'course_materials' AND COLUMN_NAME = 'is_closed'");
+    $colCheck->execute();
+    $colRow = $colCheck->fetch();
+    $hasIsClosed = $colRow && intval($colRow['cnt']) > 0;
+} catch (Exception $e) {
+    // If the check fails for any reason, be conservative and treat as missing
+    $hasIsClosed = false;
+}
+    
 // Get teacher's courses for dropdown
 $stmt = $db->prepare("SELECT id, course_code, course_name FROM courses WHERE teacher_id = ? AND status = 'active' ORDER BY course_name");
 $stmt->execute([$user['id']]);
@@ -221,8 +232,25 @@ $flash = Session::getFlash();
                                     title="<?php echo $m['is_pinned'] ? 'Unpin' : 'Pin'; ?>">
                                     <i class="fas fa-thumbtack <?php echo $m['is_pinned'] ? 'text-warning' : ''; ?>"></i>
                                 </button>
+                                <button class="btn btn-ghost btn-sm" onclick="viewMaterialTeacher(<?php echo json_encode($m, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>)" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <?php if ($m['type'] === 'assignment' && $hasIsClosed): 
+                                    // Prepare strings to avoid complex inline PHP inside attributes
+                                    $closeTitle = isset($m['is_closed']) && $m['is_closed'] ? 'Reopen assignment' : 'Close assignment';
+                                    $closeIcon = isset($m['is_closed']) && $m['is_closed'] ? 'lock-open' : 'lock';
+                                ?>
+                                    <button class="btn btn-ghost btn-sm" onclick="toggleClose(<?php echo (int)$m['id']; ?>)"
+                                        title="<?php echo sanitize($closeTitle); ?>">
+                                        <i class="fas fa-<?php echo sanitize($closeIcon); ?>"></i>
+                                    </button>
+                                    <button class="btn btn-ghost btn-sm" onclick="viewSubmissions(<?php echo (int)$m['id']; ?>)"
+                                        title="View Submissions">
+                                        <i class="fas fa-folder-open"></i>
+                                    </button>
+                                <?php endif; ?>
                                 <button class="btn btn-ghost btn-sm"
-                                    onclick="editMaterial(<?php echo htmlspecialchars(json_encode($m)); ?>)" title="Edit">
+                                    onclick="editMaterial(<?php echo json_encode($m, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>)" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-ghost btn-sm text-danger"
@@ -247,6 +275,41 @@ $flash = Session::getFlash();
                 </div>
             </div>
         </main>
+    </div>
+    
+    <!-- Submissions Modal -->
+    <div class="modal-overlay" id="submissionsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Assignment Submissions</h3>
+                <button class="btn btn-icon btn-ghost" onclick="closeModal('submissionsModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="submissionsModalBody">
+                <div id="submissionsLoading">Loading submissions...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('submissionsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Material Modal (Teacher) -->
+    <div class="modal-overlay" id="viewMaterialModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="view_material_title">Material Details</h3>
+                <button class="btn btn-icon btn-ghost" onclick="closeModal('viewMaterialModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="view_material_course" style="margin-bottom:12px"></div>
+                <div id="view_material_description" style="margin-bottom:12px"></div>
+                <div id="view_material_meta" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+                <div id="view_material_actions" style="margin-top:12px"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('viewMaterialModal')">Close</button>
+            </div>
+        </div>
     </div>
 
     <!-- Add Material Modal -->
@@ -374,6 +437,12 @@ $flash = Session::getFlash();
                         <label class="form-label">Due Date</label>
                         <input type="datetime-local" name="due_date" id="edit_material_due" class="form-input">
                     </div>
+                    <div style="margin-top:10px;">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="is_closed" id="edit_material_closed" value="1">
+                            <span>🔒 Close assignment (students cannot submit)</span>
+                        </label>
+                    </div>
                     <label class="checkbox-wrapper">
                         <input type="checkbox" name="is_pinned" id="edit_material_pinned" value="1">
                         <span>📌 Pin this material</span>
@@ -390,11 +459,52 @@ $flash = Session::getFlash();
 
     <script src="../assets/js/dashboard.js"></script>
     <script>
+        const hasIsClosed = <?php echo $hasIsClosed ? 'true' : 'false'; ?>;
         function toggleMaterialFields() {
             const type = document.getElementById('material_type').value;
             document.getElementById('file_field').style.display = type === 'file' ? 'block' : 'none';
             document.getElementById('link_field').style.display = type === 'link' ? 'block' : 'none';
             document.getElementById('due_date_field').style.display = type === 'assignment' ? 'block' : 'none';
+        }
+
+        function viewMaterialTeacher(material) {
+            // store currently viewed material for action handlers
+            window.__currentViewedMaterial = material;
+
+            document.getElementById('view_material_title').textContent = material.title || 'Material Details';
+            document.getElementById('view_material_course').innerHTML = '<i class="fas fa-book"></i> ' + (material.course_code || '') + ' - ' + (material.course_name || '');
+            document.getElementById('view_material_description').textContent = material.description || '';
+
+            // meta
+            let meta = '';
+            meta += '<div><strong>Type:</strong> ' + (material.type || '') + '</div>';
+            meta += '<div><strong>Posted on:</strong> ' + (material.created_at ? new Date(material.created_at).toLocaleString() : '') + '</div>';
+            if (material.due_date) meta += '<div><strong>Due:</strong> ' + new Date(material.due_date).toLocaleString() + '</div>';
+            if (material.file_name) meta += '<div><strong>File:</strong> ' + escapeHtml(material.file_name) + '</div>';
+            document.getElementById('view_material_meta').innerHTML = meta;
+
+            // actions (download/open, edit, toggle close, view submissions)
+            let actions = '';
+            if (material.type === 'file' && material.file_path) {
+                actions += '<a href="../' + material.file_path + '" class="btn btn-primary btn-sm" download><i class="fas fa-download"></i> Download</a> ';
+            }
+            if (material.type === 'link' && material.external_link) {
+                actions += '<a href="' + escapeHtml(material.external_link) + '" class="btn btn-primary btn-sm" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Open Link</a> ';
+            }
+
+            // Edit button
+            actions += '<button class="btn btn-ghost btn-sm" onclick="editMaterial(window.__currentViewedMaterial)"><i class="fas fa-edit"></i> Edit</button> ';
+
+            // Toggle close (assignments) and view submissions
+            if (material.type === 'assignment') {
+                if (hasIsClosed) {
+                    actions += '<button class="btn btn-ghost btn-sm" onclick="toggleClose(' + (material.id || 0) + ')"><i class="fas fa-lock"></i> Toggle Close</button> ';
+                }
+                actions += '<button class="btn btn-ghost btn-sm" onclick="viewSubmissions(' + (material.id || 0) + ')"><i class="fas fa-folder-open"></i> View Submissions</button> ';
+            }
+
+            document.getElementById('view_material_actions').innerHTML = actions;
+            openModal('viewMaterialModal');
         }
 
         function updateFileName(input) {
@@ -408,6 +518,20 @@ $flash = Session::getFlash();
             }
         }
 
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/[&<>"'`]/g, function (s) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    '`': '&#96;'
+                })[s];
+            });
+        }
+
         function editMaterial(material) {
             document.getElementById('edit_material_id').value = material.id;
             document.getElementById('edit_material_title').value = material.title;
@@ -415,6 +539,7 @@ $flash = Session::getFlash();
             document.getElementById('edit_material_link').value = material.external_link || '';
             document.getElementById('edit_material_due').value = material.due_date ? material.due_date.slice(0, 16) : '';
             document.getElementById('edit_material_pinned').checked = material.is_pinned == 1;
+            document.getElementById('edit_material_closed').checked = material.is_closed == 1;
 
             document.getElementById('edit_link_field').style.display = material.type === 'link' ? 'block' : 'none';
             document.getElementById('edit_due_field').style.display = material.type === 'assignment' ? 'block' : 'none';
@@ -468,6 +593,63 @@ $flash = Session::getFlash();
                 document.getElementById('file_input').files = files;
                 updateFileName(document.getElementById('file_input'));
             }, false);
+        }
+
+        function toggleClose(id) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '../api/teacher/materials.php';
+            form.innerHTML = `<input type="hidden" name="action" value="toggle_close"><input type="hidden" name="id" value="${id}">`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        async function viewSubmissions(materialId) {
+            openModal('submissionsModal');
+            const body = document.getElementById('submissionsModalBody');
+            body.innerHTML = '<div id="submissionsLoading">Loading submissions...</div>';
+
+            try {
+                const res = await fetch(`../api/teacher/submissions.php?material_id=${materialId}`);
+                if (!res.ok) throw new Error('Network error');
+                const data = await res.json();
+                if (!data.success) {
+                    body.innerHTML = `<div class="alert alert-error">${data.message || 'Failed to load submissions'}</div>`;
+                    return;
+                }
+
+                const subs = data.submissions || [];
+                if (subs.length === 0) {
+                    body.innerHTML = '<p>No submissions yet.</p>';
+                    return;
+                }
+
+                const list = document.createElement('div');
+                list.className = 'submissions-list';
+                subs.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'submission-item';
+                    item.innerHTML = `
+                        <div class="submission-header">
+                            <strong>${escapeHtml(s.student_name || 'Unknown')}</strong>
+                            <span class="muted">${escapeHtml(s.submitted_at || '')}</span>
+                        </div>
+                        <div class="submission-body">
+                            ${s.file_path ? `<a href="../${s.file_path}" target="_blank" download class="btn btn-ghost btn-sm"><i class="fas fa-download"></i> ${escapeHtml(s.file_name || 'file')}</a>` : ''}
+                            ${s.content ? `<div class="submission-text">${escapeHtml(s.content)}</div>` : ''}
+                            ${s.grade ? `<div class="submission-grade">Grade: ${escapeHtml(s.grade)}</div>` : ''}
+                            ${s.feedback ? `<div class="submission-feedback">Feedback: ${escapeHtml(s.feedback)}</div>` : ''}
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+
+                body.innerHTML = '';
+                body.appendChild(list);
+            } catch (err) {
+                console.error(err);
+                body.innerHTML = '<div class="alert alert-error">Error loading submissions. Please try again later.</div>';
+            }
         }
     </script>
     <style>
@@ -616,6 +798,32 @@ $flash = Session::getFlash();
 
         .modal-lg {
             max-width: 600px;
+        }
+
+        .submissions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .submission-item {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            border-radius: 8px;
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .submission-body .submission-text {
+            margin-top: 8px;
+            color: var(--text-secondary);
         }
 
         .file-upload-area {

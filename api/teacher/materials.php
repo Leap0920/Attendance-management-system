@@ -30,6 +30,8 @@ try {
             $externalLink = trim($_POST['external_link'] ?? '');
             $dueDate = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
             $isPinned = isset($_POST['is_pinned']) ? 1 : 0;
+            $isClosed = isset($_POST['is_closed']) ? 1 : 0;
+            $isClosed = isset($_POST['is_closed']) ? 1 : 0;
 
             // Validate required fields
             if (empty($courseId) || empty($title)) {
@@ -109,8 +111,8 @@ try {
 
             // Insert material
             $stmt = $db->prepare("INSERT INTO course_materials 
-                (course_id, teacher_id, type, title, description, file_path, file_name, file_size, external_link, due_date, is_pinned, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                (course_id, teacher_id, type, title, description, file_path, file_name, file_size, external_link, due_date, is_pinned, is_closed, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             $stmt->execute([
                 $courseId,
                 $userId,
@@ -122,7 +124,8 @@ try {
                 $fileSize,
                 $type === 'link' ? $externalLink : null,
                 $dueDate,
-                $isPinned
+                $isPinned,
+                $isClosed
             ]);
 
             $materialId = $db->lastInsertId();
@@ -160,10 +163,12 @@ try {
                 $externalLink = 'https://' . $externalLink;
             }
 
+            $isClosed = isset($_POST['is_closed']) ? 1 : 0;
+
             $stmt = $db->prepare("UPDATE course_materials 
-                SET title = ?, description = ?, external_link = ?, due_date = ?, is_pinned = ?, updated_at = NOW()
+                SET title = ?, description = ?, external_link = ?, due_date = ?, is_pinned = ?, is_closed = ?, updated_at = NOW()
                 WHERE id = ?");
-            $stmt->execute([$title, $description ?: null, $externalLink ?: null, $dueDate, $isPinned, $id]);
+            $stmt->execute([$title, $description ?: null, $externalLink ?: null, $dueDate, $isPinned, $isClosed, $id]);
 
             logAudit($db, $userId, 'update_material', 'course_material', $id);
             redirect('../../teacher/materials.php', 'success', 'Material updated successfully');
@@ -217,6 +222,37 @@ try {
             $stmt->execute([$newPinned, $id]);
 
             $msg = $newPinned ? 'Material pinned' : 'Material unpinned';
+            redirect('../../teacher/materials.php', 'success', $msg);
+            break;
+
+        case 'toggle_close':
+            $id = intval($_POST['id'] ?? 0);
+
+            // Ensure the is_closed column exists (migration may not have been run)
+            $colStmt = $db->prepare("SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'course_materials' AND COLUMN_NAME = 'is_closed'");
+            $colStmt->execute();
+            $colRow = $colStmt->fetch();
+            if (!$colRow || intval($colRow['cnt']) === 0) {
+                // Helpful message for missing migration
+                redirect('../../teacher/materials.php', 'error', 'Database column missing: is_closed. Please run the migration script migrate_add_assignment_support.php to add assignment support.');
+            }
+
+            // Verify ownership and current closed state
+            $stmt = $db->prepare("SELECT m.id, m.is_closed FROM course_materials m 
+                JOIN courses c ON m.course_id = c.id 
+                WHERE m.id = ? AND c.teacher_id = ?");
+            $stmt->execute([$id, $userId]);
+            $material = $stmt->fetch();
+
+            if (!$material) {
+                redirect('../../teacher/materials.php', 'error', 'Material not found');
+            }
+
+            $newClosed = $material['is_closed'] ? 0 : 1;
+            $stmt = $db->prepare("UPDATE course_materials SET is_closed = ? WHERE id = ?");
+            $stmt->execute([$newClosed, $id]);
+
+            $msg = $newClosed ? 'Assignment closed' : 'Assignment reopened';
             redirect('../../teacher/materials.php', 'success', $msg);
             break;
 

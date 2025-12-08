@@ -132,6 +132,7 @@ CREATE TABLE course_materials (
     external_link VARCHAR(500) DEFAULT NULL,
     due_date DATETIME NULL,
     is_pinned TINYINT(1) DEFAULT 0,
+    is_closed TINYINT(1) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
@@ -139,6 +140,26 @@ CREATE TABLE course_materials (
     INDEX idx_course (course_id),
     INDEX idx_type (type)
 );
+
+-- Assignment Submissions (students submit to assignments)
+CREATE TABLE IF NOT EXISTS assignment_submissions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    material_id INT NOT NULL,
+    student_id INT NOT NULL,
+    file_path VARCHAR(500) DEFAULT NULL,
+    file_name VARCHAR(255) DEFAULT NULL,
+    file_size INT DEFAULT NULL,
+    content TEXT DEFAULT NULL,
+    status ENUM('submitted','graded','late') DEFAULT 'submitted',
+    grade VARCHAR(50) DEFAULT NULL,
+    feedback TEXT DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (material_id) REFERENCES course_materials(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_material (material_id),
+    INDEX idx_student (student_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Comments/Discussions
 CREATE TABLE comments (
