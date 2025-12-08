@@ -169,7 +169,7 @@ $flash = Session::getFlash();
                             $isOverdue = $m['due_date'] && strtotime($m['due_date']) < time();
                         ?>
                                 <div class="material-item <?php echo $m['is_pinned'] ? 'pinned' : ''; ?> <?php echo $isOverdue ? 'overdue' : ''; ?>" 
-                                 onclick="viewMaterial(<?php echo json_encode($m, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>)">
+                                 onclick="viewMaterial(this)" data-material='<?php echo htmlspecialchars(json_encode($m, JSON_UNESCAPED_SLASHES|JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT), ENT_QUOTES); ?>'>
                                 <?php if ($m['is_pinned']): ?>
                                     <div class="pin-indicator" title="Pinned by teacher"><i class="fas fa-thumbtack"></i></div>
                                 <?php endif; ?>
@@ -322,96 +322,119 @@ $flash = Session::getFlash();
             'assignment': 'Assignment'
         };
         
-        function viewMaterial(material) {
-            // Set type badge
-            document.getElementById('modal_type_badge').innerHTML = 
-                '<i class="fas ' + typeIcons[material.type] + '"></i> ' + typeLabels[material.type];
-            document.getElementById('modal_type_badge').style.background = typeColors[material.type] + '20';
-            document.getElementById('modal_type_badge').style.color = typeColors[material.type];
-            
-            // Set basic info
-            document.getElementById('modal_title').textContent = material.title;
-            document.getElementById('modal_course').innerHTML = 
-                '<i class="fas fa-book"></i> ' + material.course_code + ' - ' + material.course_name;
-            document.getElementById('modal_description').textContent = material.description || 'No description provided.';
-            document.getElementById('modal_teacher').textContent = material.teacher_name;
-            document.getElementById('modal_date').textContent = new Date(material.created_at).toLocaleString();
-            
-            // Due date
-            if (material.due_date) {
-                document.getElementById('modal_due_container').style.display = 'flex';
-                const dueDate = new Date(material.due_date);
-                const isOverdue = dueDate < new Date();
-                document.getElementById('modal_due').textContent = dueDate.toLocaleString();
-                document.getElementById('modal_due').className = 'due-text' + (isOverdue ? ' overdue' : '');
-            } else {
-                document.getElementById('modal_due_container').style.display = 'none';
-            }
-            
-            // File info
-            if (material.type === 'file' && material.file_name) {
-                document.getElementById('modal_file_container').style.display = 'flex';
-                const sizeKB = material.file_size ? (material.file_size / 1024).toFixed(1) + ' KB' : '';
-                document.getElementById('modal_file').textContent = material.file_name + (sizeKB ? ' (' + sizeKB + ')' : '');
-            } else {
-                document.getElementById('modal_file_container').style.display = 'none';
-            }
-            
-            // Action area
-            let actionHtml = '';
-            if (material.type === 'file' && material.file_path) {
-                actionHtml = '<a href="../' + material.file_path + '" class="btn btn-primary btn-lg" download>' +
-                    '<i class="fas fa-download"></i> Download File</a>';
-            } else if (material.type === 'link' && material.external_link) {
-                actionHtml = '<a href="' + material.external_link + '" class="btn btn-primary btn-lg" target="_blank" rel="noopener">' +
-                    '<i class="fas fa-external-link-alt"></i> Open Link</a>';
-            } else if (material.type === 'announcement') {
-                actionHtml = '<div class="announcement-notice"><i class="fas fa-bullhorn"></i> This is an announcement from your teacher. Please read the details above.</div>';
-            } else if (material.type === 'assignment') {
-                actionHtml = '<div class="assignment-notice"><i class="fas fa-tasks"></i> This is an assignment. Please follow your teacher\'s instructions.</div>';
-                if (material.due_date) {
-                    const dueDate = new Date(material.due_date);
-                    const isOverdue = dueDate < new Date();
-                    if (isOverdue) {
-                        actionHtml += '<div class="overdue-warning"><i class="fas fa-exclamation-triangle"></i> This assignment is past due!</div>';
+        function viewMaterial(materialOrEl) {
+            try {
+                // support being passed the element (with data-material) or the material object
+                let material = materialOrEl;
+                if (materialOrEl && materialOrEl.dataset && materialOrEl.dataset.material) {
+                    try {
+                        material = JSON.parse(materialOrEl.dataset.material);
+                    } catch (e) {
+                        const t = document.createElement('textarea');
+                        t.innerHTML = materialOrEl.dataset.material;
+                        material = JSON.parse(t.value);
                     }
                 }
-            }
-            document.getElementById('modal_action_area').innerHTML = actionHtml;
-            
-            // set hidden ids for comment form
-            document.getElementById('comment_material_id').value = material.id || '';
-            document.getElementById('comment_course_id').value = material.course_id || '';
-
-            // load comments via AJAX
-            loadComments(material.id);
-
-            // if assignment, add submit form area inside action area
-            if (material.type === 'assignment') {
-                const closed = material.is_closed == 1 || material.is_closed === true;
-                let submitHtml = '';
-                if (!closed) {
-                    submitHtml = `
-                        <form action="../api/student/materials.php" method="POST" enctype="multipart/form-data" id="assignment_submit_form" style="margin-top:12px; display:flex; gap:8px; flex-direction:column;">
-                            <input type="hidden" name="action" value="submit_assignment">
-                            <input type="hidden" name="material_id" value="${material.id}">
-                            <input type="hidden" name="course_id" value="${material.course_id}">
-                            <label class="form-label">Upload file (optional)</label>
-                            <input type="file" name="file" class="form-input">
-                            <label class="form-label">Additional notes (optional)</label>
-                            <textarea name="content" class="form-input" rows="3" placeholder="Write a note..."></textarea>
-                            <div style="display:flex; gap:8px;">
-                                <button type="submit" class="btn btn-success">Submit Assignment</button>
-                            </div>
-                        </form>
-                    `;
+                // Set type badge
+                document.getElementById('modal_type_badge').innerHTML = 
+                    '<i class="fas ' + typeIcons[material.type] + '"></i> ' + (typeLabels[material.type] || material.type);
+                document.getElementById('modal_type_badge').style.background = (typeColors[material.type] || '#666') + '20';
+                document.getElementById('modal_type_badge').style.color = typeColors[material.type] || '#666';
+                
+                // Set basic info
+                document.getElementById('modal_title').textContent = material.title || 'Material';
+                document.getElementById('modal_course').innerHTML = 
+                    '<i class="fas fa-book"></i> ' + (material.course_code || '') + ' - ' + (material.course_name || '');
+                document.getElementById('modal_description').textContent = material.description || 'No description provided.';
+                document.getElementById('modal_teacher').textContent = material.teacher_name || '';
+                document.getElementById('modal_date').textContent = material.created_at ? new Date(material.created_at).toLocaleString() : '';
+                
+                // Due date
+                if (material.due_date) {
+                    document.getElementById('modal_due_container').style.display = 'flex';
+                    const dueDate = new Date(material.due_date);
+                    const isOverdue = dueDate < new Date();
+                    document.getElementById('modal_due').textContent = dueDate.toLocaleString();
+                    document.getElementById('modal_due').className = 'due-text' + (isOverdue ? ' overdue' : '');
                 } else {
-                    submitHtml = '<div class="overdue-warning"><i class="fas fa-lock"></i> This assignment is currently closed by the teacher.</div>';
+                    document.getElementById('modal_due_container').style.display = 'none';
                 }
-                document.getElementById('modal_action_area').insertAdjacentHTML('beforeend', submitHtml);
-            }
+                
+                // File info
+                if (material.type === 'file' && material.file_name) {
+                    document.getElementById('modal_file_container').style.display = 'flex';
+                    const sizeKB = material.file_size ? (material.file_size / 1024).toFixed(1) + ' KB' : '';
+                    document.getElementById('modal_file').textContent = material.file_name + (sizeKB ? ' (' + sizeKB + ')' : '');
+                } else {
+                    document.getElementById('modal_file_container').style.display = 'none';
+                }
+                
+                // Action area
+                let actionHtml = '';
+                if (material.type === 'file' && material.file_path) {
+                    actionHtml = '<a href="../' + material.file_path + '" class="btn btn-primary btn-lg" download>' +
+                        '<i class="fas fa-download"></i> Download File</a>';
+                } else if (material.type === 'link' && material.external_link) {
+                    actionHtml = '<a href="' + material.external_link + '" class="btn btn-primary btn-lg" target="_blank" rel="noopener">' +
+                        '<i class="fas fa-external-link-alt"></i> Open Link</a>';
+                } else if (material.type === 'announcement') {
+                    actionHtml = '<div class="announcement-notice"><i class="fas fa-bullhorn"></i> This is an announcement from your teacher. Please read the details above.</div>';
+                } else if (material.type === 'assignment') {
+                    actionHtml = '<div class="assignment-notice"><i class="fas fa-tasks"></i> This is an assignment. Please follow your teacher\'s instructions.</div>';
+                    if (material.due_date) {
+                        const dueDate = new Date(material.due_date);
+                        const isOverdue = dueDate < new Date();
+                        if (isOverdue) {
+                            actionHtml += '<div class="overdue-warning"><i class="fas fa-exclamation-triangle"></i> This assignment is past due!</div>';
+                        }
+                    }
+                }
+                document.getElementById('modal_action_area').innerHTML = actionHtml;
+                
+                // set hidden ids for comment form
+                document.getElementById('comment_material_id').value = material.id || '';
+                document.getElementById('comment_course_id').value = material.course_id || '';
 
-            openModal('materialDetailModal');
+                // load comments via AJAX
+                loadComments(material.id);
+
+                // if assignment, add submit form area inside action area
+                if (material.type === 'assignment') {
+                    const closed = material.is_closed == 1 || material.is_closed === true;
+                    let submitHtml = '';
+                    if (!closed) {
+                        submitHtml = `
+                            <form action="../api/student/materials.php" method="POST" enctype="multipart/form-data" id="assignment_submit_form" style="margin-top:12px; display:flex; gap:8px; flex-direction:column;">
+                                <input type="hidden" name="action" value="submit_assignment">
+                                <input type="hidden" name="material_id" value="${material.id}">
+                                <input type="hidden" name="course_id" value="${material.course_id}">
+                                <label class="form-label">Upload file (optional)</label>
+                                <input type="file" name="file" class="form-input">
+                                <label class="form-label">Additional notes (optional)</label>
+                                <textarea name="content" class="form-input" rows="3" placeholder="Write a note..."></textarea>
+                                <div style="display:flex; gap:8px;">
+                                    <button type="submit" class="btn btn-success">Submit Assignment</button>
+                                </div>
+                            </form>
+                        `;
+                    } else {
+                        submitHtml = '<div class="overdue-warning"><i class="fas fa-lock"></i> This assignment is currently closed by the teacher.</div>';
+                    }
+                    document.getElementById('modal_action_area').insertAdjacentHTML('beforeend', submitHtml);
+                }
+
+                openModal('materialDetailModal');
+            } catch (err) {
+                console.error('Error rendering material details:', err, material);
+                document.getElementById('modal_title').textContent = 'Material Details';
+                document.getElementById('modal_course').innerHTML = '';
+                document.getElementById('modal_description').textContent = '';
+                document.getElementById('modal_meta')?.remove?.();
+                document.getElementById('modal_action_area').innerHTML = '<pre style="white-space:pre-wrap;color:var(--text-primary);">' + escapeHtml(JSON.stringify(material, null, 2)) + '</pre>';
+                // still attempt to load comments if id exists
+                if (material && material.id) loadComments(material.id);
+                openModal('materialDetailModal');
+            }
         }
 
         function loadComments(materialId) {

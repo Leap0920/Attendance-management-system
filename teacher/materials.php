@@ -232,7 +232,7 @@ $flash = Session::getFlash();
                                     title="<?php echo $m['is_pinned'] ? 'Unpin' : 'Pin'; ?>">
                                     <i class="fas fa-thumbtack <?php echo $m['is_pinned'] ? 'text-warning' : ''; ?>"></i>
                                 </button>
-                                <button class="btn btn-ghost btn-sm" onclick="viewMaterialTeacher(<?php echo json_encode($m, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>)" title="View Details">
+                                <button class="btn btn-ghost btn-sm" onclick="viewMaterialTeacher(this)" data-material='<?php echo htmlspecialchars(json_encode($m, JSON_UNESCAPED_SLASHES|JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT), ENT_QUOTES); ?>' title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 <?php if ($m['type'] === 'assignment' && $hasIsClosed): 
@@ -250,7 +250,7 @@ $flash = Session::getFlash();
                                     </button>
                                 <?php endif; ?>
                                 <button class="btn btn-ghost btn-sm"
-                                    onclick="editMaterial(<?php echo json_encode($m, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT); ?>)" title="Edit">
+                                    onclick="editMaterial(this)" data-material='<?php echo htmlspecialchars(json_encode($m, JSON_UNESCAPED_SLASHES|JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT), ENT_QUOTES); ?>' title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-ghost btn-sm text-danger"
@@ -467,44 +467,68 @@ $flash = Session::getFlash();
             document.getElementById('due_date_field').style.display = type === 'assignment' ? 'block' : 'none';
         }
 
-        function viewMaterialTeacher(material) {
-            // store currently viewed material for action handlers
-            window.__currentViewedMaterial = material;
+        function viewMaterialTeacher(materialOrEl) {
+                try {
+                    // support being passed the element (with data-material) or the material object
+                    let material = materialOrEl;
+                    if (materialOrEl && materialOrEl.dataset && materialOrEl.dataset.material) {
+                        try {
+                            material = JSON.parse(materialOrEl.dataset.material);
+                        } catch (e) {
+                            // dataset material may be HTML-escaped; attempt to unescape
+                            const txt = document.createElement('textarea');
+                            txt.innerHTML = materialOrEl.dataset.material;
+                            material = JSON.parse(txt.value);
+                        }
+                    }
 
-            document.getElementById('view_material_title').textContent = material.title || 'Material Details';
-            document.getElementById('view_material_course').innerHTML = '<i class="fas fa-book"></i> ' + (material.course_code || '') + ' - ' + (material.course_name || '');
-            document.getElementById('view_material_description').textContent = material.description || '';
+                    // store currently viewed material for action handlers
+                    window.__currentViewedMaterial = material;
 
-            // meta
-            let meta = '';
-            meta += '<div><strong>Type:</strong> ' + (material.type || '') + '</div>';
-            meta += '<div><strong>Posted on:</strong> ' + (material.created_at ? new Date(material.created_at).toLocaleString() : '') + '</div>';
-            if (material.due_date) meta += '<div><strong>Due:</strong> ' + new Date(material.due_date).toLocaleString() + '</div>';
-            if (material.file_name) meta += '<div><strong>File:</strong> ' + escapeHtml(material.file_name) + '</div>';
-            document.getElementById('view_material_meta').innerHTML = meta;
+                    document.getElementById('view_material_title').textContent = material.title || 'Material Details';
+                    document.getElementById('view_material_course').innerHTML = '<i class="fas fa-book"></i> ' + (material.course_code || '') + ' - ' + (material.course_name || '');
+                    document.getElementById('view_material_description').textContent = material.description || '';
 
-            // actions (download/open, edit, toggle close, view submissions)
-            let actions = '';
-            if (material.type === 'file' && material.file_path) {
-                actions += '<a href="../' + material.file_path + '" class="btn btn-primary btn-sm" download><i class="fas fa-download"></i> Download</a> ';
-            }
-            if (material.type === 'link' && material.external_link) {
-                actions += '<a href="' + escapeHtml(material.external_link) + '" class="btn btn-primary btn-sm" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Open Link</a> ';
-            }
+                    // meta
+                    let meta = '';
+                    meta += '<div><strong>Type:</strong> ' + (material.type || '') + '</div>';
+                    meta += '<div><strong>Posted on:</strong> ' + (material.created_at ? new Date(material.created_at).toLocaleString() : '') + '</div>';
+                    if (material.due_date) meta += '<div><strong>Due:</strong> ' + new Date(material.due_date).toLocaleString() + '</div>';
+                    if (material.file_name) meta += '<div><strong>File:</strong> ' + escapeHtml(material.file_name) + '</div>';
+                    document.getElementById('view_material_meta').innerHTML = meta;
 
-            // Edit button
-            actions += '<button class="btn btn-ghost btn-sm" onclick="editMaterial(window.__currentViewedMaterial)"><i class="fas fa-edit"></i> Edit</button> ';
+                    // actions (download/open, edit, toggle close, view submissions)
+                    let actions = '';
+                    if (material.type === 'file' && material.file_path) {
+                        actions += '<a href="../' + material.file_path + '" class="btn btn-primary btn-sm" download><i class="fas fa-download"></i> Download</a> ';
+                    }
+                    if (material.type === 'link' && material.external_link) {
+                        actions += '<a href="' + escapeHtml(material.external_link) + '" class="btn btn-primary btn-sm" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Open Link</a> ';
+                    }
 
-            // Toggle close (assignments) and view submissions
-            if (material.type === 'assignment') {
-                if (hasIsClosed) {
-                    actions += '<button class="btn btn-ghost btn-sm" onclick="toggleClose(' + (material.id || 0) + ')"><i class="fas fa-lock"></i> Toggle Close</button> ';
+                    // Edit button
+                    actions += '<button class="btn btn-ghost btn-sm" onclick="editMaterial(window.__currentViewedMaterial)"><i class="fas fa-edit"></i> Edit</button> ';
+
+                    // Toggle close (assignments) and view submissions
+                    if (material.type === 'assignment') {
+                        if (hasIsClosed) {
+                            actions += '<button class="btn btn-ghost btn-sm" onclick="toggleClose(' + (material.id || 0) + ')"><i class="fas fa-lock"></i> Toggle Close</button> ';
+                        }
+                        actions += '<button class="btn btn-ghost btn-sm" onclick="viewSubmissions(' + (material.id || 0) + ')"><i class="fas fa-folder-open"></i> View Submissions</button> ';
+                    }
+
+                    document.getElementById('view_material_actions').innerHTML = actions;
+                    openModal('viewMaterialModal');
+                } catch (err) {
+                    console.error('Error rendering material details:', err, material);
+                    // fallback: show raw material data so user can see something
+                    document.getElementById('view_material_title').textContent = 'Material Details';
+                    document.getElementById('view_material_course').innerHTML = '';
+                    document.getElementById('view_material_description').textContent = '';
+                    document.getElementById('view_material_meta').innerHTML = '<pre style="white-space:pre-wrap;color:var(--text-primary);">' + escapeHtml(JSON.stringify(material, null, 2)) + '</pre>';
+                    document.getElementById('view_material_actions').innerHTML = '';
+                    openModal('viewMaterialModal');
                 }
-                actions += '<button class="btn btn-ghost btn-sm" onclick="viewSubmissions(' + (material.id || 0) + ')"><i class="fas fa-folder-open"></i> View Submissions</button> ';
-            }
-
-            document.getElementById('view_material_actions').innerHTML = actions;
-            openModal('viewMaterialModal');
         }
 
         function updateFileName(input) {
@@ -532,7 +556,12 @@ $flash = Session::getFlash();
             });
         }
 
-        function editMaterial(material) {
+        function editMaterial(materialOrEl) {
+            let material = materialOrEl;
+            if (materialOrEl && materialOrEl.dataset && materialOrEl.dataset.material) {
+                try { material = JSON.parse(materialOrEl.dataset.material); } catch (e) { const t = document.createElement('textarea'); t.innerHTML = materialOrEl.dataset.material; material = JSON.parse(t.value); }
+            }
+
             document.getElementById('edit_material_id').value = material.id;
             document.getElementById('edit_material_title').value = material.title;
             document.getElementById('edit_material_description').value = material.description || '';
