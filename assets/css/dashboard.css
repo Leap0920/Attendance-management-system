@@ -445,7 +445,7 @@ select option:checked,
         transition: opacity 0.25s ease;
     }
 
-    .sidebar.active ~ .sidebar-overlay,
+    .sidebar.active~.sidebar-overlay,
     .sidebar-overlay.active {
         opacity: 1;
         visibility: visible;

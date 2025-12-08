@@ -320,6 +320,7 @@ select.form-input option:checked {
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
+
     .table th,
     .table td {
         padding: 10px;
@@ -344,6 +345,7 @@ select.form-input option:checked {
 
 /* Student page specific responsive overrides */
 @media (max-width: 480px) {
+
     /* Override inline width on attendance code input to use available space */
     input.code-input {
         width: 100% !important;

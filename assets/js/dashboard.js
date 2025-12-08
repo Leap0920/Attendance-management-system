@@ -53,9 +53,9 @@ function showToast(message, type = 'success') {
         <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
         <span>${message}</span>
     `;
-    
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
         toast.classList.remove('show');
@@ -129,13 +129,13 @@ function toggleSidebar() {
             overlay.className = 'sidebar-overlay active';
             document.body.appendChild(overlay);
             overlay.addEventListener('click', () => {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                    document.body.classList.remove('no-scroll');
-                    // remove overlay after animation
-                    setTimeout(() => {
-                        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                    }, 300);
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.classList.remove('no-scroll');
+                // remove overlay after animation
+                setTimeout(() => {
+                    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                }, 300);
             });
         } else {
             overlay.classList.add('active');
