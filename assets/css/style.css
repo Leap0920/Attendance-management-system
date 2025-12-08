@@ -318,6 +318,51 @@ select.form-input option:checked {
     background: rgba(255, 255, 255, 0.02);
 }
 
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .table th,
+    .table td {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .avatar,
+    .avatar-initials {
+        width: 36px;
+        height: 36px;
+    }
+
+    .btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 24px;
+    }
+}
+
+/* Student page specific responsive overrides */
+@media (max-width: 480px) {
+    /* Override inline width on attendance code input to use available space */
+    input.code-input {
+        width: 100% !important;
+        max-width: 220px !important;
+    }
+
+    /* Ensure main content does not cause horizontal scroll */
+    .content-wrapper,
+    .main-content,
+    .dashboard-layout {
+        overflow-x: hidden !important;
+    }
+
+    /* Prevent material items hover transform causing layout shift on small screens */
+    .material-item {
+        transform: none !important;
+    }
+}
+
 /* Alert/Toast */
 .alert {
     padding: 16px 20px;
@@ -526,4 +571,34 @@ select.form-input option:checked {
 
 .hidden {
     display: none;
+}
+
+/* Prevent body scroll when mobile sidebar or modal is open */
+.no-scroll {
+    overflow: hidden;
+    position: relative;
+}
+
+/* Toast styling (small improvement for smoothness) */
+.toast {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    background: rgba(26, 26, 46, 0.95);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    transform: translateY(10px);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 1200;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
 }

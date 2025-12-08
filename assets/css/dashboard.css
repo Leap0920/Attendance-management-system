@@ -17,7 +17,7 @@
     z-index: 100;
     display: flex;
     flex-direction: column;
-    transition: var(--transition);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s;
 }
 
 .sidebar-header {
@@ -46,6 +46,23 @@
 .sidebar-logo h2 {
     font-size: 20px;
     font-weight: 700;
+}
+
+/* Close button visible on mobile for sidebar */
+.sidebar-close-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 18px;
+    margin-left: 12px;
+    cursor: pointer;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .sidebar-nav {
@@ -156,6 +173,25 @@
     position: sticky;
     top: 0;
     z-index: 50;
+}
+
+/* Mobile menu button (hidden on desktop) */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.mobile-menu-btn:focus {
+    outline: none;
 }
 
 .search-bar {
@@ -361,5 +397,57 @@ select option:checked,
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
+    }
+
+    /* Show mobile menu button and adjust header layout */
+    .mobile-menu-btn {
+        display: inline-flex;
+        margin-right: 12px;
+    }
+
+    /* Show sidebar close button on mobile */
+    .sidebar-close-btn {
+        display: inline-flex;
+    }
+
+    .top-header {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+
+    .search-bar {
+        width: 100%;
+        flex: 1;
+    }
+
+    /* Ensure search input doesn't overlap mobile menu button */
+    .search-bar input {
+        padding-left: 56px;
+    }
+
+    .header-right {
+        margin-left: 12px;
+    }
+
+    /* Slightly narrower sidebar on smaller devices */
+    .sidebar {
+        width: 240px;
+    }
+
+    /* Sidebar overlay for mobile */
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 90;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s ease;
+    }
+
+    .sidebar.active ~ .sidebar-overlay,
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
     }
 }

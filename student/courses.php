@@ -69,8 +69,8 @@ $flash = Session::getFlash();
                     <?php foreach ($courses as $course):
                         $rate = $course['total_sessions'] > 0 ? round(($course['attended'] / $course['total_sessions']) * 100, 1) : 100;
                         ?>
-                        <div class="course-card animate-fade-in"
-                            style="border-top: 4px solid <?php echo $course['cover_color']; ?>;">
+                        <div class="course-card animate-fade-in" data-course-id="<?php echo $course['id']; ?>"
+                            style="border-top: 4px solid <?php echo $course['cover_color']; ?>; cursor: pointer;">
                             <div class="course-header"
                                 style="background: linear-gradient(135deg, <?php echo $course['cover_color']; ?>20, transparent);">
                                 <h3><?php echo sanitize($course['course_code']); ?></h3>

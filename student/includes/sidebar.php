@@ -4,6 +4,7 @@
             <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
             <h2>AttendEase</h2>
         </a>
+        <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close menu"><i class="fas fa-times"></i></button>
     </div>
 
     <nav class="sidebar-nav">
@@ -49,7 +50,7 @@
                 <div class="user-name"><?php echo $user['full_name']; ?></div>
                 <div class="user-role">Student</div>
             </div>
-            <a href="../api/auth/logout.php" class="btn btn-icon btn-ghost" title="Logout"><i
+                <a href="javascript:void(0)" class="btn btn-icon btn-ghost logout-link" title="Logout" onclick="if(confirm('Are you sure you want to logout?')) { window.location.href='../api/auth/logout.php'; }"><i
                     class="fas fa-sign-out-alt"></i></a>
         </div>
     </div>

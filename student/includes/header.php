@@ -1,4 +1,6 @@
 <header class="top-header">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+
     <div class="search-bar">
         <i class="fas fa-search"></i>
         <input type="text" placeholder="Search courses..." id="globalSearch">

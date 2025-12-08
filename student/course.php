@@ -43,7 +43,7 @@ $stmt->execute([$courseId, $user['id']]);
 $attendanceHistory = $stmt->fetchAll();
 
 // Get course materials
-$stmt = $db->prepare("SELECT * FROM course_materials WHERE course_id = ? ORDER BY is_pinned DESC, created_at DESC LIMIT 5");
+$stmt = $db->prepare("SELECT * FROM course_materials WHERE course_id = ? ORDER BY is_pinned DESC, created_at DESC");
 $stmt->execute([$courseId]);
 $materials = $stmt->fetchAll();
 
@@ -59,7 +59,7 @@ $stmt = $db->prepare("SELECT cm.*, u.first_name, u.last_name, u.role
     FROM course_messages cm
     JOIN users u ON cm.sender_id = u.id
     WHERE cm.course_id = ?
-    ORDER BY cm.created_at DESC LIMIT 10");
+    ORDER BY cm.created_at DESC");
 $stmt->execute([$courseId]);
 $recentMessages = array_reverse($stmt->fetchAll());
 

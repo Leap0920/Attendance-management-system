@@ -445,7 +445,7 @@ $flash = Session::getFlash();
         .material-item:hover {
             background: var(--bg-card);
             border-color: var(--primary);
-            transform: translateX(4px);
+            transform: translateY(-4px);
             box-shadow: var(--shadow-lg);
         }
 

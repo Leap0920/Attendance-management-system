@@ -27,7 +27,21 @@ document.addEventListener('keydown', (e) => {
         document.querySelectorAll('.modal-overlay.active').forEach(modal => {
             modal.classList.remove('active');
         });
-        document.body.style.overflow = '';
+
+        // close mobile sidebar if open
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('__mobile_sidebar_overlay');
+        if (sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+        }
+
+        if (overlay) {
+            overlay.classList.remove('active');
+            // remove overlay after transition
+            setTimeout(() => overlay.remove(), 300);
+        }
+
+        document.body.classList.remove('no-scroll');
     }
 });
 
@@ -93,7 +107,47 @@ if (globalSearch) {
 
 // Mobile sidebar toggle
 function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('active');
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    const overlayId = '__mobile_sidebar_overlay';
+    let overlay = document.getElementById(overlayId);
+
+    const isActive = sidebar.classList.toggle('active');
+
+    // update mobile menu button aria state
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    if (menuBtn) menuBtn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+
+    // manage body scroll
+    if (isActive) {
+        document.body.classList.add('no-scroll');
+        // create overlay if not exists
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = overlayId;
+            overlay.className = 'sidebar-overlay active';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                    // remove overlay after animation
+                    setTimeout(() => {
+                        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    }, 300);
+            });
+        } else {
+            overlay.classList.add('active');
+        }
+    } else {
+        document.body.classList.remove('no-scroll');
+        if (overlay) overlay.classList.remove('active');
+        // remove overlay after animation
+        if (overlay) setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 300);
+        const menuBtn = document.querySelector('.mobile-menu-btn');
+        if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+    }
 }
 
 // Copy to clipboard
@@ -117,3 +171,14 @@ const animateOnScroll = () => {
 
 window.addEventListener('scroll', animateOnScroll);
 window.addEventListener('load', animateOnScroll);
+
+// Make course cards clickable but ignore clicks on controls inside them
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.course-card[data-course-id]').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('form') || e.target.closest('a') || e.target.closest('button')) return;
+            const id = card.getAttribute('data-course-id');
+            if (id) window.location.href = 'course.php?id=' + id;
+        });
+    });
+});

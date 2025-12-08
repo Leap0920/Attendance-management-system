@@ -341,7 +341,8 @@ $flash = Session::getFlash();
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 24px;
-            height: calc(100vh - 220px);
+            /* Use auto height to avoid forcing viewport height which can cause horizontal issues on mobile */
+            height: auto;
             min-height: 500px;
         }
 
@@ -519,6 +520,8 @@ $flash = Session::getFlash();
 
         .message {
             max-width: 75%;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .message.mine {
@@ -618,6 +621,18 @@ $flash = Session::getFlash();
 
             .conversations-list {
                 max-height: 250px;
+                overflow-y: auto;
+            }
+
+            /* Allow the message thread to size naturally and scroll vertically */
+            .message-thread {
+                max-height: calc(100vh - 260px);
+                overflow-y: auto;
+            }
+
+            /* Ensure messages can use full width on mobile */
+            .message {
+                max-width: 100%;
             }
         }
     </style>

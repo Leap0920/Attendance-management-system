@@ -220,8 +220,8 @@
 /* Course card grid for students */
 .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
 }
 
 .course-card {
@@ -258,6 +258,18 @@
     display: flex;
     gap: 12px;
     border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+    .course-card .course-header {
+        padding: 16px;
+    }
+
+    .course-actions {
+        padding: 12px;
+        gap: 8px;
+    }
 }
 
 .empty-state {

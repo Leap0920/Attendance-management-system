@@ -2,8 +2,8 @@
 
 .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
 }
 
 .course-card {
@@ -86,6 +86,26 @@
     padding: 16px 24px;
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+    .course-card .course-header {
+        padding: 16px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .course-actions {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .course-detail-header {
+        padding: 16px;
+    }
 }
 
 /* Active Sessions */
