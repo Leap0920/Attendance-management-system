@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: attendease-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/attendease_db
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Manila
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+
+# Application-specific configuration
+app:
+  jwt:
+    secret: attendease-super-secret-key-change-in-production-must-be-at-least-256-bits-long-for-hs256
+    access-token-expiration-ms: 900000       # 15 minutes
+    refresh-token-expiration-ms: 604800000   # 7 days
+
+  encryption:
+    aes-secret-key: "AttendEaseAES256SecretKey@Dev32!"  # Must be exactly 32 bytes for AES-256
+
+  cors:
+    allowed-origins: http://localhost:5173
+
+  upload:
+    dir: ./uploads
+    max-size: 10485760
+    allowed-types: pdf,ppt,pptx,doc,docx,xls,xlsx,jpg,jpeg,png,gif,mp4,zip,rar,txt,csv
