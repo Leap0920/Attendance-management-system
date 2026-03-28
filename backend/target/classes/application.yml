@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/attendease_db
-    username: admin
-    password: admin
+    username: postgres
+    password: leapfrog
     driver-class-name: org.postgresql.Driver
 
   jpa:
