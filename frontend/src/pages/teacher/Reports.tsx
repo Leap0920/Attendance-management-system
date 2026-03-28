@@ -52,7 +52,7 @@ const TeacherReports: React.FC = () => {
         <DashboardLayout role="teacher">
             <div className="page-header">
                 <div><h1 className="page-title">Attendance Reports</h1><p className="page-subtitle">View attendance statistics and export reports</p></div>
-                {report && <button className="btn btn-primary" style={{ width: 'auto' }} onClick={exportCsv}>📥 Export CSV</button>}
+                {report && <button className="btn btn-primary" style={{ width: 'auto' }} onClick={exportCsv}>Export CSV</button>}
             </div>
 
             {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (

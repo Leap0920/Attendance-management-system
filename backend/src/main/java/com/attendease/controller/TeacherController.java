@@ -57,6 +57,18 @@ public class TeacherController {
             });
         }
         data.put("activeSessions", activeSessions);
+
+        // Total students (across all courses)
+        long totalStudents = 0;
+        long totalSessions = 0;
+        for (Course c : courses) {
+            totalStudents += enrollmentRepository.countByCourseIdAndStatus(c.getId(), "active");
+            totalSessions += attendanceSessionRepository.findByCourseId(c.getId()).size();
+        }
+        data.put("totalStudents", totalStudents);
+        data.put("totalSessions", totalSessions);
+        data.put("teacherName", teacher.getFirstName());
+
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
@@ -391,6 +403,65 @@ public class TeacherController {
             @RequestParam Long userId, @AuthenticationPrincipal User teacher) {
         return ResponseEntity.ok(ApiResponse.success(
                 messageRepository.findConversation(teacher.getId(), userId)));
+    }
+
+    @GetMapping("/messages/conversations")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getConversations(
+            @AuthenticationPrincipal User teacher) {
+        List<Message> allMessages = messageRepository.findAllByUser(teacher.getId());
+        Map<Long, Map<String, Object>> convMap = new LinkedHashMap<>();
+
+        for (Message m : allMessages) {
+            Long otherId = m.getSender().getId().equals(teacher.getId())
+                    ? m.getReceiver().getId() : m.getSender().getId();
+            if (!convMap.containsKey(otherId)) {
+                User other = m.getSender().getId().equals(teacher.getId())
+                        ? m.getReceiver() : m.getSender();
+                Map<String, Object> conv = new HashMap<>();
+                conv.put("userId", other.getId());
+                conv.put("firstName", other.getFirstName());
+                conv.put("lastName", other.getLastName());
+                conv.put("role", other.getRole());
+                conv.put("lastMessage", m.getContent());
+                conv.put("lastMessageTime", m.getCreatedAt());
+                conv.put("unreadCount", messageRepository.countBySenderIdAndReceiverIdAndIsRead(
+                        other.getId(), teacher.getId(), false));
+                convMap.put(otherId, conv);
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.success(new ArrayList<>(convMap.values())));
+    }
+
+    @GetMapping("/messages/contacts")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getContacts(
+            @AuthenticationPrincipal User teacher) {
+        List<Course> courses = courseRepository.findByTeacherIdAndStatusNot(teacher.getId(), "deleted");
+        Map<Long, Map<String, Object>> contactMap = new LinkedHashMap<>();
+        for (Course c : courses) {
+            List<Enrollment> enrollments = enrollmentRepository.findByCourseIdAndStatus(c.getId(), "active");
+            for (Enrollment e : enrollments) {
+                User s = e.getStudent();
+                if (!contactMap.containsKey(s.getId())) {
+                    Map<String, Object> contact = new HashMap<>();
+                    contact.put("id", s.getId());
+                    contact.put("firstName", s.getFirstName());
+                    contact.put("lastName", s.getLastName());
+                    contact.put("email", s.getEmail());
+                    contactMap.put(s.getId(), contact);
+                }
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.success(new ArrayList<>(contactMap.values())));
+    }
+
+    @PostMapping("/messages/dm/read")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<ApiResponse<Void>> markDmRead(
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User teacher) {
+        Long userId = Long.valueOf(body.get("userId").toString());
+        messageRepository.markAsRead(userId, teacher.getId());
+        return ResponseEntity.ok(ApiResponse.success("Messages marked as read", null));
     }
 
     // ── Reports ────────────────────────────────────────────────────────

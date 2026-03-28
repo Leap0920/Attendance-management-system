@@ -71,7 +71,7 @@ const AdminUsers: React.FC = () => {
                 <td>{u.department || '—'}</td>
                 <td><span className="badge badge-active">{u.status}</span></td>
                 <td>
-                  <button className="btn-icon" onClick={() => handleDelete(u.id)} title="Delete">🗑️</button>
+                  <button className="btn-icon" onClick={() => handleDelete(u.id)} title="Delete" style={{ fontSize: '0.75rem' }}>Del</button>
                 </td>
               </tr>
             ))}

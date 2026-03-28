@@ -34,7 +34,7 @@ const Register: React.FC = () => {
         <div className="auth-card">
           <h1 className="auth-title">Create Account</h1>
           <p className="auth-subtitle">Join AttendEase — Secured Super System</p>
-          {error && <div className="alert alert-error">⚠ {error}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
               <div className="form-group">

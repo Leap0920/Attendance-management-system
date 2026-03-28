@@ -66,7 +66,7 @@ const TeacherAttendance: React.FC = () => {
                     {/* Active Sessions */}
                     {activeSessions.length > 0 && (
                         <div style={{ marginBottom: '2rem' }}>
-                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-green)' }}>🟢 Active Sessions</h3>
+                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-green)' }}>Active Sessions</h3>
                             {activeSessions.map(s => (
                                 <div key={s.id} className="glass-card" style={{ marginBottom: '1rem', borderLeft: '3px solid var(--accent-green)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -104,7 +104,7 @@ const TeacherAttendance: React.FC = () => {
                                             <td style={{ color: 'var(--text-secondary)' }}>{new Date(s.startTime).toLocaleString()}</td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => viewRecords(s)}>📊</button>
+                                                    <button className="btn btn-secondary btn-sm" onClick={() => viewRecords(s)}>View</button>
                                                     {s.status === 'active' && <button className="btn btn-danger btn-sm" onClick={() => closeSession(s.id)}>Close</button>}
                                                 </div>
                                             </td>

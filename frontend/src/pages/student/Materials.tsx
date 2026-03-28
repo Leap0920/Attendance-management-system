@@ -26,7 +26,7 @@ const StudentMaterials: React.FC = () => {
     }, [selectedCourse]);
 
     const filtered = typeFilter ? materials.filter(m => m.type === typeFilter) : materials;
-    const typeIcons: Record<string, string> = { file: '📄', link: '🔗', announcement: '📢', assignment: '📝' };
+    const typeIcons: Record<string, string> = { file: 'F', link: 'L', announcement: 'A', assignment: 'W' };
     const typeColors: Record<string, string> = { file: 'var(--accent-blue)', link: 'var(--accent-purple)', announcement: 'var(--accent-yellow)', assignment: 'var(--accent-red)' };
 
     return (
@@ -63,18 +63,18 @@ const StudentMaterials: React.FC = () => {
                     {filtered.length > 0 ? filtered.map(m => (
                         <div key={m.id} className="glass-card" style={{ marginBottom: '0.75rem', borderLeft: `3px solid ${typeColors[m.type] || 'var(--accent-blue)'}` }}>
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                                <span style={{ fontSize: '1.5rem' }}>{typeIcons[m.type] || '📄'}</span>
+                                <span style={{ width: 32, height: 32, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: typeColors[m.type] || 'var(--accent-blue)', background: '#f1f5f9' }}>{typeIcons[m.type] || 'F'}</span>
                                 <div style={{ flex: 1 }}>
                                     <h4 style={{ marginBottom: '0.25rem' }}>
-                                        {m.isPinned && <span style={{ color: 'var(--accent-yellow)', marginRight: '0.5rem' }}>📌</span>}
+                                        {m.isPinned && <span style={{ color: 'var(--accent-yellow)', marginRight: '0.5rem', fontSize: '0.75rem', fontWeight: 700 }}>PINNED</span>}
                                         {m.title}
                                     </h4>
                                     {m.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>{m.description}</p>}
                                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                         <span className="badge badge-active" style={{ fontSize: '0.7rem' }}>{m.type}</span>
-                                        {m.fileName && <span>📎 {m.fileName}</span>}
-                                        {m.externalLink && <a href={m.externalLink} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-blue)' }}>🔗 Open Link</a>}
-                                        {m.dueDate && <span style={{ color: new Date(m.dueDate) < new Date() ? 'var(--accent-red)' : 'var(--text-muted)' }}>⏰ Due: {new Date(m.dueDate).toLocaleDateString()}</span>}
+                                        {m.fileName && <span>File: {m.fileName}</span>}
+                                        {m.externalLink && <a href={m.externalLink} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-blue)' }}>Open Link</a>}
+                                        {m.dueDate && <span style={{ color: new Date(m.dueDate) < new Date() ? 'var(--accent-red)' : 'var(--text-muted)' }}>Due: {new Date(m.dueDate).toLocaleDateString()}</span>}
                                         <span>{new Date(m.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </div>

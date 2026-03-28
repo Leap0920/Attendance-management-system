@@ -21,4 +21,9 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Modifying
     @Query("UPDATE Message m SET m.isRead = true WHERE m.sender.id = :senderId AND m.receiver.id = :receiverId")
     void markAsRead(Long senderId, Long receiverId);
+
+    @Query("SELECT m FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId ORDER BY m.createdAt DESC")
+    List<Message> findAllByUser(Long userId);
+
+    long countBySenderIdAndReceiverIdAndIsRead(Long senderId, Long receiverId, Boolean isRead);
 }

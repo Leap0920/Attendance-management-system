@@ -45,6 +45,9 @@ export const teacherApi = {
   sendGroupMessage: (data: any) => api.post('/teacher/messages/group', data),
   getGroupMessages: (courseId: number) => api.get(`/teacher/messages/group/${courseId}`),
   getDmMessages: (userId: number) => api.get('/teacher/messages/dm', { params: { userId } }),
+  getConversations: () => api.get('/teacher/messages/conversations'),
+  getContacts: () => api.get('/teacher/messages/contacts'),
+  markDmRead: (userId: number) => api.post('/teacher/messages/dm/read', { userId }),
   broadcast: (data: any) => api.post('/teacher/messages/broadcast', data),
 
   getReport: (courseId: number) => api.get('/teacher/reports', { params: { courseId } }),
@@ -65,5 +68,8 @@ export const studentApi = {
   sendMessage: (data: any) => api.post('/student/messages/send', data),
   getGroupMessages: (courseId: number) => api.get(`/student/messages/group/${courseId}`),
   getDmMessages: (userId: number) => api.get('/student/messages/dm', { params: { userId } }),
+  getConversations: () => api.get('/student/messages/conversations'),
+  getContacts: () => api.get('/student/messages/contacts'),
+  markDmRead: (userId: number) => api.post('/student/messages/dm/read', { userId }),
   sendGroupMessage: (data: any) => api.post('/student/messages/group', data),
 };

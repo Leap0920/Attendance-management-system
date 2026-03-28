@@ -37,7 +37,7 @@ const Login: React.FC = () => {
           <h1 className="auth-title">AttendEase</h1>
           <p className="auth-subtitle">Secured Super System — Enterprise Platform</p>
 
-          {error && <div className="alert alert-error">⚠ {error}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">

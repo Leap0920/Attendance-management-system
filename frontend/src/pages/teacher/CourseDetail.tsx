@@ -71,23 +71,23 @@ const TeacherCourseDetail: React.FC = () => {
                         <p className="page-subtitle">{course.description || 'No description'}</p>
                         <div className="meta-row">
                             {course.section && <span className="badge badge-active">{course.section}</span>}
-                            <span className="meta-item">🔑 {course.joinCode}</span>
-                            {course.schedule && <span className="meta-item">🕐 {course.schedule}</span>}
-                            {course.room && <span className="meta-item">🏫 {course.room}</span>}
+                            <span className="meta-item">Join: {course.joinCode}</span>
+                            {course.schedule && <span className="meta-item">Schedule: {course.schedule}</span>}
+                            {course.room && <span className="meta-item">Room: {course.room}</span>}
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowAttendance(true)}>📋 Start Attendance</button>
-                        <button className="btn btn-secondary" style={{ width: 'auto' }} onClick={() => setShowEdit(true)}>✏️ Edit</button>
-                        <button className="btn btn-danger btn-sm" onClick={handleDelete}>🗑️</button>
+                        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowAttendance(true)}>Start Attendance</button>
+                        <button className="btn btn-secondary" style={{ width: 'auto' }} onClick={() => setShowEdit(true)}>Edit</button>
+                        <button className="btn btn-danger btn-sm" onClick={handleDelete}>Delete</button>
                     </div>
                 </div>
             </div>
 
             {/* Tabs */}
             <div className="tabs-container">
-                <button className={`tab-btn ${tab === 'students' ? 'active' : ''}`} onClick={() => setTab('students')}>👥 Students ({enrollments?.length || 0})</button>
-                <button className={`tab-btn ${tab === 'sessions' ? 'active' : ''}`} onClick={() => setTab('sessions')}>📋 Sessions ({sessions?.length || 0})</button>
+                <button className={`tab-btn ${tab === 'students' ? 'active' : ''}`} onClick={() => setTab('students')}>Students ({enrollments?.length || 0})</button>
+                <button className={`tab-btn ${tab === 'sessions' ? 'active' : ''}`} onClick={() => setTab('sessions')}>Sessions ({sessions?.length || 0})</button>
             </div>
 
             {/* Students Tab */}

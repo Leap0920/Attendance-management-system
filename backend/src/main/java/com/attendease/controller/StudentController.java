@@ -243,6 +243,62 @@ public class StudentController {
                                 messageRepository.findConversation(student.getId(), userId)));
         }
 
+        @GetMapping("/messages/conversations")
+        public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getConversations(
+                        @AuthenticationPrincipal User student) {
+                List<Message> allMessages = messageRepository.findAllByUser(student.getId());
+                Map<Long, Map<String, Object>> convMap = new LinkedHashMap<>();
+
+                for (Message m : allMessages) {
+                        Long otherId = m.getSender().getId().equals(student.getId())
+                                        ? m.getReceiver().getId() : m.getSender().getId();
+                        if (!convMap.containsKey(otherId)) {
+                                User other = m.getSender().getId().equals(student.getId())
+                                                ? m.getReceiver() : m.getSender();
+                                Map<String, Object> conv = new HashMap<>();
+                                conv.put("userId", other.getId());
+                                conv.put("firstName", other.getFirstName());
+                                conv.put("lastName", other.getLastName());
+                                conv.put("role", other.getRole());
+                                conv.put("lastMessage", m.getContent());
+                                conv.put("lastMessageTime", m.getCreatedAt());
+                                conv.put("unreadCount", messageRepository.countBySenderIdAndReceiverIdAndIsRead(
+                                                other.getId(), student.getId(), false));
+                                convMap.put(otherId, conv);
+                        }
+                }
+                return ResponseEntity.ok(ApiResponse.success(new ArrayList<>(convMap.values())));
+        }
+
+        @GetMapping("/messages/contacts")
+        public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getContacts(
+                        @AuthenticationPrincipal User student) {
+                List<Enrollment> enrollments = enrollmentRepository.findByStudentIdAndStatus(student.getId(), "active");
+                Map<Long, Map<String, Object>> contactMap = new LinkedHashMap<>();
+                for (Enrollment e : enrollments) {
+                        User t = e.getCourse().getTeacher();
+                        if (!contactMap.containsKey(t.getId())) {
+                                Map<String, Object> contact = new HashMap<>();
+                                contact.put("id", t.getId());
+                                contact.put("firstName", t.getFirstName());
+                                contact.put("lastName", t.getLastName());
+                                contact.put("email", t.getEmail());
+                                contactMap.put(t.getId(), contact);
+                        }
+                }
+                return ResponseEntity.ok(ApiResponse.success(new ArrayList<>(contactMap.values())));
+        }
+
+        @PostMapping("/messages/dm/read")
+        @jakarta.transaction.Transactional
+        public ResponseEntity<ApiResponse<Void>> markDmRead(
+                        @RequestBody Map<String, Object> body,
+                        @AuthenticationPrincipal User student) {
+                Long userId = Long.valueOf(body.get("userId").toString());
+                messageRepository.markAsRead(userId, student.getId());
+                return ResponseEntity.ok(ApiResponse.success("Messages marked as read", null));
+        }
+
         @PostMapping("/messages/group")
         public ResponseEntity<ApiResponse<CourseMessage>> sendGroupMessage(
                         @RequestBody Map<String, Object> body, @AuthenticationPrincipal User student) {

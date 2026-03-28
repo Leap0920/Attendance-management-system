@@ -33,8 +33,8 @@ const StudentCourseDetail: React.FC = () => {
                 <p className="page-subtitle">{course.description || 'No description'}</p>
                 <div className="meta-row">
                     {course.section && <span className="badge badge-active">{course.section}</span>}
-                    {course.schedule && <span className="meta-item">🕐 {course.schedule}</span>}
-                    {course.room && <span className="meta-item">🏫 {course.room}</span>}
+                    {course.schedule && <span className="meta-item">Schedule: {course.schedule}</span>}
+                    {course.room && <span className="meta-item">Room: {course.room}</span>}
                 </div>
             </div>
 
@@ -76,7 +76,7 @@ const StudentCourseDetail: React.FC = () => {
                     <h3 style={{ marginBottom: '1rem' }}>Recent Materials</h3>
                     {materials.slice(0, 5).map((m: any) => (
                         <div key={m.id} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid var(--border-glass)' }}>
-                            <span style={{ fontSize: '1.25rem' }}>{m.type === 'file' ? '📄' : m.type === 'link' ? '🔗' : m.type === 'assignment' ? '📝' : '📢'}</span>
+                            <span style={{ width: 28, height: 28, borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.65rem', background: '#f1f5f9', color: 'var(--accent-blue)' }}>{m.type?.[0]?.toUpperCase()}</span>
                             <div>
                                 <div style={{ fontWeight: 500 }}>{m.title}</div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(m.createdAt).toLocaleDateString()}</div>

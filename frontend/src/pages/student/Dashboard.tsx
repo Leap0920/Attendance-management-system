@@ -54,7 +54,7 @@ const StudentDashboard: React.FC = () => {
           {/* Active Sessions — Submit Attendance */}
           {data.activeSessions?.filter((s: any) => !s.alreadySubmitted).length > 0 && (
             <div className="glass-card" style={{ marginBottom: '2rem' }}>
-              <h3 style={{ marginBottom: '1rem' }}>📋 Submit Attendance</h3>
+              <h3 style={{ marginBottom: '1rem' }}>Submit Attendance</h3>
               {submitMsg && <div className={`alert ${submitMsg.includes('fail') || submitMsg.includes('Invalid') ? 'alert-error' : 'alert-success'}`}>{submitMsg}</div>}
               {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
                 <div key={s.session.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem', padding: '0.75rem', background: 'var(--bg-glass)', borderRadius: 'var(--radius-sm)' }}>
@@ -96,7 +96,7 @@ const StudentDashboard: React.FC = () => {
                       {cd.attendanceRate}%
                     </span>
                   </div>
-                  <div style={{ marginTop: '0.5rem', height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.1)' }}>
+                  <div style={{ marginTop: '0.5rem', height: 4, borderRadius: 2, background: '#e2e8f0' }}>
                     <div style={{ height: '100%', width: `${cd.attendanceRate}%`, borderRadius: 2,
                       background: cd.attendanceRate >= 80 ? 'var(--accent-green)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)' }} />
                   </div>
