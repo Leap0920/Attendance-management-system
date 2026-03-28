@@ -16,10 +16,17 @@ const navItems: Record<string, { label: string; path: string; icon: string }[]> 
   teacher: [
     { label: 'Dashboard', path: '/teacher', icon: '📊' },
     { label: 'Courses', path: '/teacher/courses', icon: '📚' },
+    { label: 'Attendance', path: '/teacher/attendance', icon: '📋' },
+    { label: 'Materials', path: '/teacher/materials', icon: '📄' },
+    { label: 'Reports', path: '/teacher/reports', icon: '📈' },
+    { label: 'Messages', path: '/teacher/messages', icon: '💬' },
   ],
   student: [
     { label: 'Dashboard', path: '/student', icon: '📊' },
     { label: 'Courses', path: '/student/courses', icon: '📚' },
+    { label: 'Attendance', path: '/student/attendance', icon: '📋' },
+    { label: 'Materials', path: '/student/materials', icon: '📄' },
+    { label: 'Messages', path: '/student/messages', icon: '💬' },
   ],
 };
 
@@ -33,6 +40,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     navigate('/login');
   };
 
+  const isActive = (path: string) => {
+    if (path === `/${role}`) return location.pathname === path;
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <div className="dashboard-layout">
       <aside className="sidebar">
@@ -42,7 +54,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             <Link
               key={item.path}
               to={item.path}
-              className={`sidebar-link ${location.pathname === item.path ? 'active' : ''}`}
+              className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
             >
               <span>{item.icon}</span>
               <span>{item.label}</span>

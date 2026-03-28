@@ -8,8 +8,17 @@ import AdminUsers from './pages/admin/Users';
 import AdminAuditLog from './pages/admin/AuditLog';
 import TeacherDashboard from './pages/teacher/Dashboard';
 import TeacherCourses from './pages/teacher/Courses';
+import TeacherCourseDetail from './pages/teacher/CourseDetail';
+import TeacherAttendance from './pages/teacher/Attendance';
+import TeacherMaterials from './pages/teacher/Materials';
+import TeacherMessages from './pages/teacher/Messages';
+import TeacherReports from './pages/teacher/Reports';
 import StudentDashboard from './pages/student/Dashboard';
 import StudentCourses from './pages/student/Courses';
+import StudentCourseDetail from './pages/student/CourseDetail';
+import StudentAttendance from './pages/student/Attendance';
+import StudentMaterials from './pages/student/Materials';
+import StudentMessages from './pages/student/Messages';
 import './styles/index.css';
 
 function RootRedirect() {
@@ -37,10 +46,19 @@ function App() {
           {/* Teacher */}
           <Route path="/teacher" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
           <Route path="/teacher/courses" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCourses /></ProtectedRoute>} />
+          <Route path="/teacher/courses/:id" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCourseDetail /></ProtectedRoute>} />
+          <Route path="/teacher/attendance" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherAttendance /></ProtectedRoute>} />
+          <Route path="/teacher/materials" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherMaterials /></ProtectedRoute>} />
+          <Route path="/teacher/messages" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherMessages /></ProtectedRoute>} />
+          <Route path="/teacher/reports" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherReports /></ProtectedRoute>} />
 
           {/* Student */}
           <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
           <Route path="/student/courses" element={<ProtectedRoute allowedRoles={['student']}><StudentCourses /></ProtectedRoute>} />
+          <Route path="/student/courses/:id" element={<ProtectedRoute allowedRoles={['student']}><StudentCourseDetail /></ProtectedRoute>} />
+          <Route path="/student/attendance" element={<ProtectedRoute allowedRoles={['student']}><StudentAttendance /></ProtectedRoute>} />
+          <Route path="/student/materials" element={<ProtectedRoute allowedRoles={['student']}><StudentMaterials /></ProtectedRoute>} />
+          <Route path="/student/messages" element={<ProtectedRoute allowedRoles={['student']}><StudentMessages /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

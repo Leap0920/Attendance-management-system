@@ -376,6 +376,63 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.success("Broadcast sent to " + enrollments.size() + " students", null));
     }
 
+    @GetMapping("/messages/group/{courseId}")
+    public ResponseEntity<ApiResponse<List<CourseMessage>>> getGroupMessages(
+            @PathVariable Long courseId, @AuthenticationPrincipal User teacher) {
+        courseRepository.findById(courseId)
+                .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        return ResponseEntity.ok(ApiResponse.success(
+                courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId)));
+    }
+
+    @GetMapping("/messages/dm")
+    public ResponseEntity<ApiResponse<List<Message>>> getDmMessages(
+            @RequestParam Long userId, @AuthenticationPrincipal User teacher) {
+        return ResponseEntity.ok(ApiResponse.success(
+                messageRepository.findConversation(teacher.getId(), userId)));
+    }
+
+    // ── Reports ────────────────────────────────────────────────────────
+    @GetMapping("/reports")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getReport(
+            @RequestParam Long courseId, @AuthenticationPrincipal User teacher) {
+        Course course = courseRepository.findById(courseId)
+                .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        List<AttendanceSession> sessions = attendanceSessionRepository.findByCourseId(courseId);
+        List<Enrollment> enrollments = enrollmentRepository.findByCourseIdAndStatus(courseId, "active");
+
+        List<Map<String, Object>> studentsData = new ArrayList<>();
+        for (Enrollment e : enrollments) {
+            User s = e.getStudent();
+            long present = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId, "present");
+            long late = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId, "late");
+            long absent = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId, "absent");
+
+            Map<String, Object> sd = new HashMap<>();
+            sd.put("id", s.getId());
+            sd.put("name", s.getFullName());
+            sd.put("studentId", s.getStudentId());
+            sd.put("email", s.getEmail());
+            sd.put("present", present);
+            sd.put("late", late);
+            sd.put("absent", absent);
+            long total = present + late + absent;
+            sd.put("rate", total > 0 ? Math.round(((double)(present + late) / total) * 1000.0) / 10.0 : 100);
+            studentsData.add(sd);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("course", course);
+        data.put("students", studentsData);
+        data.put("totalSessions", sessions.size());
+        data.put("totalStudents", enrollments.size());
+
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────
     private String generateCode(int length) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

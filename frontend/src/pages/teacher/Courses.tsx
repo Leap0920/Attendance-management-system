@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
 
 const TeacherCourses: React.FC = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -19,7 +21,7 @@ const TeacherCourses: React.FC = () => {
       setShowModal(false);
       setForm({ courseCode: '', courseName: '', description: '', section: '', schedule: '', room: '' });
       teacherApi.getCourses().then(res => setCourses(res.data.data || []));
-    } catch {}
+    } catch { }
   };
 
   return (
@@ -32,7 +34,7 @@ const TeacherCourses: React.FC = () => {
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
         <div className="course-grid">
           {courses.map(c => (
-            <div key={c.id} className="course-card">
+            <div key={c.id} className="course-card" onClick={() => navigate(`/teacher/courses/${c.id}`)}>
               <div className="course-card-header" style={{ background: c.coverColor }}>
                 <h3>{c.courseName}</h3>
                 <p>{c.courseCode} {c.section ? `• ${c.section}` : ''}</p>
@@ -56,14 +58,14 @@ const TeacherCourses: React.FC = () => {
             </div>
             <form onSubmit={handleCreate}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group"><label className="form-label">Course Code</label><input className="form-input" value={form.courseCode} onChange={e => setForm({...form, courseCode: e.target.value})} required /></div>
-                <div className="form-group"><label className="form-label">Section</label><input className="form-input" value={form.section} onChange={e => setForm({...form, section: e.target.value})} /></div>
+                <div className="form-group"><label className="form-label">Course Code</label><input className="form-input" value={form.courseCode} onChange={e => setForm({ ...form, courseCode: e.target.value })} required /></div>
+                <div className="form-group"><label className="form-label">Section</label><input className="form-input" value={form.section} onChange={e => setForm({ ...form, section: e.target.value })} /></div>
               </div>
-              <div className="form-group"><label className="form-label">Course Name</label><input className="form-input" value={form.courseName} onChange={e => setForm({...form, courseName: e.target.value})} required /></div>
-              <div className="form-group"><label className="form-label">Description</label><input className="form-input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} /></div>
+              <div className="form-group"><label className="form-label">Course Name</label><input className="form-input" value={form.courseName} onChange={e => setForm({ ...form, courseName: e.target.value })} required /></div>
+              <div className="form-group"><label className="form-label">Description</label><input className="form-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group"><label className="form-label">Schedule</label><input className="form-input" value={form.schedule} onChange={e => setForm({...form, schedule: e.target.value})} /></div>
-                <div className="form-group"><label className="form-label">Room</label><input className="form-input" value={form.room} onChange={e => setForm({...form, room: e.target.value})} /></div>
+                <div className="form-group"><label className="form-label">Schedule</label><input className="form-input" value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Room</label><input className="form-input" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} /></div>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

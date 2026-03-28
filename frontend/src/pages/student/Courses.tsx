@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi } from '../../api';
 
 const StudentCourses: React.FC = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showJoin, setShowJoin] = useState(false);
@@ -36,7 +38,7 @@ const StudentCourses: React.FC = () => {
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
         <div className="course-grid">
           {courses.map((cd: any) => (
-            <div key={cd.course?.id} className="course-card">
+            <div key={cd.course?.id} className="course-card" onClick={() => navigate(`/student/courses/${cd.course?.id}`)}>
               <div className="course-card-header" style={{ background: cd.course?.coverColor }}>
                 <h3>{cd.course?.courseName}</h3>
                 <p>{cd.course?.courseCode}</p>

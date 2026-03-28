@@ -3,14 +3,10 @@ import api from './axiosInstance';
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
-
   register: (data: { firstName: string; lastName: string; email: string; password: string; role?: string; studentId?: string }) =>
     api.post('/auth/register', data),
-
   logout: () => api.post('/auth/logout'),
-
   getMe: () => api.get('/auth/me'),
-
   refresh: () => api.post('/auth/refresh'),
 };
 
@@ -38,6 +34,7 @@ export const teacherApi = {
     api.post(`/teacher/attendance/${id}/extend`, { extraMinutes }),
   getSessions: () => api.get('/teacher/attendance/sessions'),
   getRecords: (sessionId: number) => api.get(`/teacher/attendance/records/${sessionId}`),
+  updateRecord: (id: number, data: any) => api.put(`/teacher/attendance/records/${id}`, data),
 
   getMaterials: (courseId: number) => api.get('/teacher/materials', { params: { courseId } }),
   createMaterial: (data: FormData) =>
@@ -46,7 +43,11 @@ export const teacherApi = {
 
   sendMessage: (data: any) => api.post('/teacher/messages/send', data),
   sendGroupMessage: (data: any) => api.post('/teacher/messages/group', data),
+  getGroupMessages: (courseId: number) => api.get(`/teacher/messages/group/${courseId}`),
+  getDmMessages: (userId: number) => api.get('/teacher/messages/dm', { params: { userId } }),
   broadcast: (data: any) => api.post('/teacher/messages/broadcast', data),
+
+  getReport: (courseId: number) => api.get('/teacher/reports', { params: { courseId } }),
 };
 
 export const studentApi = {
@@ -54,6 +55,7 @@ export const studentApi = {
   getCourses: () => api.get('/student/courses'),
   joinCourse: (joinCode: string) => api.post('/student/courses/join', { joinCode }),
   getCourse: (id: number) => api.get(`/student/courses/${id}`),
+  leaveCourse: (id: number) => api.post(`/student/courses/${id}/leave`),
 
   submitAttendance: (data: { sessionId: number; attendanceCode: string }) =>
     api.post('/student/attendance/submit', data),
@@ -62,4 +64,6 @@ export const studentApi = {
   getMessages: () => api.get('/student/messages'),
   sendMessage: (data: any) => api.post('/student/messages/send', data),
   getGroupMessages: (courseId: number) => api.get(`/student/messages/group/${courseId}`),
+  getDmMessages: (userId: number) => api.get('/student/messages/dm', { params: { userId } }),
+  sendGroupMessage: (data: any) => api.post('/student/messages/group', data),
 };
