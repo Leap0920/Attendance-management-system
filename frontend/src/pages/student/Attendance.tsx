@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi } from '../../api';
+import { showAlert } from '../../utils/feedback';
 
 const StudentAttendance: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -19,26 +20,28 @@ const StudentAttendance: React.FC = () => {
 
     const submitAttendance = async (sessionId: number) => {
         const code = codes[sessionId];
-        if (!code?.trim()) { alert('Enter attendance code'); return; }
+        if (!code?.trim()) { showAlert('Error', 'Enter attendance code', 'error'); return; }
+        if (submitting) return;
         setSubmitting(sessionId);
         try {
             const res = await studentApi.submitAttendance({ sessionId, attendanceCode: code });
-            alert(res.data.message || 'Attendance submitted!');
+            showAlert('Success', res.data.message || 'Attendance submitted!');
+            setCodes(prev => ({ ...prev, [sessionId]: '' }));
             load();
-        } catch (err: any) { alert(err.response?.data?.message || 'Error'); }
-        setSubmitting(null);
+        } catch (err: any) {
+            showAlert('Error', err.response?.data?.message || 'Failed to submit', 'error');
+        } finally { setSubmitting(null); }
     };
 
     const activeSessions = data?.activeSessions || [];
     const courses = data?.courses || [];
 
-    // Aggregate stats
-    let totalPresent = 0, totalAbsent = 0, totalAll = 0;
+    let totalPresent = 0, totalAll = 0;
     courses.forEach((c: any) => {
         totalAll += c.totalSessions || 0;
         totalPresent += c.presentCount || 0;
     });
-    totalAbsent = totalAll - totalPresent;
+    const totalAbsent = totalAll - totalPresent;
     const overallRate = totalAll > 0 ? Math.round((totalPresent / totalAll) * 1000) / 10 : 100;
 
     return (
@@ -52,7 +55,7 @@ const StudentAttendance: React.FC = () => {
                     {/* Active Sessions */}
                     {activeSessions.length > 0 && (
                         <div style={{ marginBottom: '2rem' }}>
-                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-green)' }}>Active Sessions - Submit Now</h3>
+                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-green)' }}>Active Sessions — Submit Now</h3>
                             {activeSessions.map((s: any) => (
                                 <div key={s.session.id} className="glass-card" style={{ marginBottom: '1rem', borderLeft: '3px solid var(--accent-green)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -61,14 +64,15 @@ const StudentAttendance: React.FC = () => {
                                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{s.session.sessionTitle || 'Session'} • {s.session.durationMinutes} min</p>
                                         </div>
                                         {s.alreadySubmitted ? (
-                                            <span className="badge badge-present" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Submitted</span>
+                                            <span className="badge badge-present" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>✓ Submitted</span>
                                         ) : (
                                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                <input className="form-input" style={{ maxWidth: '160px' }} placeholder="Enter code..." value={codes[s.session.id] || ''}
-                                                    onChange={e => setCodes({ ...codes, [s.session.id]: e.target.value.toUpperCase() })} />
+                                                <input className="form-input" style={{ maxWidth: '160px' }} placeholder="Enter code…" value={codes[s.session.id] || ''}
+                                                    onChange={e => setCodes({ ...codes, [s.session.id]: e.target.value.toUpperCase() })}
+                                                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(s.session.id); } }} />
                                                 <button className="btn btn-primary" style={{ width: 'auto' }} disabled={submitting === s.session.id}
                                                     onClick={() => submitAttendance(s.session.id)}>
-                                                    {submitting === s.session.id ? '...' : 'Submit'}
+                                                    {submitting === s.session.id ? 'Submitting…' : 'Submit'}
                                                 </button>
                                             </div>
                                         )}

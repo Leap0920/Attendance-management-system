@@ -1,32 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi } from '../../api';
+import { showAlert } from '../../utils/feedback';
 
 const StudentDashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [attendCode, setAttendCode] = useState('');
   const [selectedSession, setSelectedSession] = useState<number | null>(null);
-  const [submitMsg, setSubmitMsg] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     studentApi.getDashboard().then(res => {
       setData(res.data.data);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  // Auto-select session if only one is available
+  useEffect(() => {
+    if (data?.activeSessions) {
+      const active = data.activeSessions.filter((s: any) => !s.alreadySubmitted);
+      if (active.length === 1) {
+        setSelectedSession(active[0].session.id);
+      }
+    }
+  }, [data]);
 
   const submitAttendance = async () => {
-    if (!selectedSession || !attendCode) return;
+    if (!selectedSession || !attendCode || submitting) return;
+    setSubmitting(true);
     try {
       const res = await studentApi.submitAttendance({ sessionId: selectedSession, attendanceCode: attendCode });
-      setSubmitMsg(res.data.message || 'Attendance recorded!');
+      showAlert('Success', res.data.message || 'Attendance recorded!');
       setAttendCode('');
       setSelectedSession(null);
-      setTimeout(() => window.location.reload(), 1500);
+      load(); // Refresh data instead of full page reload
     } catch (err: any) {
-      setSubmitMsg(err.response?.data?.message || 'Failed to submit');
-    }
+      showAlert('Error', err.response?.data?.message || 'Failed to submit', 'error');
+    } finally { setSubmitting(false); }
   };
 
   return (
@@ -34,48 +48,63 @@ const StudentDashboard: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Student Dashboard</h1>
-          <p className="page-subtitle">Your courses and attendance</p>
+          <p className="page-subtitle">Your courses and attendance overview</p>
         </div>
       </div>
 
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : data && (
         <>
           <div className="stats-grid">
-            <div className="stat-card blue">
-              <div className="stat-value">{data.totalCourses}</div>
-              <div className="stat-label">Enrolled Courses</div>
-            </div>
-            <div className="stat-card green">
-              <div className="stat-value">{data.activeSessions?.length || 0}</div>
-              <div className="stat-label">Active Sessions</div>
-            </div>
+            <div className="stat-card blue"><div className="stat-value">{data.totalCourses}</div><div className="stat-label">Enrolled Courses</div></div>
+            <div className="stat-card green"><div className="stat-value">{data.activeSessions?.length || 0}</div><div className="stat-label">Active Sessions</div></div>
           </div>
 
           {/* Active Sessions — Submit Attendance */}
           {data.activeSessions?.filter((s: any) => !s.alreadySubmitted).length > 0 && (
             <div className="glass-card" style={{ marginBottom: '2rem' }}>
               <h3 style={{ marginBottom: '1rem' }}>Submit Attendance</h3>
-              {submitMsg && <div className={`alert ${submitMsg.includes('fail') || submitMsg.includes('Invalid') ? 'alert-error' : 'alert-success'}`}>{submitMsg}</div>}
               {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
-                <div key={s.session.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem', padding: '0.75rem', background: 'var(--bg-glass)', borderRadius: 'var(--radius-sm)' }}>
-                  <input type="radio" name="session" checked={selectedSession === s.session.id} onChange={() => setSelectedSession(s.session.id)} />
+                <div 
+                  key={s.session.id} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '1rem', 
+                    marginBottom: '0.75rem', 
+                    padding: '0.85rem 1.25rem', 
+                    background: selectedSession === s.session.id ? 'rgba(59, 130, 246, 0.05)' : 'var(--bg-glass)', 
+                    borderRadius: 'var(--radius-md)', 
+                    border: selectedSession === s.session.id ? '2px solid var(--accent-blue)' : '1px solid var(--border-glass)', 
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: selectedSession === s.session.id ? '0 4px 12px rgba(59, 130, 246, 0.1)' : 'none'
+                  }} 
+                  onClick={() => setSelectedSession(s.session.id)}
+                >
                   <div style={{ flex: 1 }}>
-                    <strong>{s.courseName}</strong>
-                    <span style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem', fontSize: '0.85rem' }}>
-                      {s.session.sessionTitle || ''}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong style={{ fontSize: '1.05rem', color: selectedSession === s.session.id ? 'var(--accent-blue)' : 'inherit' }}>
+                        {s.courseName}
+                      </strong>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                        {s.session.sessionTitle || ''}
+                      </span>
+                    </div>
                   </div>
-                  <span className="badge badge-active">Active</span>
+                  <span className={`badge ${selectedSession === s.session.id ? 'badge-active' : 'badge-active'}`} style={{ opacity: selectedSession === s.session.id ? 1 : 0.7 }}>
+                    {selectedSession === s.session.id ? 'Selected' : 'Active'}
+                  </span>
                 </div>
               ))}
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
                 <input
                   className="form-input" placeholder="Enter attendance code"
                   value={attendCode} onChange={e => setAttendCode(e.target.value.toUpperCase())}
-                  style={{ flex: 1, fontFamily: 'Courier New', fontSize: '1.1rem', letterSpacing: '0.2rem', textAlign: 'center' }}
+                  style={{ flex: 1, fontFamily: 'Courier New', fontSize: '1.2rem', fontWeight: 'bold', letterSpacing: '0.3rem', textAlign: 'center', height: '50px' }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
                 />
-                <button className="btn btn-primary" style={{ width: 'auto' }} onClick={submitAttendance}
-                  disabled={!selectedSession || !attendCode}>Submit</button>
+                <button className="btn btn-primary" style={{ width: 'auto', paddingInline: '2rem' }} onClick={submitAttendance}
+                  disabled={!selectedSession || !attendCode || submitting}>{submitting ? 'Submitting…' : 'Submit'}</button>
               </div>
             </div>
           )}

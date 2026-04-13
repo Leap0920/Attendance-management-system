@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
+import { showAlert } from '../../utils/feedback';
 
 const POLL_INTERVAL = 3000;
 
@@ -129,7 +130,7 @@ const StudentMessages: React.FC = () => {
         selectDmUser(Number(dmForm.receiverId), `${contact.firstName} ${contact.lastName}`);
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error sending message');
+      showAlert('Error', err.response?.data?.message || 'Error sending message', 'error');
     }
   };
 

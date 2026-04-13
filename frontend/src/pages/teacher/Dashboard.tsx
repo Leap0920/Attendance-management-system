@@ -87,7 +87,25 @@ const TeacherDashboard: React.FC = () => {
     }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadDashboard(); }, []);
+  useEffect(() => {
+    loadDashboard();
+    
+    // Set up polling for active sessions
+    const pollInterval = setInterval(() => {
+      // Only poll if there's data and at least one active session
+      // or if we're still on the initial load
+      if (data?.activeSessions?.length > 0) {
+        // Use a silented version of loadDashboard to avoid flickering or global loading states
+        teacherApi.getDashboard().then(res => {
+          setData(res.data.data);
+        }).catch(err => {
+          console.error("Polling error:", err);
+        });
+      }
+    }, 5000); // 5 seconds interval for "immediate" feel
+
+    return () => clearInterval(pollInterval);
+  }, [data?.activeSessions?.length]);
 
   const formatTime12 = (t: string) => {
     const [h, m] = t.split(':').map(Number);
@@ -254,7 +272,15 @@ const TeacherDashboard: React.FC = () => {
           {/* Active Attendance Sessions */}
           <div style={{ marginBottom: '1.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 className="section-title">Active Attendance Sessions</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <h3 className="section-title" style={{ marginBottom: 0 }}>Active Attendance Sessions</h3>
+                {data.activeSessions?.length > 0 && (
+                  <div className="live-indicator-badge">
+                    <span className="live-dot"></span>
+                    LIVE
+                  </div>
+                )}
+              </div>
               <button className="btn btn-primary btn-sm" style={{ width: 'auto' }} onClick={() => setShowAttendance(true)}>
                 + New Session
               </button>

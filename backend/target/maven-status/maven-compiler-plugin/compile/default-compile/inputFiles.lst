@@ -5,6 +5,7 @@ E:\code\Attendance-management-system\backend\src\main\java\com\attendease\config
 E:\code\Attendance-management-system\backend\src\main\java\com\attendease\config\SecurityConfig.java
 E:\code\Attendance-management-system\backend\src\main\java\com\attendease\controller\AdminController.java
 E:\code\Attendance-management-system\backend\src\main\java\com\attendease\controller\AuthController.java
+E:\code\Attendance-management-system\backend\src\main\java\com\attendease\controller\FileController.java
 E:\code\Attendance-management-system\backend\src\main\java\com\attendease\controller\StudentController.java
 E:\code\Attendance-management-system\backend\src\main\java\com\attendease\controller\TeacherController.java
 E:\code\Attendance-management-system\backend\src\main\java\com\attendease\dto\ApiResponse.java
