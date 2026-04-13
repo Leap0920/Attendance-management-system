@@ -25,9 +25,15 @@ public class CourseMessage {
     @Column(nullable = false)
     private String content;
 
+    @Builder.Default
     @Column(name = "is_pinned")
     private Boolean isPinned = false;
 
+    @Builder.Default
+    @Column(name = "deleted_for_users")
+    private String deletedForUsers = "";
+
+    @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

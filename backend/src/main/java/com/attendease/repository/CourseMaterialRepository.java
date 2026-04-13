@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface CourseMaterialRepository extends JpaRepository<CourseMaterial, Long> {
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"teacher"})
     List<CourseMaterial> findByCourseIdOrderByIsPinnedDescCreatedAtDesc(Long courseId);
     List<CourseMaterial> findByCourseIdAndType(Long courseId, String type);
     long countByCourseId(Long courseId);

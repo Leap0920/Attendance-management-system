@@ -11,7 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -28,6 +33,8 @@ public class StudentController {
         private final MessageRepository messageRepository;
         private final CourseMessageRepository courseMessageRepository;
         private final UserRepository userRepository;
+        private final AssignmentSubmissionRepository assignmentSubmissionRepository;
+        private final CommentRepository commentRepository;
         private final AuditService auditService;
 
         // ── Dashboard ──────────────────────────────────────────────────────
@@ -49,7 +56,13 @@ public class StudentController {
                                         "late");
 
                         Map<String, Object> cd = new HashMap<>();
-                        cd.put("course", course);
+                        Map<String, Object> courseInfo = new HashMap<>();
+                        courseInfo.put("id", course.getId());
+                        courseInfo.put("courseCode", course.getCourseCode());
+                        courseInfo.put("courseName", course.getCourseName());
+                        courseInfo.put("coverColor", course.getCoverColor());
+                        
+                        cd.put("course", courseInfo);
                         cd.put("totalSessions", total);
                         cd.put("presentCount", present + late);
                         cd.put("attendanceRate",
@@ -195,15 +208,74 @@ public class StudentController {
                 return ResponseEntity.ok(ApiResponse.success(message, record));
         }
 
-        // ── Materials ──────────────────────────────────────────────────────
-        @GetMapping("/materials")
-        public ResponseEntity<ApiResponse<List<CourseMaterial>>> getMaterials(
-                        @RequestParam Long courseId, @AuthenticationPrincipal User student) {
-                enrollmentRepository.findByStudentIdAndCourseId(student.getId(), courseId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Not enrolled"));
-                return ResponseEntity.ok(ApiResponse.success(
-                                courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(courseId)));
+    @GetMapping("/materials/{materialId}/comments")
+    public ResponseEntity<ApiResponse<List<Comment>>> getComments(@PathVariable Long materialId) {
+        return ResponseEntity.ok(ApiResponse.success(commentRepository.findByMaterialIdOrderByCreatedAtAsc(materialId)));
+    }
+
+    @PostMapping("/materials/{materialId}/comments")
+    public ResponseEntity<ApiResponse<Comment>> addComment(
+            @PathVariable Long materialId,
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User student) {
+        CourseMaterial material = courseMaterialRepository.findById(materialId)
+                .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
+        
+        Comment comment = Comment.builder()
+                .course(material.getCourse())
+                .material(material)
+                .user(student)
+                .content(body.get("content").toString())
+                .isPrivate(body.containsKey("isPrivate") && (boolean) body.get("isPrivate"))
+                .build();
+        
+        return ResponseEntity.ok(ApiResponse.success("Comment added", commentRepository.save(comment)));
+    }
+
+    @GetMapping("/materials/{materialId}/submission")
+    public ResponseEntity<ApiResponse<AssignmentSubmission>> getSubmission(
+            @PathVariable Long materialId, @AuthenticationPrincipal User student) {
+        return ResponseEntity.ok(ApiResponse.success(
+                assignmentSubmissionRepository.findByMaterialIdAndStudentId(materialId, student.getId()).orElse(null)));
+    }
+
+    @PostMapping("/submissions")
+    public ResponseEntity<ApiResponse<AssignmentSubmission>> submitHomework(
+            @RequestParam Long materialId,
+            @RequestParam(required = false) MultipartFile file,
+            @RequestParam(required = false) String content,
+            @AuthenticationPrincipal User student,
+            HttpServletRequest request) throws IOException {
+
+        CourseMaterial material = courseMaterialRepository.findById(materialId)
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
+
+        if (!"assignment".equals(material.getType())) {
+            throw new BadRequestException("This material is not an assignment");
         }
+
+        // Check if already submitted
+        AssignmentSubmission submission = assignmentSubmissionRepository.findByMaterialIdAndStudentId(materialId, student.getId())
+                .orElse(AssignmentSubmission.builder().material(material).student(student).build());
+
+        submission.setContent(content);
+        submission.setStatus("submitted");
+
+        if (file != null && !file.isEmpty()) {
+            String uploadDir = "uploads/submissions/" + materialId;
+            Path uploadPath = Paths.get(uploadDir);
+            Files.createDirectories(uploadPath);
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
+            submission.setFilePath(uploadDir + "/" + fileName);
+            submission.setFileName(file.getOriginalFilename());
+            submission.setFileSize((int) file.getSize());
+        }
+
+        submission = assignmentSubmissionRepository.save(submission);
+        auditService.log(student, "submit_homework", "assignment_submission", submission.getId(), request);
+        return ResponseEntity.ok(ApiResponse.success("Homework submitted successfully", submission));
+    }
 
         // ── Messages ───────────────────────────────────────────────────────
         @GetMapping("/messages")

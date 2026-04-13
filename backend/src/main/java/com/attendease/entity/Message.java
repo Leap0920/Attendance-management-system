@@ -31,9 +31,19 @@ public class Message {
     @Column(nullable = false)
     private String content;
 
+    @Builder.Default
     @Column(name = "is_read")
     private Boolean isRead = false;
 
+    @Builder.Default
+    @Column(name = "deleted_for_sender")
+    private Boolean deletedForSender = false;
+
+    @Builder.Default
+    @Column(name = "deleted_for_receiver")
+    private Boolean deletedForReceiver = false;
+
+    @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

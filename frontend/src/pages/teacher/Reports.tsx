@@ -8,6 +8,9 @@ const TeacherReports: React.FC = () => {
     const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
     const [report, setReport] = useState<any>(null);
     const [loadingReport, setLoadingReport] = useState(false);
+    const [studentDetail, setStudentDetail] = useState<any>(null);
+    const [studentRecords, setStudentRecords] = useState<any[]>([]);
+    const [loadingStudent, setLoadingStudent] = useState(false);
 
     useEffect(() => {
         teacherApi.getCourses().then(res => {
@@ -27,6 +30,19 @@ const TeacherReports: React.FC = () => {
             }).catch(() => setLoadingReport(false));
         }
     }, [selectedCourse]);
+
+    const viewStudentRecords = async (student: any) => {
+        if (!selectedCourse) return;
+        setLoadingStudent(true);
+        setStudentDetail(student);
+        try {
+            const res = await teacherApi.getStudentReport(selectedCourse, student.id);
+            setStudentRecords(res.data.data?.records || []);
+        } catch {
+            setStudentRecords([]);
+        }
+        setLoadingStudent(false);
+    };
 
     const exportCsv = () => {
         if (!report) return;
@@ -48,6 +64,11 @@ const TeacherReports: React.FC = () => {
         return 'var(--accent-red)';
     };
 
+    const getStatusBadge = (status: string) => {
+        const map: Record<string, string> = { present: 'badge-present', late: 'badge-late', absent: 'badge-absent', pending: 'badge-pending' };
+        return map[status] || 'badge-closed';
+    };
+
     return (
         <DashboardLayout role="teacher">
             <div className="page-header">
@@ -57,12 +78,16 @@ const TeacherReports: React.FC = () => {
 
             {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
                 <>
-                    {/* Course Selector */}
+                    {/* Course Selector — Shows code + section only */}
                     <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             <label className="form-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Select Course:</label>
-                            <select className="form-input" style={{ maxWidth: '400px' }} value={selectedCourse || ''} onChange={e => setSelectedCourse(Number(e.target.value))}>
-                                {courses.map(c => <option key={c.id} value={c.id}>{c.courseCode} — {c.courseName}</option>)}
+                            <select className="form-input" style={{ maxWidth: '300px' }} value={selectedCourse || ''} onChange={e => setSelectedCourse(Number(e.target.value))}>
+                                {courses.map(c => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.courseCode}{c.section ? ` - ${c.section}` : ''}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>
@@ -83,16 +108,16 @@ const TeacherReports: React.FC = () => {
 
                             {/* Report Table */}
                             <div className="glass-card">
-                                <h3 style={{ marginBottom: '1rem' }}>Student Attendance Report</h3>
+                                <h3 style={{ marginBottom: '0.5rem' }}>Student Attendance Report</h3>
+                                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Click on a student name to view their detailed attendance records</p>
                                 <div className="data-table-wrapper">
                                     <table className="data-table">
-                                        <thead><tr><th>Student</th><th>Student ID</th><th>Email</th><th>Present</th><th>Late</th><th>Absent</th><th>Rate</th></tr></thead>
+                                        <thead><tr><th>Student</th><th>Student ID</th><th>Present</th><th>Late</th><th>Absent</th><th>Rate</th></tr></thead>
                                         <tbody>
                                             {report.students?.map((s: any) => (
-                                                <tr key={s.id}>
-                                                    <td style={{ fontWeight: 600 }}>{s.name}</td>
+                                                <tr key={s.id} className="clickable-row" onClick={() => viewStudentRecords(s)}>
+                                                    <td style={{ fontWeight: 600, color: 'var(--accent-blue)', cursor: 'pointer' }}>{s.name}</td>
                                                     <td>{s.studentId || '—'}</td>
-                                                    <td style={{ color: 'var(--text-secondary)' }}>{s.email}</td>
                                                     <td><span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>{s.present}</span></td>
                                                     <td><span style={{ color: 'var(--accent-yellow)', fontWeight: 600 }}>{s.late}</span></td>
                                                     <td><span style={{ color: 'var(--accent-red)', fontWeight: 600 }}>{s.absent}</span></td>
@@ -106,7 +131,7 @@ const TeacherReports: React.FC = () => {
                                                     </td>
                                                 </tr>
                                             ))}
-                                            {(!report.students || report.students.length === 0) && <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No students enrolled</td></tr>}
+                                            {(!report.students || report.students.length === 0) && <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No students enrolled</td></tr>}
                                         </tbody>
                                     </table>
                                 </div>
@@ -114,6 +139,54 @@ const TeacherReports: React.FC = () => {
                         </>
                     )}
                 </>
+            )}
+
+            {/* Student Detail Modal */}
+            {studentDetail && (
+                <div className="modal-overlay" onClick={() => setStudentDetail(null)}>
+                    <div className="modal" style={{ maxWidth: '650px' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <h3 className="modal-title">{studentDetail.name}</h3>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+                                    {studentDetail.studentId || ''} · {studentDetail.email}
+                                </p>
+                            </div>
+                            <button className="modal-close" onClick={() => setStudentDetail(null)}>×</button>
+                        </div>
+
+                        {/* Summary badges */}
+                        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                            <span className="badge badge-present" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}>Present: {studentDetail.present}</span>
+                            <span className="badge badge-late" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}>Late: {studentDetail.late}</span>
+                            <span className="badge badge-absent" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}>Absent: {studentDetail.absent}</span>
+                            <span className="badge badge-active" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}>Rate: {studentDetail.rate}%</span>
+                        </div>
+
+                        {loadingStudent ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}><div className="spinner" style={{ margin: '0 auto' }}></div></div>
+                        ) : (
+                            <div className="data-table-wrapper">
+                                <table className="data-table">
+                                    <thead><tr><th>Session</th><th>Date</th><th>Status</th><th>Submitted At</th></tr></thead>
+                                    <tbody>
+                                        {studentRecords.map((r: any, i: number) => (
+                                            <tr key={i}>
+                                                <td style={{ fontWeight: 500 }}>{r.sessionTitle || `Session ${i + 1}`}</td>
+                                                <td style={{ color: 'var(--text-secondary)' }}>{new Date(r.date).toLocaleDateString()}</td>
+                                                <td><span className={`badge ${getStatusBadge(r.status)}`}>{r.status}</span></td>
+                                                <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                                                    {r.submittedAt ? new Date(r.submittedAt).toLocaleString() : '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {studentRecords.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No attendance records</td></tr>}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
         </DashboardLayout>
     );

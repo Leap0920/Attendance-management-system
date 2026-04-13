@@ -26,8 +26,6 @@ const StudentMaterials: React.FC = () => {
     }, [selectedCourse]);
 
     const filtered = typeFilter ? materials.filter(m => m.type === typeFilter) : materials;
-    const typeIcons: Record<string, string> = { file: 'F', link: 'L', announcement: 'A', assignment: 'W' };
-    const typeColors: Record<string, string> = { file: 'var(--accent-blue)', link: 'var(--accent-purple)', announcement: 'var(--accent-yellow)', assignment: 'var(--accent-red)' };
 
     return (
         <DashboardLayout role="student">
@@ -59,28 +57,56 @@ const StudentMaterials: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Materials List */}
-                    {filtered.length > 0 ? filtered.map(m => (
-                        <div key={m.id} className="glass-card" style={{ marginBottom: '0.75rem', borderLeft: `3px solid ${typeColors[m.type] || 'var(--accent-blue)'}` }}>
-                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                                <span style={{ width: 32, height: 32, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: typeColors[m.type] || 'var(--accent-blue)', background: '#f1f5f9' }}>{typeIcons[m.type] || 'F'}</span>
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ marginBottom: '0.25rem' }}>
-                                        {m.isPinned && <span style={{ color: 'var(--accent-yellow)', marginRight: '0.5rem', fontSize: '0.75rem', fontWeight: 700 }}>PINNED</span>}
-                                        {m.title}
-                                    </h4>
-                                    {m.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>{m.description}</p>}
-                                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        <span className="badge badge-active" style={{ fontSize: '0.7rem' }}>{m.type}</span>
-                                        {m.fileName && <span>File: {m.fileName}</span>}
-                                        {m.externalLink && <a href={m.externalLink} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-blue)' }}>Open Link</a>}
-                                        {m.dueDate && <span style={{ color: new Date(m.dueDate) < new Date() ? 'var(--accent-red)' : 'var(--text-muted)' }}>Due: {new Date(m.dueDate).toLocaleDateString()}</span>}
-                                        <span>{new Date(m.createdAt).toLocaleDateString()}</span>
+                    {/* Resource Stream */}
+                    <div className="classroom-stream">
+                        {filtered.length > 0 ? filtered.map(m => (
+                            <div key={m.id} className="stream-item">
+                                {m.type === 'announcement' ? (
+                                    <>
+                                        <div className="stream-header">
+                                            <div className="stream-avatar">{m.teacher?.firstName?.[0]}{m.teacher?.lastName?.[0]}</div>
+                                            <div className="stream-info">
+                                                <div className="stream-author">{m.teacher?.firstName} {m.teacher?.lastName}</div>
+                                                <div className="stream-date">{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                            </div>
+                                        </div>
+                                        <div className="stream-content">
+                                            {m.title && <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{m.title}</div>}
+                                            {m.description}
+                                        </div>
+                                        <div className="comment-input-area">
+                                            <div className="comment-avatar">S</div>
+                                            <button className="comment-trigger">Add comment</button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="stream-item-material">
+                                        <div className="material-badge">
+                                            {m.type === 'file' && (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                            )}
+                                            {m.type === 'link' && (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                            )}
+                                            {m.type === 'assignment' && (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                            )}
+                                        </div>
+                                        <div className="stream-info">
+                                            <h4>{m.teacher?.firstName} {m.teacher?.lastName} posted a new {m.type}: {m.title}</h4>
+                                            <p>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
-                        </div>
-                    )) : <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}><p style={{ color: 'var(--text-secondary)' }}>No materials found</p></div>}
+                        )) : (
+                            <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
+                                <h3 style={{ marginBottom: '0.5rem' }}>No materials yet</h3>
+                                <p style={{ color: 'var(--text-secondary)' }}>Files and resources for this course will appear here when shared by your teacher.</p>
+                            </div>
+                        )}
+                    </div>
                 </>
             )}
         </DashboardLayout>

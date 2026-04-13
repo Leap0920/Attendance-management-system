@@ -22,6 +22,7 @@ public class Setting {
 
     private String description;
 
+    @Builder.Default
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

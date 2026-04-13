@@ -40,8 +40,16 @@ const AdminDashboard: React.FC = () => {
               <div className="stat-label">Students</div>
             </div>
             <div className="stat-card purple">
-              <div className="stat-value">{stats.totalCourses}</div>
+              <div className="stat-value">{stats.activeCourses}</div>
               <div className="stat-label">Active Courses</div>
+            </div>
+            <div className="stat-card yellow">
+              <div className="stat-value">{stats.archivedCourses}</div>
+              <div className="stat-label">Archived Courses</div>
+            </div>
+            <div className="stat-card red">
+              <div className="stat-value">{stats.deletedCourses}</div>
+              <div className="stat-label">Deleted Classrooms</div>
             </div>
           </div>
 

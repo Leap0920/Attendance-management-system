@@ -37,6 +37,7 @@ public class Comment {
     @Column(nullable = false)
     private String content;
 
+    @Builder.Default
     @Column(name = "is_private")
     private Boolean isPrivate = false;
 

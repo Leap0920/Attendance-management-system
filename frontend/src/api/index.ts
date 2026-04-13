@@ -27,9 +27,12 @@ export const teacherApi = {
   getCourse: (id: number) => api.get(`/teacher/courses/${id}`),
   updateCourse: (id: number, data: any) => api.put(`/teacher/courses/${id}`, data),
   deleteCourse: (id: number) => api.delete(`/teacher/courses/${id}`),
+  archiveCourse: (id: number) => api.post(`/teacher/courses/${id}/archive`),
+  unarchiveCourse: (id: number) => api.post(`/teacher/courses/${id}/unarchive`),
 
   createAttendance: (data: any) => api.post('/teacher/attendance/create', data),
   closeAttendance: (id: number) => api.post(`/teacher/attendance/${id}/close`),
+  reopenAttendance: (id: number, duration?: number) => api.post(`/teacher/attendance/${id}/reopen`, { duration }),
   extendAttendance: (id: number, extraMinutes: number) =>
     api.post(`/teacher/attendance/${id}/extend`, { extraMinutes }),
   getSessions: () => api.get('/teacher/attendance/sessions'),
@@ -40,6 +43,12 @@ export const teacherApi = {
   createMaterial: (data: FormData) =>
     api.post('/teacher/materials', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteMaterial: (id: number) => api.delete(`/teacher/materials/${id}`),
+  shareMaterial: (id: number, courseIds: string) => 
+    api.post(`/teacher/materials/${id}/share`, null, { params: { courseIds } }),
+  getComments: (materialId: number) => api.get(`/teacher/materials/${materialId}/comments`),
+  addComment: (materialId: number, data: any) => api.post(`/teacher/materials/${materialId}/comments`, data),
+  getSubmissions: (materialId: number) => api.get(`/teacher/materials/${materialId}/submissions`),
+  gradeSubmission: (id: number, data: any) => api.put(`/teacher/submissions/${id}`, data),
 
   sendMessage: (data: any) => api.post('/teacher/messages/send', data),
   sendGroupMessage: (data: any) => api.post('/teacher/messages/group', data),
@@ -49,8 +58,17 @@ export const teacherApi = {
   getContacts: () => api.get('/teacher/messages/contacts'),
   markDmRead: (userId: number) => api.post('/teacher/messages/dm/read', { userId }),
   broadcast: (data: any) => api.post('/teacher/messages/broadcast', data),
+  deleteMessage: (id: number) => api.delete(`/teacher/messages/${id}`),
+  hideMessage: (id: number) => api.post(`/teacher/messages/${id}/hide`),
+  deleteGroupMessage: (id: number) => api.delete(`/teacher/messages/group/${id}`),
+  hideGroupMessage: (id: number) => api.post(`/teacher/messages/group/${id}/hide`),
 
   getReport: (courseId: number) => api.get('/teacher/reports', { params: { courseId } }),
+  getStudentReport: (courseId: number, studentId: number) =>
+    api.get('/teacher/reports/student', { params: { courseId, studentId } }),
+
+  updateProfile: (data: any) => api.put('/teacher/profile', data),
+  changePassword: (data: any) => api.put('/teacher/profile/password', data),
 };
 
 export const studentApi = {
@@ -72,4 +90,9 @@ export const studentApi = {
   getContacts: () => api.get('/student/messages/contacts'),
   markDmRead: (userId: number) => api.post('/student/messages/dm/read', { userId }),
   sendGroupMessage: (data: any) => api.post('/student/messages/group', data),
+  getComments: (materialId: number) => api.get(`/student/materials/${materialId}/comments`),
+  addComment: (materialId: number, data: any) => api.post(`/student/materials/${materialId}/comments`, data),
+  getSubmission: (materialId: number) => api.get(`/student/materials/${materialId}/submission`),
+  submitHomework: (data: FormData) =>
+    api.post('/student/submissions', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };

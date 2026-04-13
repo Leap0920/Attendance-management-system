@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { teacherApi } from '../api';
+import Modal from './Modal';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -63,10 +65,60 @@ const navSections: Record<string, NavSection[]> = {
 };
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, setUser, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogout, setShowLogout] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileTab, setProfileTab] = useState<'info' | 'security'>('info');
+  const [profileForm, setProfileForm] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    department: (user as any)?.department || '',
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'alert' | 'confirm' | 'error' | 'success';
+    onConfirm?: () => void;
+    confirmLabel?: string;
+  }>({ isOpen: false, title: '', message: '', type: 'alert' });
+
+  React.useEffect(() => {
+    const handleAlert = (e: any) => {
+      setModal({
+        isOpen: true,
+        title: e.detail.title,
+        message: e.detail.message,
+        type: e.detail.type || 'alert',
+      });
+    };
+    const handleConfirm = (e: any) => {
+      setModal({
+        isOpen: true,
+        title: e.detail.title,
+        message: e.detail.message,
+        type: 'confirm',
+        onConfirm: e.detail.onConfirm,
+        confirmLabel: e.detail.confirmLabel,
+      });
+    };
+
+    window.addEventListener('ff-alert', handleAlert);
+    window.addEventListener('ff-confirm', handleConfirm);
+    return () => {
+      window.removeEventListener('ff-alert', handleAlert);
+      window.removeEventListener('ff-confirm', handleConfirm);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -76,6 +128,62 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   const isActive = (path: string) => {
     if (path === `/${role}`) return location.pathname === path;
     return location.pathname.startsWith(path);
+  };
+
+  const openProfile = () => {
+    setProfileForm({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      department: (user as any)?.department || '',
+    });
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setProfileMsg(null);
+    setProfileTab('info');
+    setShowProfile(true);
+  };
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setProfileMsg(null);
+    try {
+      const res = await teacherApi.updateProfile(profileForm);
+      const updatedUser = res.data.data;
+      if (updatedUser) {
+        setUser({ ...user, ...updatedUser } as any);
+        localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+      }
+      setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
+      await refreshUser();
+    } catch (err: any) {
+      setProfileMsg({ type: 'error', text: err.response?.data?.message || 'Error updating profile' });
+    }
+    setSaving(false);
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setProfileMsg({ type: 'error', text: 'New passwords do not match' });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setProfileMsg({ type: 'error', text: 'Password must be at least 6 characters' });
+      return;
+    }
+    setSaving(true);
+    setProfileMsg(null);
+    try {
+      await teacherApi.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setProfileMsg({ type: 'success', text: 'Password changed successfully!' });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err: any) {
+      setProfileMsg({ type: 'error', text: err.response?.data?.message || 'Error changing password' });
+    }
+    setSaving(false);
   };
 
   return (
@@ -99,13 +207,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           ))}
         </nav>
         <div className="sidebar-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', fontWeight: 700,
-              fontSize: '0.8rem', color: '#fff',
-            }}>
+          <div className="sidebar-profile" onClick={openProfile} title="Edit Profile">
+            <div className="sidebar-avatar">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </div>
             <div>
@@ -161,6 +264,105 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           </div>
         </div>
       )}
+
+      {/* Profile Edit Modal */}
+      {showProfile && (
+        <div className="modal-overlay" onClick={() => setShowProfile(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Edit Profile</h3>
+              <button className="modal-close" onClick={() => setShowProfile(false)}>×</button>
+            </div>
+
+            <div className="profile-avatar-lg">
+              {user?.firstName?.[0]}{user?.lastName?.[0]}
+            </div>
+
+            <div className="profile-tabs">
+              <button className={`profile-tab ${profileTab === 'info' ? 'active' : ''}`} onClick={() => { setProfileTab('info'); setProfileMsg(null); }}>
+                Personal Info
+              </button>
+              <button className={`profile-tab ${profileTab === 'security' ? 'active' : ''}`} onClick={() => { setProfileTab('security'); setProfileMsg(null); }}>
+                Security
+              </button>
+            </div>
+
+            {profileMsg && (
+              <div className={`alert alert-${profileMsg.type === 'success' ? 'success' : 'error'}`}>
+                {profileMsg.text}
+              </div>
+            )}
+
+            {profileTab === 'info' && (
+              <form onSubmit={handleProfileUpdate}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">First Name</label>
+                    <input className="form-input" value={profileForm.firstName} onChange={e => setProfileForm({ ...profileForm, firstName: e.target.value })} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Last Name</label>
+                    <input className="form-input" value={profileForm.lastName} onChange={e => setProfileForm({ ...profileForm, lastName: e.target.value })} required />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6 }} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Department</label>
+                  <input className="form-input" value={profileForm.department} onChange={e => setProfileForm({ ...profileForm, department: e.target.value })} placeholder="e.g. Computer Science" />
+                </div>
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowProfile(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {profileTab === 'security' && (
+              <form onSubmit={handlePasswordChange}>
+                <div className="form-group">
+                  <label className="form-label">Current Password</label>
+                  <input className="form-input" type="password" value={passwordForm.currentPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">New Password</label>
+                  <input className="form-input" type="password" value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Confirm New Password</label>
+                  <input className="form-input" type="password" value={passwordForm.confirmPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required />
+                </div>
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowProfile(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                    {saving ? 'Changing...' : 'Change Password'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Modal 
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        onConfirm={() => {
+          if (modal.onConfirm) modal.onConfirm();
+          setModal({ ...modal, isOpen: false });
+        }}
+        confirmLabel={modal.confirmLabel}
+      />
     </div>
   );
 };

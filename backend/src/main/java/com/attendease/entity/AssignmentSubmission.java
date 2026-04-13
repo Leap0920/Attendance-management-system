@@ -37,6 +37,7 @@ public class AssignmentSubmission {
 
     private String content;
 
+    @Builder.Default
     private String status = "submitted"; // submitted, graded, late
 
     private String grade;

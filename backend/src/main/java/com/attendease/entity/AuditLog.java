@@ -44,6 +44,7 @@ public class AuditLog {
     @Column(name = "user_agent")
     private String userAgent;
 
+    @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

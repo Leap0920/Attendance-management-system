@@ -39,9 +39,11 @@ public class Course {
     private String schedule;
     private String room;
 
+    @Builder.Default
     @Column(name = "cover_color")
     private String coverColor = "#4285F4";
 
+    @Builder.Default
     private String status = "active";
 
     @CreatedDate

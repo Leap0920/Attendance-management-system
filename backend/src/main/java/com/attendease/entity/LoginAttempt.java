@@ -20,8 +20,10 @@ public class LoginAttempt {
     @Column(name = "ip_address")
     private String ipAddress;
 
+    @Builder.Default
     private Boolean success = false;
 
+    @Builder.Default
     @Column(name = "attempted_at")
     private LocalDateTime attemptedAt = LocalDateTime.now();
 }

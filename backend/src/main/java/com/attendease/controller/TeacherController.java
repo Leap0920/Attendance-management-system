@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,11 +31,13 @@ public class TeacherController {
     private final AttendanceSessionRepository attendanceSessionRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final CourseMaterialRepository courseMaterialRepository;
-    private final AssignmentSubmissionRepository assignmentSubmissionRepository;
     private final MessageRepository messageRepository;
     private final CourseMessageRepository courseMessageRepository;
     private final UserRepository userRepository;
+    private final AssignmentSubmissionRepository assignmentSubmissionRepository;
+    private final CommentRepository commentRepository;
     private final AuditService auditService;
+    private final PasswordEncoder passwordEncoder;
 
     // ── Dashboard ──────────────────────────────────────────────────────
     @GetMapping("/dashboard")
@@ -44,19 +47,52 @@ public class TeacherController {
         data.put("courses", courses);
         data.put("totalCourses", courses.size());
 
-        // Active sessions
-        List<Map<String, Object>> activeSessions = new ArrayList<>();
+        // Active sessions (auto-close expired ones)
+        List<Map<String, Object>> activeSessionsList = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        
         for (Course c : courses) {
-            attendanceSessionRepository.findByCourseIdAndStatus(c.getId(), "active").forEach(s -> {
-                Map<String, Object> sessionMap = new HashMap<>();
-                sessionMap.put("session", s);
-                sessionMap.put("courseName", c.getCourseName());
-                sessionMap.put("submissions", attendanceRecordRepository.findBySessionId(s.getId()).size());
-                sessionMap.put("enrolled", enrollmentRepository.countByCourseIdAndStatus(c.getId(), "active"));
-                activeSessions.add(sessionMap);
-            });
+            List<AttendanceSession> sessions = attendanceSessionRepository.findByCourseIdAndStatus(c.getId(), "active");
+            for (AttendanceSession s : sessions) {
+                if (s.getEndTime().isBefore(now)) {
+                    s.setStatus("closed");
+                    attendanceSessionRepository.save(s);
+                    // Mark absent students for this auto-closed session
+                    List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(c.getId(), "active");
+                    for (Enrollment e : enrolls) {
+                        if (!attendanceRecordRepository.existsBySessionIdAndStudentId(s.getId(), e.getStudent().getId())) {
+                            attendanceRecordRepository.save(AttendanceRecord.builder()
+                                    .session(s).student(e.getStudent()).course(c).status("absent").build());
+                        }
+                    }
+                } else {
+                    Map<String, Object> sessionMap = new HashMap<>();
+                    sessionMap.put("session", s);
+                    sessionMap.put("courseName", c.getCourseName());
+                    sessionMap.put("submissions", attendanceRecordRepository.findBySessionId(s.getId()).size());
+                    sessionMap.put("enrolled", enrollmentRepository.countByCourseIdAndStatus(c.getId(), "active"));
+                    activeSessionsList.add(sessionMap);
+                }
+            }
         }
-        data.put("activeSessions", activeSessions);
+        data.put("activeSessions", activeSessionsList);
+
+        // Recent closed sessions (last 5)
+        List<AttendanceSession> allSessions = attendanceSessionRepository.findByTeacherId(teacher.getId());
+        List<Map<String, Object>> recentSessions = new ArrayList<>();
+        allSessions.stream()
+                .filter(s -> "closed".equals(s.getStatus()))
+                .sorted(Comparator.comparing(AttendanceSession::getStartTime).reversed())
+                .limit(5)
+                .forEach(s -> {
+                    Map<String, Object> sessionMap = new HashMap<>();
+                    sessionMap.put("session", s);
+                    sessionMap.put("courseName", s.getCourse().getCourseName());
+                    sessionMap.put("submissions", attendanceRecordRepository.findBySessionId(s.getId()).size());
+                    sessionMap.put("enrolled", enrollmentRepository.countByCourseIdAndStatus(s.getCourse().getId(), "active"));
+                    recentSessions.add(sessionMap);
+                });
+        data.put("recentSessions", recentSessions);
 
         // Total students (across all courses)
         long totalStudents = 0;
@@ -121,7 +157,24 @@ public class TeacherController {
         data.put("course", course);
         data.put("enrollments", enrollmentRepository.findByCourseIdAndStatus(id, "active"));
         data.put("materials", courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(id));
-        data.put("sessions", attendanceSessionRepository.findByCourseId(id));
+        // sessions (auto-close expired)
+        List<AttendanceSession> sessions = attendanceSessionRepository.findByCourseId(id);
+        LocalDateTime now = LocalDateTime.now();
+        for (AttendanceSession s : sessions) {
+            if ("active".equals(s.getStatus()) && s.getEndTime().isBefore(now)) {
+                s.setStatus("closed");
+                attendanceSessionRepository.save(s);
+                // Mark absent
+                List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(id, "active");
+                for (Enrollment e : enrolls) {
+                    if (!attendanceRecordRepository.existsBySessionIdAndStudentId(s.getId(), e.getStudent().getId())) {
+                        attendanceRecordRepository.save(AttendanceRecord.builder()
+                                .session(s).student(e.getStudent()).course(course).status("absent").build());
+                    }
+                }
+            }
+        }
+        data.put("sessions", sessions);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
@@ -157,8 +210,33 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.success("Course deleted", null));
     }
 
+    @PostMapping("/courses/{id}/archive")
+    public ResponseEntity<ApiResponse<Course>> archiveCourse(
+            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+        Course course = courseRepository.findById(id)
+                .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        course.setStatus("archived");
+        course = courseRepository.save(course);
+        auditService.log(teacher, "archive_course", "course", id, request);
+        return ResponseEntity.ok(ApiResponse.success("Course archived", course));
+    }
+
+    @PostMapping("/courses/{id}/unarchive")
+    public ResponseEntity<ApiResponse<Course>> unarchiveCourse(
+            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+        Course course = courseRepository.findById(id)
+                .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        course.setStatus("active");
+        course = courseRepository.save(course);
+        auditService.log(teacher, "unarchive_course", "course", id, request);
+        return ResponseEntity.ok(ApiResponse.success("Course unarchived", course));
+    }
+
     // ── Attendance ─────────────────────────────────────────────────────
     @PostMapping("/attendance/create")
+    @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<AttendanceSession>> createSession(
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
@@ -199,6 +277,7 @@ public class TeacherController {
     }
 
     @PostMapping("/attendance/{id}/close")
+    @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> closeSession(
             @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         AttendanceSession session = attendanceSessionRepository.findById(id)
@@ -226,6 +305,76 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.success("Session closed", null));
     }
 
+    @PostMapping("/attendance/{id}/reopen")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<ApiResponse<AttendanceSession>> reopenSession(
+            @PathVariable Long id, 
+            @RequestBody(required = false) Map<String, Object> body,
+            @AuthenticationPrincipal User teacher, 
+            HttpServletRequest request) {
+        AttendanceSession session = attendanceSessionRepository.findById(id)
+                .filter(s -> s.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        if ("active".equals(session.getStatus())) {
+            throw new BadRequestException("Session is already active");
+        }
+
+        // Auto-close any expired active session for this course first
+        List<AttendanceSession> activeSessions = attendanceSessionRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
+        LocalDateTime now = LocalDateTime.now();
+        for (AttendanceSession as : activeSessions) {
+            if (as.getEndTime().isBefore(now)) {
+                as.setStatus("closed");
+                attendanceSessionRepository.save(as);
+                // Mark absent
+                List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
+                for (Enrollment e : enrolls) {
+                    if (!attendanceRecordRepository.existsBySessionIdAndStudentId(as.getId(), e.getStudent().getId())) {
+                        attendanceRecordRepository.save(AttendanceRecord.builder()
+                                .session(as).student(e.getStudent()).course(session.getCourse()).status("absent").build());
+                    }
+                }
+            }
+        }
+
+        // Now check if another active session exists
+        if (attendanceSessionRepository.existsByCourseIdAndStatus(session.getCourse().getId(), "active")) {
+            throw new BadRequestException("Another active session already exists for this course");
+        }
+
+        // Remove auto-generated absent records
+        List<AttendanceRecord> absentRecords = attendanceRecordRepository.findBySessionId(id);
+        for (AttendanceRecord r : absentRecords) {
+            if ("absent".equals(r.getStatus()) && r.getSubmittedAt() == null) {
+                attendanceRecordRepository.delete(r);
+            }
+        }
+
+        // Generate new code and reopen
+        String code;
+        do { code = generateCode(6); }
+        while (attendanceSessionRepository.findByAttendanceCodeAndStatus(code, "active").isPresent());
+
+        session.setStatus("active");
+        session.setAttendanceCode(code);
+        session.setStartTime(now);
+        
+        int duration = 10;
+        if (body != null && body.containsKey("duration")) {
+            duration = Integer.parseInt(body.get("duration").toString());
+            session.setDurationMinutes(duration);
+        } else if (session.getDurationMinutes() != null) {
+            duration = session.getDurationMinutes();
+        }
+        
+        session.setEndTime(now.plusMinutes(duration));
+        session = attendanceSessionRepository.save(session);
+
+        auditService.log(teacher, "reopen_attendance_session", "attendance_session", id, request);
+        return ResponseEntity.ok(ApiResponse.success("Session reopened! New code: " + code, session));
+    }
+
     @PostMapping("/attendance/{id}/extend")
     public ResponseEntity<ApiResponse<AttendanceSession>> extendSession(
             @PathVariable Long id, @RequestBody Map<String, Object> body,
@@ -243,7 +392,7 @@ public class TeacherController {
 
     @GetMapping("/attendance/sessions")
     public ResponseEntity<ApiResponse<List<AttendanceSession>>> getSessions(@AuthenticationPrincipal User teacher) {
-        return ResponseEntity.ok(ApiResponse.success(attendanceSessionRepository.findByTeacherId(teacher.getId())));
+        return ResponseEntity.ok(ApiResponse.success(attendanceSessionRepository.findByTeacherIdOrderByStartTimeDesc(teacher.getId())));
     }
 
     @GetMapping("/attendance/records/{sessionId}")
@@ -273,8 +422,8 @@ public class TeacherController {
     }
 
     @PostMapping("/materials")
-    public ResponseEntity<ApiResponse<CourseMaterial>> createMaterial(
-            @RequestParam Long courseId,
+    public ResponseEntity<ApiResponse<List<CourseMaterial>>> createMaterial(
+            @RequestParam String courseIds,
             @RequestParam String type,
             @RequestParam String title,
             @RequestParam(required = false) String description,
@@ -284,31 +433,115 @@ public class TeacherController {
             @AuthenticationPrincipal User teacher,
             HttpServletRequest request) throws IOException {
 
-        Course course = courseRepository.findById(courseId)
-                .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+        List<CourseMaterial> createdItems = new ArrayList<>();
+        String[] ids = courseIds.split(",");
 
-        CourseMaterial material = CourseMaterial.builder()
-                .course(course).teacher(teacher).type(type).title(title)
-                .description(description).externalLink(externalLink)
-                .dueDate(dueDate != null && !dueDate.isEmpty() ? LocalDateTime.parse(dueDate) : null)
-                .isPinned(false).isClosed(false).build();
+        for (String idStr : ids) {
+            Long courseId = Long.valueOf(idStr.trim());
+            Course course = courseRepository.findById(courseId)
+                    .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
 
-        // Handle file upload
-        if ("file".equals(type) && file != null && !file.isEmpty()) {
-            String uploadDir = "uploads/materials/" + courseId;
-            Path uploadPath = Paths.get(uploadDir);
-            Files.createDirectories(uploadPath);
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-            material.setFilePath(uploadDir + "/" + fileName);
-            material.setFileName(file.getOriginalFilename());
-            material.setFileSize((int) file.getSize());
+            CourseMaterial material = CourseMaterial.builder()
+                    .course(course).teacher(teacher).type(type).title(title)
+                    .description(description).externalLink(externalLink)
+                    .dueDate(dueDate != null && !dueDate.isEmpty() ? LocalDateTime.parse(dueDate) : null)
+                    .isPinned(false).isClosed(false).build();
+
+            // Handle file upload (copy for each course if multiple, or share one path - here we copy for simplicity/isolation)
+            if ("file".equals(type) && file != null && !file.isEmpty()) {
+                String uploadDir = "uploads/materials/" + courseId;
+                Path uploadPath = Paths.get(uploadDir);
+                Files.createDirectories(uploadPath);
+                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
+                material.setFilePath(uploadDir + "/" + fileName);
+                material.setFileName(file.getOriginalFilename());
+                material.setFileSize((int) file.getSize());
+            }
+
+            material = courseMaterialRepository.save(material);
+            createdItems.add(material);
+            auditService.log(teacher, "create_material", "course_material", material.getId(), request);
         }
 
-        material = courseMaterialRepository.save(material);
-        auditService.log(teacher, "create_material", "course_material", material.getId(), request);
-        return ResponseEntity.ok(ApiResponse.success("Material added", material));
+        return ResponseEntity.ok(ApiResponse.success("Material added to " + createdItems.size() + " courses", createdItems));
+    }
+
+    @PostMapping("/materials/{id}/share")
+    public ResponseEntity<ApiResponse<Void>> shareMaterial(
+            @PathVariable Long id,
+            @RequestParam String courseIds,
+            @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
+        CourseMaterial material = courseMaterialRepository.findById(id)
+                .filter(m -> m.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
+
+        String[] ids = courseIds.split(",");
+        for (String idStr : ids) {
+            Long courseId = Long.valueOf(idStr.trim());
+            if (material.getCourse().getId().equals(courseId)) continue;
+
+            Course course = courseRepository.findById(courseId)
+                    .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
+
+            CourseMaterial copy = CourseMaterial.builder()
+                    .course(course).teacher(teacher).type(material.getType())
+                    .title(material.getTitle()).description(material.getDescription())
+                    .externalLink(material.getExternalLink()).dueDate(material.getDueDate())
+                    .filePath(material.getFilePath()).fileName(material.getFileName())
+                    .fileSize(material.getFileSize()).isPinned(false).isClosed(false).build();
+            courseMaterialRepository.save(copy);
+        }
+        auditService.log(teacher, "share_material", "course_material", id, request);
+        return ResponseEntity.ok(ApiResponse.success("Material shared successfully", null));
+    }
+
+    @GetMapping("/materials/{materialId}/comments")
+
+    public ResponseEntity<ApiResponse<List<Comment>>> getComments(@PathVariable Long materialId) {
+        return ResponseEntity.ok(ApiResponse.success(commentRepository.findByMaterialIdOrderByCreatedAtAsc(materialId)));
+    }
+
+    @PostMapping("/materials/{materialId}/comments")
+    public ResponseEntity<ApiResponse<Comment>> addComment(
+            @PathVariable Long materialId,
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User teacher) {
+        CourseMaterial material = courseMaterialRepository.findById(materialId)
+                .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
+        
+        Comment comment = Comment.builder()
+                .course(material.getCourse())
+                .material(material)
+                .user(teacher)
+                .content(body.get("content").toString())
+                .isPrivate(body.containsKey("isPrivate") && (boolean) body.get("isPrivate"))
+                .build();
+        
+        return ResponseEntity.ok(ApiResponse.success("Comment added", commentRepository.save(comment)));
+    }
+
+    @GetMapping("/materials/{materialId}/submissions")
+    public ResponseEntity<ApiResponse<List<AssignmentSubmission>>> getSubmissions(@PathVariable Long materialId) {
+        return ResponseEntity.ok(ApiResponse.success(assignmentSubmissionRepository.findByMaterialId(materialId)));
+    }
+
+    @PutMapping("/submissions/{id}")
+    public ResponseEntity<ApiResponse<AssignmentSubmission>> gradeSubmission(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User teacher) {
+        AssignmentSubmission submission = assignmentSubmissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
+        
+        if (body.containsKey("grade")) submission.setGrade(body.get("grade").toString());
+        if (body.containsKey("feedback")) submission.setFeedback(body.get("feedback").toString());
+        submission.setStatus("graded");
+        
+        return ResponseEntity.ok(ApiResponse.success("Submission graded", assignmentSubmissionRepository.save(submission)));
     }
 
     @DeleteMapping("/materials/{id}")
@@ -394,8 +627,13 @@ public class TeacherController {
         courseRepository.findById(courseId)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
-        return ResponseEntity.ok(ApiResponse.success(
-                courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId)));
+        List<CourseMessage> messages = courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId);
+        // Filter out messages deleted for this user
+        messages.removeIf(m -> {
+            String deleted = m.getDeletedForUsers();
+            return deleted != null && deleted.contains("," + teacher.getId() + ",");
+        });
+        return ResponseEntity.ok(ApiResponse.success(messages));
     }
 
     @GetMapping("/messages/dm")
@@ -464,6 +702,63 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.success("Messages marked as read", null));
     }
 
+    // Delete message for everyone (only sender can do this)
+    @DeleteMapping("/messages/{id}")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<ApiResponse<Void>> deleteMessageForEveryone(
+            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+        Message msg = messageRepository.findById(id)
+                .filter(m -> m.getSender().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found or not authorized"));
+        messageRepository.delete(msg);
+        return ResponseEntity.ok(ApiResponse.success("Message deleted for everyone", null));
+    }
+
+    // Hide message for current user only
+    @PostMapping("/messages/{id}/hide")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<ApiResponse<Void>> hideMessage(
+            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+        Message msg = messageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+
+        if (msg.getSender().getId().equals(teacher.getId())) {
+            msg.setDeletedForSender(true);
+        } else if (msg.getReceiver().getId().equals(teacher.getId())) {
+            msg.setDeletedForReceiver(true);
+        }
+        messageRepository.save(msg);
+        return ResponseEntity.ok(ApiResponse.success("Message hidden", null));
+    }
+
+    // Delete group message for everyone (only sender can do this)
+    @DeleteMapping("/messages/group/{id}")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<ApiResponse<Void>> deleteGroupMessageForEveryone(
+            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+        CourseMessage msg = courseMessageRepository.findById(id)
+                .filter(m -> m.getSender().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found or not authorized"));
+        courseMessageRepository.delete(msg);
+        return ResponseEntity.ok(ApiResponse.success("Group message deleted for everyone", null));
+    }
+
+    // Hide group message for current user
+    @PostMapping("/messages/group/{id}/hide")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<ApiResponse<Void>> hideGroupMessage(
+            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+        CourseMessage msg = courseMessageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+        String deleted = msg.getDeletedForUsers() == null ? "" : msg.getDeletedForUsers();
+        if (!deleted.contains("," + teacher.getId() + ",")) {
+            deleted += "," + teacher.getId() + ",";
+            msg.setDeletedForUsers(deleted);
+            courseMessageRepository.save(msg);
+        }
+        return ResponseEntity.ok(ApiResponse.success("Group message hidden", null));
+    }
+
     // ── Reports ────────────────────────────────────────────────────────
     @GetMapping("/reports")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getReport(
@@ -502,6 +797,103 @@ public class TeacherController {
         data.put("totalStudents", enrollments.size());
 
         return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    @GetMapping("/reports/student")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getStudentReport(
+            @RequestParam Long courseId,
+            @RequestParam Long studentId,
+            @AuthenticationPrincipal User teacher) {
+        Course course = courseRepository.findById(courseId)
+                .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        List<AttendanceSession> sessions = attendanceSessionRepository.findByCourseId(courseId);
+        List<Map<String, Object>> records = new ArrayList<>();
+
+        for (AttendanceSession session : sessions) {
+            Map<String, Object> record = new HashMap<>();
+            record.put("sessionId", session.getId());
+            record.put("sessionTitle", session.getSessionTitle());
+            record.put("date", session.getStartTime());
+            record.put("durationMinutes", session.getDurationMinutes());
+
+            List<AttendanceRecord> attendanceRecords = attendanceRecordRepository.findBySessionId(session.getId());
+            AttendanceRecord studentRecord = attendanceRecords.stream()
+                    .filter(r -> r.getStudent().getId().equals(studentId))
+                    .findFirst().orElse(null);
+
+            if (studentRecord != null) {
+                record.put("status", studentRecord.getStatus());
+                record.put("submittedAt", studentRecord.getSubmittedAt());
+            } else {
+                record.put("status", session.getStatus().equals("active") ? "pending" : "absent");
+                record.put("submittedAt", null);
+            }
+            records.add(record);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("student", Map.of(
+                "id", student.getId(),
+                "name", student.getFullName(),
+                "studentId", student.getStudentId() != null ? student.getStudentId() : "",
+                "email", student.getEmail()
+        ));
+        data.put("course", Map.of("courseCode", course.getCourseCode(), "courseName", course.getCourseName()));
+        data.put("records", records);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    // ── Profile ────────────────────────────────────────────────────────
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateProfile(
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+        if (body.containsKey("firstName")) teacher.setFirstName(body.get("firstName"));
+        if (body.containsKey("lastName")) teacher.setLastName(body.get("lastName"));
+        if (body.containsKey("department")) teacher.setDepartment(body.get("department"));
+
+        teacher = userRepository.save(teacher);
+        auditService.log(teacher, "update_profile", "user", teacher.getId(), request);
+
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", teacher.getId());
+        userData.put("email", teacher.getEmail());
+        userData.put("firstName", teacher.getFirstName());
+        userData.put("lastName", teacher.getLastName());
+        userData.put("fullName", teacher.getFullName());
+        userData.put("role", teacher.getRole());
+        userData.put("department", teacher.getDepartment());
+        return ResponseEntity.ok(ApiResponse.success("Profile updated", userData));
+    }
+
+    @PutMapping("/profile/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+
+        if (currentPassword == null || newPassword == null) {
+            throw new BadRequestException("Current and new password are required");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, teacher.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        if (newPassword.length() < 6) {
+            throw new BadRequestException("New password must be at least 6 characters");
+        }
+
+        teacher.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(teacher);
+        auditService.log(teacher, "change_password", "user", teacher.getId(), request);
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
 
     // ── Helpers ────────────────────────────────────────────────────────

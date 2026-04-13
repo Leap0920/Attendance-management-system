@@ -22,8 +22,10 @@ public class Enrollment {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @Builder.Default
     @Column(name = "enrolled_at")
     private LocalDateTime enrolledAt = LocalDateTime.now();
 
+    @Builder.Default
     private String status = "active";
 }

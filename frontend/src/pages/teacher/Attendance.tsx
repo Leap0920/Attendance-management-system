@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
+import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
 const TeacherAttendance: React.FC = () => {
     const [sessions, setSessions] = useState<any[]>([]);
@@ -28,14 +29,28 @@ const TeacherAttendance: React.FC = () => {
             setShowModal(false);
             setForm({ courseId: '', sessionTitle: '', duration: '10' });
             load();
-        } catch (err: any) { alert(err.response?.data?.message || 'Error'); }
+            showAlert('Success', 'Attendance session started!');
+        } catch (err: any) { showApiError(err); }
     };
 
     const closeSession = async (id: number) => {
-        if (confirm('Close this session? Absent students will be auto-marked.')) {
-            await teacherApi.closeAttendance(id);
-            load();
-        }
+        showConfirm('Close Session', 'Are you sure you want to close this session? Absent students will be auto-marked.', async () => {
+            try {
+                await teacherApi.closeAttendance(id);
+                load();
+                showAlert('Success', 'Session closed.');
+            } catch (err: any) { showApiError(err); }
+        });
+    };
+
+    const reopenSession = async (id: number) => {
+        showConfirm('Reopen Session', 'Reopen this session? A new code will be generated.', async () => {
+            try {
+                await teacherApi.reopenAttendance(id);
+                load();
+                showAlert('Success', 'Session reopened.');
+            } catch (err: any) { showApiError(err); }
+        });
     };
 
     const viewRecords = async (session: any) => {
@@ -106,6 +121,7 @@ const TeacherAttendance: React.FC = () => {
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                     <button className="btn btn-secondary btn-sm" onClick={() => viewRecords(s)}>View</button>
                                                     {s.status === 'active' && <button className="btn btn-danger btn-sm" onClick={() => closeSession(s.id)}>Close</button>}
+                                                    {s.status === 'closed' && <button className="btn btn-success btn-sm" onClick={() => reopenSession(s.id)}>Reopen</button>}
                                                 </div>
                                             </td>
                                         </tr>
@@ -152,7 +168,10 @@ const TeacherAttendance: React.FC = () => {
                                 <tbody>
                                     {records.map((r: any) => (
                                         <tr key={r.id}>
-                                            <td>{r.student?.firstName} {r.student?.lastName}</td>
+                                            <td style={{ fontWeight: 500 }}>
+                                                {r.student?.firstName} {r.student?.lastName}
+                                                {r.student?.studentId && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>{r.student.studentId}</div>}
+                                            </td>
                                             <td><span className={`badge badge-${r.status}`}>{r.status}</span></td>
                                             <td style={{ color: 'var(--text-secondary)' }}>{r.submittedAt ? new Date(r.submittedAt).toLocaleString() : '—'}</td>
                                         </tr>

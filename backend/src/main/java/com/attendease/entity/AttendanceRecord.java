@@ -26,8 +26,10 @@ public class AttendanceRecord {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @Builder.Default
     private String status = "present"; // present, late, absent, excused
 
+    @Builder.Default
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt = LocalDateTime.now();
 

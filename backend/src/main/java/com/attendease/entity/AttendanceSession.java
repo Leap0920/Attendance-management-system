@@ -31,6 +31,7 @@ public class AttendanceSession {
     @Column(name = "qr_code_data")
     private String qrCodeData;
 
+    @Builder.Default
     @Column(name = "duration_minutes")
     private Integer durationMinutes = 10;
 
@@ -40,14 +41,18 @@ public class AttendanceSession {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
+    @Builder.Default
     private String status = "pending";
 
+    @Builder.Default
     @Column(name = "allow_late")
     private Boolean allowLate = true;
 
+    @Builder.Default
     @Column(name = "late_minutes")
     private Integer lateMinutes = 5;
 
+    @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

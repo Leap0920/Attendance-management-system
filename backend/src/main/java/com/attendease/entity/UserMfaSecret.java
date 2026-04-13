@@ -21,6 +21,7 @@ public class UserMfaSecret {
     @Column(name = "secret_encrypted", nullable = false)
     private String secretEncrypted;
 
+    @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

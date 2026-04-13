@@ -49,6 +49,7 @@ public class User {
     @Column(name = "reset_token_expiry")
     private LocalDateTime resetTokenExpiry;
 
+    @Builder.Default
     @Column(name = "mfa_enabled")
     private Boolean mfaEnabled = false;
 

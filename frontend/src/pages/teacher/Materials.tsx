@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
+import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
 const TeacherMaterials: React.FC = () => {
     const [courses, setCourses] = useState<any[]>([]);
@@ -9,21 +10,33 @@ const TeacherMaterials: React.FC = () => {
     const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
     const [typeFilter, setTypeFilter] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ type: 'file', title: '', description: '', externalLink: '', dueDate: '' });
+    const [form, setForm] = useState({ type: 'file', content: '', externalLink: '', dueDate: '', forCourses: [] as number[] });
     const [file, setFile] = useState<File | null>(null);
+    const [showForwardModal, setShowForwardModal] = useState(false);
+    const [forwardMaterialId, setForwardMaterialId] = useState<number | null>(null);
+    const [forwardCourses, setForwardCourses] = useState<number[]>([]);
 
-    useEffect(() => {
+    const load = () => {
         teacherApi.getCourses().then(res => {
             const c = res.data.data || [];
             setCourses(c);
-            if (c.length > 0) { setSelectedCourse(c[0].id); }
+            if (c.length > 0 && !selectedCourse) { 
+                setSelectedCourse(c[0].id);
+                setForm(prev => ({ ...prev, forCourses: [c[0].id] }));
+            }
             setLoading(false);
         }).catch(() => setLoading(false));
-    }, []);
+    };
+
+    const loadMaterials = (courseId: number) => {
+        teacherApi.getMaterials(courseId).then(res => setMaterials(res.data.data || [])).catch(() => { });
+    };
+
+    useEffect(() => { load(); }, []);
 
     useEffect(() => {
         if (selectedCourse) {
-            teacherApi.getMaterials(selectedCourse).then(res => setMaterials(res.data.data || [])).catch(() => { });
+            loadMaterials(selectedCourse);
         }
     }, [selectedCourse]);
 
@@ -31,35 +44,56 @@ const TeacherMaterials: React.FC = () => {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedCourse) return;
+        
+        // Split content into title and description (first line is title)
+        const lines = form.content.split('\n');
+        const title = lines[0].trim();
+        const description = lines.slice(1).join('\n').trim();
+
+        if (!title) {
+            showAlert('Error', 'Please enter some content', 'error');
+            return;
+        }
+
         const fd = new FormData();
-        fd.append('courseId', selectedCourse.toString());
+        fd.append('courseIds', (selectedCourse ? [selectedCourse] : []).join(','));
         fd.append('type', form.type);
-        fd.append('title', form.title);
-        if (form.description) fd.append('description', form.description);
+        fd.append('title', title);
+        if (description) fd.append('description', description);
         if (form.externalLink) fd.append('externalLink', form.externalLink);
         if (form.dueDate) fd.append('dueDate', form.dueDate);
         if (file) fd.append('file', file);
         try {
             await teacherApi.createMaterial(fd);
             setShowModal(false);
-            setForm({ type: 'file', title: '', description: '', externalLink: '', dueDate: '' });
+            setForm({ type: 'file', content: '', externalLink: '', dueDate: '', forCourses: selectedCourse ? [selectedCourse] : [] });
             setFile(null);
-            teacherApi.getMaterials(selectedCourse).then(res => setMaterials(res.data.data || []));
-        } catch (err: any) { alert(err.response?.data?.message || 'Error'); }
+            load();
+            showAlert('Success', 'Material shared!');
+        } catch (err: any) { showApiError(err); }
+    };
+
+    const handleForward = async () => {
+        if (!forwardMaterialId || forwardCourses.length === 0) return;
+        try {
+            await teacherApi.shareMaterial(forwardMaterialId, forwardCourses.join(','));
+            setShowForwardModal(false);
+            setForwardMaterialId(null);
+            setForwardCourses([]);
+            load();
+            showAlert('Success', 'Material forwarded successfully!');
+        } catch (err: any) { showApiError(err); }
     };
 
     const handleDelete = async (id: number) => {
-        if (confirm('Delete this material?')) {
-            await teacherApi.deleteMaterial(id);
-            if (selectedCourse) teacherApi.getMaterials(selectedCourse).then(res => setMaterials(res.data.data || []));
-        }
+        showConfirm('Delete Material', 'Delete this material?', async () => {
+            try {
+                await teacherApi.deleteMaterial(id);
+                load();
+                showAlert('Deleted', 'Material removed.', 'error');
+            } catch (err: any) { showApiError(err); }
+        });
     };
-
-    const typeIcons: Record<string, string> = { file: 'F', link: 'L', announcement: 'A', assignment: 'W' };
-    const typeColors: Record<string, string> = { file: 'var(--accent-blue)', link: 'var(--accent-purple)', announcement: 'var(--accent-yellow)', assignment: 'var(--accent-red)' };
-
-    const stats = { total: materials.length, file: materials.filter(m => m.type === 'file').length, link: materials.filter(m => m.type === 'link').length, announcement: materials.filter(m => m.type === 'announcement').length, assignment: materials.filter(m => m.type === 'assignment').length };
 
     return (
         <DashboardLayout role="teacher">
@@ -70,20 +104,11 @@ const TeacherMaterials: React.FC = () => {
 
             {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
                 <>
-                    {/* Stats */}
-                    <div className="stats-grid">
-                        <div className="stat-card blue"><div className="stat-value">{stats.total}</div><div className="stat-label">Total</div></div>
-                        <div className="stat-card cyan"><div className="stat-value">{stats.file}</div><div className="stat-label">Files</div></div>
-                        <div className="stat-card purple"><div className="stat-value">{stats.link}</div><div className="stat-label">Links</div></div>
-                        <div className="stat-card yellow"><div className="stat-value">{stats.announcement}</div><div className="stat-label">Announcements</div></div>
-                        <div className="stat-card red"><div className="stat-value">{stats.assignment}</div><div className="stat-label">Assignments</div></div>
-                    </div>
-
                     {/* Filters */}
                     <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                             <select className="form-input" style={{ maxWidth: '250px' }} value={selectedCourse || ''} onChange={e => setSelectedCourse(Number(e.target.value))}>
-                                {courses.map(c => <option key={c.id} value={c.id}>{c.courseCode} — {c.courseName}</option>)}
+                                {courses.map(c => <option key={c.id} value={c.id}>{c.courseCode} {c.section ? `- ${c.section}` : ''}</option>)}
                             </select>
                             <select className="form-input" style={{ maxWidth: '180px' }} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
                                 <option value="">All Types</option>
@@ -92,34 +117,79 @@ const TeacherMaterials: React.FC = () => {
                                 <option value="announcement">Announcements</option>
                                 <option value="assignment">Assignments</option>
                             </select>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                                {filtered.length} item{filtered.length !== 1 ? 's' : ''}
+                            </span>
                         </div>
                     </div>
 
-                    {/* Materials List */}
-                    {filtered.length > 0 ? filtered.map(m => (
-                        <div key={m.id} className="glass-card" style={{ marginBottom: '0.75rem', borderLeft: `3px solid ${typeColors[m.type] || 'var(--accent-blue)'}` }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flex: 1 }}>
-                                    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: typeColors[m.type] || 'var(--accent-blue)', background: '#f1f5f9' }}>{typeIcons[m.type] || 'F'}</span>
-                                    <div>
-                                        <h4 style={{ marginBottom: '0.25rem' }}>
-                                            {m.isPinned && <span style={{ color: 'var(--accent-yellow)', marginRight: '0.5rem', fontSize: '0.75rem', fontWeight: 700 }}>PINNED</span>}
-                                            {m.title}
-                                        </h4>
-                                        {m.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>{m.description}</p>}
-                                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                            <span className="badge badge-active" style={{ fontSize: '0.7rem' }}>{m.type}</span>
-                                            {m.fileName && <span>File: {m.fileName}</span>}
-                                            {m.externalLink && <a href={m.externalLink} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-blue)' }}>Open Link</a>}
-                                            {m.dueDate && <span>Due: {new Date(m.dueDate).toLocaleDateString()}</span>}
-                                            <span>{new Date(m.createdAt).toLocaleDateString()}</span>
+                    {/* Resource Stream */}
+                    <div className="classroom-stream">
+                        {/* Announce Box Placeholder */}
+                        <div className="stream-item" style={{ padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowModal(true)}>
+                            <div className="stream-avatar" style={{ width: 32, height: 32 }}>{courses.find(c => c.id === selectedCourse)?.teacherName?.[0] || 'T'}</div>
+                            <span style={{ fontSize: '0.85rem' }}>Announce something to your class...</span>
+                        </div>
+
+                        {filtered.length > 0 ? filtered.map(m => (
+                            <div key={m.id} className="stream-item">
+                                <div className="stream-actions">
+                                    <button className="btn-icon" title="Forward" onClick={() => {
+                                        setForwardMaterialId(m.id);
+                                        setForwardCourses([]);
+                                        setShowForwardModal(true);
+                                    }} style={{ border: 'none', background: 'transparent', color: 'var(--primary)' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+                                    </button>
+                                    <button className="btn-icon" title="Delete" onClick={() => handleDelete(m.id)} style={{ border: 'none', background: 'transparent' }}>⋮</button>
+                                </div>
+
+                                {m.type === 'announcement' ? (
+                                    <>
+                                        <div className="stream-header">
+                                            <div className="stream-avatar">{m.teacher?.firstName?.[0]}{m.teacher?.lastName?.[0]}</div>
+                                            <div className="stream-info">
+                                                <div className="stream-author">{m.teacher?.firstName} {m.teacher?.lastName}</div>
+                                                <div className="stream-date">{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                            </div>
+                                        </div>
+                                        <div className="stream-content">
+                                            {m.title && <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{m.title}</div>}
+                                            {m.description}
+                                        </div>
+                                        <div className="comment-input-area">
+                                            <div className="comment-avatar">T</div>
+                                            <button className="comment-trigger">Add comment</button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="stream-item-material">
+                                        <div className="material-badge">
+                                            {m.type === 'file' && (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                            )}
+                                            {m.type === 'link' && (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                            )}
+                                            {m.type === 'assignment' && (
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                            )}
+                                        </div>
+                                        <div className="stream-info">
+                                            <h4>{m.teacher?.firstName} {m.teacher?.lastName} posted a new {m.type}: {m.title}</h4>
+                                            <p>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
                                         </div>
                                     </div>
-                                </div>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(m.id)}>Delete</button>
+                                )}
                             </div>
-                        </div>
-                    )) : <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}><p style={{ color: 'var(--text-secondary)' }}>No materials found</p></div>}
+                        )) : (
+                            <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
+                                <h3 style={{ marginBottom: '0.5rem' }}>No materials found</h3>
+                                <p style={{ color: 'var(--text-secondary)' }}>Shared files and resources for this course will appear here.</p>
+                            </div>
+                        )}
+                    </div>
                 </>
             )}
 
@@ -137,16 +207,54 @@ const TeacherMaterials: React.FC = () => {
                                     <option value="assignment">Assignment</option>
                                 </select>
                             </div>
-                            <div className="form-group"><label className="form-label">Title</label><input className="form-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required /></div>
-                            <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+                            <div className="form-group">
+                                <label className="form-label">Title / Description</label>
+                                <textarea 
+                                    className="form-input" 
+                                    rows={5} 
+                                    placeholder="Enter title on the first line, then details below..." 
+                                    value={form.content} 
+                                    onChange={e => setForm({ ...form, content: e.target.value })} 
+                                    required 
+                                />
+                            </div>
                             {form.type === 'file' && <div className="form-group"><label className="form-label">File</label><input type="file" className="form-input" onChange={e => setFile(e.target.files?.[0] || null)} /></div>}
                             {form.type === 'link' && <div className="form-group"><label className="form-label">URL</label><input className="form-input" value={form.externalLink} onChange={e => setForm({ ...form, externalLink: e.target.value })} placeholder="https://..." /></div>}
                             {form.type === 'assignment' && <div className="form-group"><label className="form-label">Due Date</label><input className="form-input" type="datetime-local" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>}
+
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Add Material</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Forward Modal */}
+            {showForwardModal && (
+                <div className="modal-overlay" onClick={() => setShowForwardModal(false)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Forward to Other Sections</h3>
+                            <button className="modal-close" onClick={() => setShowForwardModal(false)}>×</button>
+                        </div>
+                        <div style={{ padding: '1rem 0' }}>
+                            <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>Select sections to forward this material to:</p>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                {courses.filter(c => c.id !== selectedCourse).map(c => (
+                                    <label key={c.id} className={`chip-select ${forwardCourses.includes(c.id) ? 'selected' : ''}`}>
+                                        <input type="checkbox" checked={forwardCourses.includes(c.id)} onChange={e => {
+                                            setForwardCourses(prev => e.target.checked ? [...prev, c.id] : prev.filter(x => x !== c.id));
+                                        }} style={{ display: 'none' }} />
+                                        {c.courseCode} {c.section}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setShowForwardModal(false)}>Cancel</button>
+                            <button className="btn btn-primary" onClick={handleForward} disabled={forwardCourses.length === 0} style={{ width: 'auto' }}>Forward Material</button>
+                        </div>
                     </div>
                 </div>
             )}

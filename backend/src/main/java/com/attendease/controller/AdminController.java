@@ -7,7 +7,6 @@ import com.attendease.entity.User;
 import com.attendease.exception.BadRequestException;
 import com.attendease.exception.ResourceNotFoundException;
 import com.attendease.repository.CourseRepository;
-import com.attendease.repository.EnrollmentRepository;
 import com.attendease.repository.UserRepository;
 import com.attendease.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +30,6 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
-    private final EnrollmentRepository enrollmentRepository;
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
 
@@ -41,10 +39,22 @@ public class AdminController {
         stats.put("totalUsers", userRepository.count());
         stats.put("totalStudents", userRepository.countByRole("student"));
         stats.put("totalTeachers", userRepository.countByRole("teacher"));
-        stats.put("totalCourses", courseRepository.countByStatus("active"));
+        stats.put("totalCourses", courseRepository.count());
+        stats.put("activeCourses", courseRepository.countByStatus("active"));
+        stats.put("archivedCourses", courseRepository.countByStatus("archived"));
+        stats.put("deletedCourses", courseRepository.countByStatus("deleted"));
         stats.put("activeUsers", userRepository.countByStatus("active"));
         stats.put("recentUsers", userRepository.findAll(PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent().stream().map(UserDto::fromEntity).toList());
         return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    @GetMapping("/courses")
+    public ResponseEntity<ApiResponse<List<com.attendease.entity.Course>>> getAllCourses(
+            @RequestParam(required = false) String status) {
+        if (status != null) {
+            return ResponseEntity.ok(ApiResponse.success(courseRepository.findByStatus(status)));
+        }
+        return ResponseEntity.ok(ApiResponse.success(courseRepository.findAll()));
     }
 
     @GetMapping("/users")

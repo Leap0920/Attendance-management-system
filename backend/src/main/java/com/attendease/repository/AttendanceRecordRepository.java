@@ -10,7 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord, Long> {
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"student"})
     List<AttendanceRecord> findBySessionId(Long sessionId);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"session"})
     List<AttendanceRecord> findByStudentIdAndCourseId(Long studentId, Long courseId);
     Optional<AttendanceRecord> findBySessionIdAndStudentId(Long sessionId, Long studentId);
     boolean existsBySessionIdAndStudentId(Long sessionId, Long studentId);

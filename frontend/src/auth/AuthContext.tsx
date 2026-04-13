@@ -9,6 +9,7 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -80,8 +81,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authApi.getMe();
+      if (response.data.success) {
+        setUser(response.data.data);
+        localStorage.setItem('user', JSON.stringify(response.data.data));
+      }
+    } catch {}
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -19,6 +19,7 @@ com\attendease\exception\UnauthorizedException.class
 com\attendease\config\CorsConfig.class
 com\attendease\dto\UserDto$UserDtoBuilder.class
 com\attendease\entity\Comment$CommentBuilder.class
+com\attendease\config\JacksonConfig.class
 com\attendease\entity\AttendanceRecord.class
 com\attendease\entity\AttendanceSession.class
 com\attendease\dto\ApiResponse.class

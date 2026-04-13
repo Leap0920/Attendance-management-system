@@ -49,9 +49,11 @@ public class CourseMaterial {
     @Column(name = "due_date")
     private LocalDateTime dueDate;
 
+    @Builder.Default
     @Column(name = "is_pinned")
     private Boolean isPinned = false;
 
+    @Builder.Default
     @Column(name = "is_closed")
     private Boolean isClosed = false;
 

@@ -21,7 +21,7 @@
         <java.version>17</java.version>
         <jjwt.version>0.12.5</jjwt.version>
         <totp.version>1.7.1</totp.version>
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
