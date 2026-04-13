@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { teacherApi } from '../api';
+import { studentApi, teacherApi } from '../api';
 import Modal from './Modal';
 
 interface DashboardLayoutProps {
@@ -70,6 +70,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   const location = useLocation();
   const [showLogout, setShowLogout] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [profileTab, setProfileTab] = useState<'info' | 'security'>('info');
   const [profileForm, setProfileForm] = useState({
     firstName: user?.firstName || '',
@@ -83,6 +84,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   });
   const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [modal, setModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -125,6 +127,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     navigate('/login');
   };
 
+  const apiForRole = role === 'student' ? studentApi : role === 'teacher' ? teacherApi : null;
+
+  const hasAvatar = typeof user?.avatar === 'string' && user.avatar.trim().length > 0;
+
+  const getAvatarUrl = (avatar?: unknown) => {
+    if (typeof avatar !== 'string') return '';
+    const value = avatar.trim();
+    if (!value) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    return `http://localhost:8080${value.startsWith('/') ? value : `/${value}`}`;
+  };
+
   const isActive = (path: string) => {
     if (path === `/${role}`) return location.pathname === path;
     return location.pathname.startsWith(path);
@@ -144,10 +158,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!apiForRole) {
+      setProfileMsg({ type: 'error', text: 'Profile editing is only available for students and teachers' });
+      return;
+    }
     setSaving(true);
     setProfileMsg(null);
     try {
-      const res = await teacherApi.updateProfile(profileForm);
+      const res = await apiForRole.updateProfile(profileForm);
       const updatedUser = res.data.data;
       if (updatedUser) {
         setUser({ ...user, ...updatedUser } as any);
@@ -163,6 +181,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!apiForRole) {
+      setProfileMsg({ type: 'error', text: 'Password update is only available for students and teachers' });
+      return;
+    }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setProfileMsg({ type: 'error', text: 'New passwords do not match' });
       return;
@@ -174,7 +196,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     setSaving(true);
     setProfileMsg(null);
     try {
-      await teacherApi.changePassword({
+      await apiForRole.changePassword({
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
@@ -184,6 +206,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       setProfileMsg({ type: 'error', text: err.response?.data?.message || 'Error changing password' });
     }
     setSaving(false);
+  };
+
+  const handleAvatarUpload = async (file?: File) => {
+    if (!file || !apiForRole) return;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploadingAvatar(true);
+    setProfileMsg(null);
+    try {
+      const res = await apiForRole.uploadAvatar(formData);
+      const updatedUser = res.data.data;
+      if (updatedUser) {
+        setUser({ ...user, ...updatedUser } as any);
+        localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+      }
+      setProfileMsg({ type: 'success', text: 'Profile photo updated successfully!' });
+      await refreshUser();
+    } catch (err: any) {
+      setProfileMsg({ type: 'error', text: err.response?.data?.message || 'Error uploading profile photo' });
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   return (
@@ -209,7 +254,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         <div className="sidebar-footer">
           <div className="sidebar-profile" onClick={openProfile} title="Edit Profile">
             <div className="sidebar-avatar">
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {hasAvatar ? (
+                  <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
+                ) : (
+                  <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+                )}
             </div>
             <div>
               <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{user?.fullName}</div>
@@ -275,8 +324,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             </div>
 
             <div className="profile-avatar-lg">
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+              {hasAvatar ? (
+                <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
+              ) : (
+                <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+              )}
             </div>
+
+            {(role === 'student' || role === 'teacher') && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-0.75rem', marginBottom: '1.25rem' }}>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    handleAvatarUpload(file);
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ width: 'auto' }}
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                >
+                  {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                </button>
+              </div>
+            )}
 
             <div className="profile-tabs">
               <button className={`profile-tab ${profileTab === 'info' ? 'active' : ''}`} onClick={() => { setProfileTab('info'); setProfileMsg(null); }}>

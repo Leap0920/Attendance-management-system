@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -36,6 +38,7 @@ public class StudentController {
         private final AssignmentSubmissionRepository assignmentSubmissionRepository;
         private final CommentRepository commentRepository;
         private final AuditService auditService;
+        private final PasswordEncoder passwordEncoder;
 
         // ── Dashboard ──────────────────────────────────────────────────────
         @GetMapping("/dashboard")
@@ -60,7 +63,22 @@ public class StudentController {
                         courseInfo.put("id", course.getId());
                         courseInfo.put("courseCode", course.getCourseCode());
                         courseInfo.put("courseName", course.getCourseName());
+                        courseInfo.put("description", course.getDescription());
+                        courseInfo.put("section", course.getSection());
+                        courseInfo.put("schedule", course.getSchedule());
+                        courseInfo.put("room", course.getRoom());
                         courseInfo.put("coverColor", course.getCoverColor());
+
+                        User t = course.getTeacher();
+                        if (t != null) {
+                                Map<String, Object> teacherData = new HashMap<>();
+                                teacherData.put("id", t.getId());
+                                teacherData.put("firstName", t.getFirstName());
+                                teacherData.put("lastName", t.getLastName());
+                                teacherData.put("email", t.getEmail());
+                                teacherData.put("role", t.getRole());
+                                courseInfo.put("teacher", teacherData);
+                        }
                         
                         cd.put("course", courseInfo);
                         cd.put("totalSessions", total);
@@ -98,8 +116,38 @@ public class StudentController {
                 List<Enrollment> enrollments = enrollmentRepository.findByStudentIdAndStatus(student.getId(), "active");
                 List<Map<String, Object>> courses = enrollments.stream().map(e -> {
                         Map<String, Object> m = new HashMap<>();
-                        m.put("enrollment", e);
-                        m.put("course", e.getCourse());
+                        Course c = e.getCourse();
+
+                        Map<String, Object> courseData = new HashMap<>();
+                        courseData.put("id", c.getId());
+                        courseData.put("courseCode", c.getCourseCode());
+                        courseData.put("courseName", c.getCourseName());
+                        courseData.put("description", c.getDescription());
+                        courseData.put("joinCode", c.getJoinCode());
+                        courseData.put("section", c.getSection());
+                        courseData.put("schedule", c.getSchedule());
+                        courseData.put("room", c.getRoom());
+                        courseData.put("coverColor", c.getCoverColor());
+                        courseData.put("status", c.getStatus());
+
+                        User t = c.getTeacher();
+                        if (t != null) {
+                                Map<String, Object> teacherData = new HashMap<>();
+                                teacherData.put("id", t.getId());
+                                teacherData.put("firstName", t.getFirstName());
+                                teacherData.put("lastName", t.getLastName());
+                                teacherData.put("email", t.getEmail());
+                                teacherData.put("role", t.getRole());
+                                courseData.put("teacher", teacherData);
+                        }
+
+                        Map<String, Object> enrollmentData = new HashMap<>();
+                        enrollmentData.put("id", e.getId());
+                        enrollmentData.put("status", e.getStatus());
+                        enrollmentData.put("enrolledAt", e.getEnrolledAt());
+
+                        m.put("enrollment", enrollmentData);
+                        m.put("course", courseData);
                         return m;
                 }).toList();
                 return ResponseEntity.ok(ApiResponse.success(courses));
@@ -207,6 +255,18 @@ public class StudentController {
                                 : "Attendance recorded as Late.";
                 return ResponseEntity.ok(ApiResponse.success(message, record));
         }
+
+    @GetMapping("/materials")
+    public ResponseEntity<ApiResponse<List<CourseMaterial>>> getMaterials(
+            @RequestParam Long courseId,
+            @AuthenticationPrincipal User student) {
+        enrollmentRepository.findByStudentIdAndCourseId(student.getId(), courseId)
+                .filter(e -> "active".equals(e.getStatus()))
+                .orElseThrow(() -> new ResourceNotFoundException("Not enrolled in this course"));
+
+        return ResponseEntity.ok(ApiResponse.success(
+                courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(courseId)));
+    }
 
     @GetMapping("/materials/{materialId}/comments")
     public ResponseEntity<ApiResponse<List<Comment>>> getComments(@PathVariable Long materialId) {
@@ -355,6 +415,7 @@ public class StudentController {
                                 contact.put("firstName", t.getFirstName());
                                 contact.put("lastName", t.getLastName());
                                 contact.put("email", t.getEmail());
+                                contact.put("role", t.getRole());
                                 contactMap.put(t.getId(), contact);
                         }
                 }
@@ -387,6 +448,69 @@ public class StudentController {
                 return ResponseEntity.ok(ApiResponse.success("Message sent", courseMessageRepository.save(msg)));
         }
 
+        // ── Profile ────────────────────────────────────────────────────────
+        @PutMapping("/profile")
+        public ResponseEntity<ApiResponse<Map<String, Object>>> updateProfile(
+                        @RequestBody Map<String, String> body,
+                        @AuthenticationPrincipal User student,
+                        HttpServletRequest request) {
+                if (body.containsKey("firstName")) student.setFirstName(body.get("firstName"));
+                if (body.containsKey("lastName")) student.setLastName(body.get("lastName"));
+                if (body.containsKey("department")) student.setDepartment(body.get("department"));
+
+                student = userRepository.save(student);
+                auditService.log(student, "update_profile", "user", student.getId(), request);
+                return ResponseEntity.ok(ApiResponse.success("Profile updated", buildUserData(student)));
+        }
+
+        @PutMapping("/profile/password")
+        public ResponseEntity<ApiResponse<Void>> changePassword(
+                        @RequestBody Map<String, String> body,
+                        @AuthenticationPrincipal User student,
+                        HttpServletRequest request) {
+                String currentPassword = body.get("currentPassword");
+                String newPassword = body.get("newPassword");
+
+                if (currentPassword == null || newPassword == null) {
+                        throw new BadRequestException("Current and new password are required");
+                }
+
+                if (!passwordEncoder.matches(currentPassword, student.getPassword())) {
+                        throw new BadRequestException("Current password is incorrect");
+                }
+
+                if (newPassword.length() < 6) {
+                        throw new BadRequestException("New password must be at least 6 characters");
+                }
+
+                student.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(student);
+                auditService.log(student, "change_password", "user", student.getId(), request);
+                return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
+        }
+
+        @PostMapping("/profile/avatar")
+        public ResponseEntity<ApiResponse<Map<String, Object>>> uploadAvatar(
+                        @RequestParam("file") MultipartFile file,
+                        @AuthenticationPrincipal User student,
+                        HttpServletRequest request) throws IOException {
+                if (file == null || file.isEmpty()) {
+                        throw new BadRequestException("Please select an image to upload");
+                }
+
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                        throw new BadRequestException("Only image files are allowed");
+                }
+
+                String avatarPath = saveAvatar(file, student.getId());
+                student.setAvatar(avatarPath);
+                student = userRepository.save(student);
+                auditService.log(student, "update_avatar", "user", student.getId(), request);
+
+                return ResponseEntity.ok(ApiResponse.success("Avatar updated", buildUserData(student)));
+        }
+
         @PostMapping("/courses/{id}/leave")
         public ResponseEntity<ApiResponse<Void>> leaveCourse(
                         @PathVariable Long id, @AuthenticationPrincipal User student, HttpServletRequest request) {
@@ -397,5 +521,32 @@ public class StudentController {
                 enrollmentRepository.save(enrollment);
                 auditService.log(student, "leave_course", "enrollment", enrollment.getId(), request);
                 return ResponseEntity.ok(ApiResponse.success("Left course", null));
+        }
+
+        private String saveAvatar(MultipartFile file, Long userId) throws IOException {
+                String uploadDir = "uploads/avatars/" + userId;
+                Path uploadPath = Paths.get(uploadDir);
+                Files.createDirectories(uploadPath);
+
+                String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "avatar";
+                String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
+                String fileName = System.currentTimeMillis() + "_" + safeName;
+
+                Path target = uploadPath.resolve(fileName);
+                Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+                return "/uploads/avatars/" + userId + "/" + fileName;
+        }
+
+        private Map<String, Object> buildUserData(User user) {
+                Map<String, Object> userData = new HashMap<>();
+                userData.put("id", user.getId());
+                userData.put("email", user.getEmail());
+                userData.put("firstName", user.getFirstName());
+                userData.put("lastName", user.getLastName());
+                userData.put("fullName", user.getFullName());
+                userData.put("role", user.getRole());
+                userData.put("department", user.getDepartment());
+                userData.put("avatar", user.getAvatar());
+                return userData;
         }
 }

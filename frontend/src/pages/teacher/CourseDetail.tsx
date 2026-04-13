@@ -261,7 +261,7 @@ const TeacherCourseDetail: React.FC = () => {
                     {/* Share Box */}
                     {!showPostArea ? (
                         <div className="stream-item post-trigger" onClick={() => setShowPostArea(true)}>
-                            <div className="stream-avatar">{teacher.firstName?.[0]}</div>
+                            <div className="stream-avatar">{course?.teacher?.firstName?.[0] || 'T'}</div>
                             <span>Announce something to your class...</span>
                         </div>
                     ) : (

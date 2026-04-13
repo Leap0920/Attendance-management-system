@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -155,7 +156,11 @@ public class TeacherController {
 
         Map<String, Object> data = new HashMap<>();
         data.put("course", course);
-        data.put("enrollments", enrollmentRepository.findByCourseIdAndStatus(id, "active"));
+        List<Enrollment> activeEnrollments = enrollmentRepository.findByCourseIdAndStatus(id, "active");
+        List<Map<String, Object>> enrollmentData = activeEnrollments.stream()
+            .map(this::mapEnrollment)
+            .toList();
+        data.put("enrollments", enrollmentData);
         data.put("materials", courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(id));
         // sessions (auto-close expired)
         List<AttendanceSession> sessions = attendanceSessionRepository.findByCourseId(id);
@@ -868,7 +873,39 @@ public class TeacherController {
         userData.put("fullName", teacher.getFullName());
         userData.put("role", teacher.getRole());
         userData.put("department", teacher.getDepartment());
+        userData.put("avatar", teacher.getAvatar());
         return ResponseEntity.ok(ApiResponse.success("Profile updated", userData));
+    }
+
+    @PostMapping("/profile/avatar")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> uploadAvatar(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Please select an image to upload");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("Only image files are allowed");
+        }
+
+        String avatarPath = saveAvatar(file, teacher.getId());
+        teacher.setAvatar(avatarPath);
+        teacher = userRepository.save(teacher);
+        auditService.log(teacher, "update_avatar", "user", teacher.getId(), request);
+
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", teacher.getId());
+        userData.put("email", teacher.getEmail());
+        userData.put("firstName", teacher.getFirstName());
+        userData.put("lastName", teacher.getLastName());
+        userData.put("fullName", teacher.getFullName());
+        userData.put("role", teacher.getRole());
+        userData.put("department", teacher.getDepartment());
+        userData.put("avatar", teacher.getAvatar());
+        return ResponseEntity.ok(ApiResponse.success("Avatar updated", userData));
     }
 
     @PutMapping("/profile/password")
@@ -903,5 +940,41 @@ public class TeacherController {
         Random random = new Random();
         for (int i = 0; i < length; i++) sb.append(chars.charAt(random.nextInt(chars.length())));
         return sb.toString();
+    }
+
+    private Map<String, Object> mapEnrollment(Enrollment enrollment) {
+        User student = enrollment.getStudent();
+
+        Map<String, Object> studentData = new HashMap<>();
+        if (student != null) {
+            studentData.put("id", student.getId());
+            studentData.put("firstName", student.getFirstName());
+            studentData.put("lastName", student.getLastName());
+            studentData.put("email", student.getEmail());
+            studentData.put("studentId", student.getStudentId());
+            studentData.put("role", student.getRole());
+            studentData.put("status", student.getStatus());
+        }
+
+        Map<String, Object> enrollmentData = new HashMap<>();
+        enrollmentData.put("id", enrollment.getId());
+        enrollmentData.put("status", enrollment.getStatus());
+        enrollmentData.put("enrolledAt", enrollment.getEnrolledAt());
+        enrollmentData.put("student", studentData);
+        return enrollmentData;
+    }
+
+    private String saveAvatar(MultipartFile file, Long userId) throws IOException {
+        String uploadDir = "uploads/avatars/" + userId;
+        Path uploadPath = Paths.get(uploadDir);
+        Files.createDirectories(uploadPath);
+
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "avatar";
+        String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String fileName = System.currentTimeMillis() + "_" + safeName;
+
+        Path target = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+        return "/uploads/avatars/" + userId + "/" + fileName;
     }
 }

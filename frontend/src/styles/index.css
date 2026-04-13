@@ -211,7 +211,13 @@ textarea.form-input { resize: vertical; }
   background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); display: flex;
   align-items: center; justify-content: center; font-weight: 700;
   font-size: 0.8rem; color: #fff; flex-shrink: 0;
-  transition: var(--transition);
+  transition: var(--transition); overflow: hidden;
+}
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .sidebar-profile:hover .sidebar-avatar {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -715,7 +721,7 @@ textarea.form-input { resize: vertical; }
   background: var(--gradient-primary); display: flex;
   align-items: center; justify-content: center;
   font-weight: 700; font-size: 1.5rem; color: white;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 1.5rem; overflow: hidden;
 }
 
 /* ── Empty State ─────────────────────────────────────────── */
