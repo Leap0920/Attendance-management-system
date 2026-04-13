@@ -448,8 +448,8 @@ public class TeacherController {
                     .dueDate(dueDate != null && !dueDate.isEmpty() ? LocalDateTime.parse(dueDate) : null)
                     .isPinned(false).isClosed(false).build();
 
-            // Handle file upload (copy for each course if multiple, or share one path - here we copy for simplicity/isolation)
-            if ("file".equals(type) && file != null && !file.isEmpty()) {
+            // Handle file upload for both file and assignment types
+            if (("file".equals(type) || "assignment".equals(type)) && file != null && !file.isEmpty()) {
                 String uploadDir = "uploads/materials/" + courseId;
                 Path uploadPath = Paths.get(uploadDir);
                 Files.createDirectories(uploadPath);

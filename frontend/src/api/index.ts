@@ -96,3 +96,14 @@ export const studentApi = {
   submitHomework: (data: FormData) =>
     api.post('/student/submissions', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
+
+export const fileApi = {
+  downloadMaterial: (materialId: number) =>
+    api.get(`/files/materials/${materialId}/download`, { responseType: 'blob' }),
+  downloadSubmission: (submissionId: number) =>
+    api.get(`/files/submissions/${submissionId}/download`, { responseType: 'blob' }),
+  getMaterialDownloadUrl: (materialId: number) =>
+    `http://localhost:8080/api/files/materials/${materialId}/download`,
+  getSubmissionDownloadUrl: (submissionId: number) =>
+    `http://localhost:8080/api/files/submissions/${submissionId}/download`,
+};
