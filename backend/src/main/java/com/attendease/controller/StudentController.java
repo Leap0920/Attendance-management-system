@@ -184,6 +184,24 @@ public class StudentController {
 
                 Map<String, Object> data = new HashMap<>();
                 data.put("course", course);
+                List<Enrollment> activeEnrollments = enrollmentRepository.findByCourseIdAndStatus(id, "active");
+                List<Map<String, Object>> enrollmentData = activeEnrollments.stream().map(e -> {
+                        User s = e.getStudent();
+                        Map<String, Object> studentData = new HashMap<>();
+                        studentData.put("id", s.getId());
+                        studentData.put("firstName", s.getFirstName());
+                        studentData.put("lastName", s.getLastName());
+                        studentData.put("studentId", s.getStudentId());
+                        studentData.put("avatarUrl", s.getAvatar());
+                        studentData.put("role", s.getRole());
+
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("id", e.getId());
+                        row.put("status", e.getStatus());
+                        row.put("student", studentData);
+                        return row;
+                }).toList();
+                data.put("enrollments", enrollmentData);
                 data.put("materials", courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(id));
                 data.put("attendanceRecords",
                                 attendanceRecordRepository.findByStudentIdAndCourseId(student.getId(), id));

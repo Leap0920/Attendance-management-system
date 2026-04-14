@@ -52,6 +52,7 @@ const TeacherCourseDetail: React.FC = () => {
     const [submissions, setSubmissions] = useState<any[]>([]);
     const [gradingSub, setGradingSub] = useState<any>(null);
     const [comments, setComments] = useState<Record<number, any[]>>({});
+    const [showStudentsPanel, setShowStudentsPanel] = useState(false);
 
     const load = () => {
         teacherApi.getCourse(Number(id)).then(res => {
@@ -199,6 +200,63 @@ const TeacherCourseDetail: React.FC = () => {
 
     return (
         <DashboardLayout role="teacher">
+            <button
+                className="btn btn-primary"
+                onClick={() => setShowStudentsPanel(prev => !prev)}
+                style={{
+                    position: 'fixed',
+                    right: showStudentsPanel ? 330 : 18,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 'auto',
+                    zIndex: 50,
+                    borderRadius: 999,
+                    padding: '0.45rem 0.9rem',
+                    transition: 'right 0.2s ease'
+                }}
+            >
+                {showStudentsPanel ? 'Hide Students' : `Students (${enrollments?.length || 0})`}
+            </button>
+
+            <div
+                style={{
+                    position: 'fixed',
+                    top: 90,
+                    right: 0,
+                    bottom: 16,
+                    width: 320,
+                    background: '#fff',
+                    borderLeft: '1px solid var(--border-glass)',
+                    boxShadow: '-8px 0 20px rgba(15,23,42,0.08)',
+                    transform: showStudentsPanel ? 'translateX(0)' : 'translateX(100%)',
+                    transition: 'transform 0.2s ease',
+                    zIndex: 45,
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}
+            >
+                <div style={{ padding: '0.9rem 1rem', borderBottom: '1px solid var(--border-glass)', fontWeight: 700 }}>
+                    Student List
+                </div>
+                <div style={{ padding: '0.75rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {enrollments?.length > 0 ? enrollments.map((e: any) => (
+                        <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.55rem 0.6rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                            <div className="sidebar-avatar" style={{ width: 30, height: 30, fontSize: '0.65rem' }}>
+                                {e.student?.firstName?.[0]}{e.student?.lastName?.[0]}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: '0.82rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {e.student?.firstName} {e.student?.lastName}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                    {e.student?.studentId || 'No student ID'}
+                                </div>
+                            </div>
+                        </div>
+                    )) : <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1.25rem 0.5rem' }}>No students enrolled yet.</p>}
+                </div>
+            </div>
+
             {/* Course Header */}
             <div className="detail-header" style={{ borderLeft: `4px solid ${course.coverColor}`, background: `linear-gradient(135deg, ${course.coverColor}15, transparent)` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
