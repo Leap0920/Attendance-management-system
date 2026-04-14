@@ -1,3 +1,4 @@
+com\attendease\controller\FileController.class
 com\attendease\entity\RefreshToken.class
 com\attendease\exception\BadRequestException.class
 com\attendease\entity\Message$MessageBuilder.class
