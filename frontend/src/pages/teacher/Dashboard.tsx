@@ -55,7 +55,7 @@ const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ end
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
       fontSize: '0.85rem', color: 'var(--accent-green)', 
-      fontWeight: 700, fontPadding: '0 0.5rem', background: '#f0fdf4',
+      fontWeight: 700, background: '#f0fdf4',
       padding: '0.25rem 0.5rem', borderRadius: '4px'
     }}>
       <span style={{ fontSize: '1rem' }}>⏱</span> {timeLeft}
@@ -67,6 +67,7 @@ const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [attendForm, setAttendForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
@@ -82,9 +83,28 @@ const TeacherDashboard: React.FC = () => {
 
   const loadDashboard = () => {
     teacherApi.getDashboard().then(res => {
-      setData(res.data.data);
+      setData(res.data?.data || {
+        courses: [],
+        activeSessions: [],
+        recentSessions: [],
+        totalCourses: 0,
+        totalStudents: 0,
+        totalSessions: 0,
+      });
+      setLoadError(null);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => {
+      setLoadError('Unable to load teacher dashboard. Please refresh.');
+      setData({
+        courses: [],
+        activeSessions: [],
+        recentSessions: [],
+        totalCourses: 0,
+        totalStudents: 0,
+        totalSessions: 0,
+      });
+      setLoading(false);
+    });
   };
 
   useEffect(() => {
@@ -191,28 +211,6 @@ const TeacherDashboard: React.FC = () => {
     setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
   };
 
-  const handleArchive = async (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    showConfirm('Archive Course', 'Are you sure you want to archive this course?', async () => {
-      try {
-        await teacherApi.archiveCourse(id);
-        showAlert('Archived', 'Course moved to archives.');
-        loadDashboard();
-      } catch (err: any) { showApiError(err, 'Error archiving course'); }
-    });
-  };
-
-  const handleDelete = async (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    showConfirm('Delete Course', 'Are you sure you want to delete this course? This action cannot be undone, though admins can still view the logs.', async () => {
-      try {
-        await teacherApi.deleteCourse(id);
-        showAlert('Deleted', 'Course has been deleted.', 'error');
-        loadDashboard();
-      } catch (err: any) { showApiError(err, 'Error deleting course'); }
-    });
-  };
-
   // Compute stats
   const totalCourses = data?.totalCourses || data?.courses?.length || 0;
   const totalStudents = data?.totalStudents || 0;
@@ -231,7 +229,15 @@ const TeacherDashboard: React.FC = () => {
         </button>
       </div>
 
-      {loading ? <div className="loading-screen"><div className="spinner"></div></div> : data && (
+      {loading ? <div className="loading-screen"><div className="spinner"></div></div> : loadError ? (
+        <div className="glass-card" style={{ textAlign: 'center', padding: '2rem' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Dashboard unavailable</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{loadError}</p>
+          <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => { setLoading(true); loadDashboard(); }}>
+            Retry
+          </button>
+        </div>
+      ) : (
         <>
           {/* Notification Banner */}
           {notification && (

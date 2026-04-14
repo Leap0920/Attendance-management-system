@@ -10,6 +10,16 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
+  const normalizeRole = (role?: string) => {
+    const raw = (role || '').toLowerCase();
+    if (raw.startsWith('role_')) {
+      const stripped = raw.replace('role_', '');
+      return stripped === 'professor' ? 'teacher' : stripped;
+    }
+    if (raw === 'professor') return 'teacher';
+    return raw;
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -23,8 +33,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={`/${user.role}`} replace />;
+  const normalizedRole = normalizeRole(user.role);
+
+  if (allowedRoles && !allowedRoles.includes(normalizedRole)) {
+    return <Navigate to={`/${normalizedRole || 'login'}`} replace />;
   }
 
   return <>{children}</>;

@@ -23,9 +23,18 @@ import './styles/index.css';
 
 function RootRedirect() {
   const { user, loading } = useAuth();
+  const normalizeRole = (role?: string) => {
+    const raw = (role || '').toLowerCase();
+    if (raw.startsWith('role_')) {
+      const stripped = raw.replace('role_', '');
+      return stripped === 'professor' ? 'teacher' : stripped;
+    }
+    if (raw === 'professor') return 'teacher';
+    return raw;
+  };
   if (loading) return <div className="loading-screen"><div className="spinner"></div></div>;
   if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={`/${user.role}`} replace />;
+  return <Navigate to={`/${normalizeRole(user.role)}`} replace />;
 }
 
 function App() {

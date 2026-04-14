@@ -12,6 +12,7 @@ const StudentMessages: React.FC = () => {
   const [conversations, setConversations] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   const [viewMode, setViewMode] = useState<'group' | 'dm'>('group');
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
@@ -26,7 +27,24 @@ const StudentMessages: React.FC = () => {
   const chatRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isTeacherRole = (role?: string) => (role || '').toLowerCase().includes('teacher');
+  const isTeacherRole = (role?: string) => {
+    const raw = (role || '').toLowerCase();
+    return raw.includes('teacher') || raw.includes('professor');
+  };
+  const isOwnMessage = (msg: any) => {
+    const senderId = Number(msg?.sender?.id ?? msg?.senderId ?? 0);
+    const currentId = Number(user?.id ?? 0);
+    return currentId > 0 && senderId === currentId;
+  };
+
+  const dedupeById = (arr: any[]) => {
+    const seen = new Set<number>();
+    return arr.filter((m) => {
+      if (!m?.id || seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  };
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     if (chatRef.current) {
@@ -62,7 +80,7 @@ const StudentMessages: React.FC = () => {
 
   const loadGroupMessages = useCallback((courseId: number) => {
     studentApi.getGroupMessages(courseId).then(res => {
-      const newMsgs = Array.isArray(res.data?.data) ? res.data.data : [];
+      const newMsgs = dedupeById(Array.isArray(res.data?.data) ? res.data.data : []);
       setMessages(prev => {
         if (prev.length !== newMsgs.length) {
           setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 50);
@@ -74,7 +92,7 @@ const StudentMessages: React.FC = () => {
 
   const loadDmMessages = useCallback((userId: number) => {
     studentApi.getDmMessages(userId).then(res => {
-      const newMsgs = Array.isArray(res.data?.data) ? res.data.data : [];
+      const newMsgs = dedupeById(Array.isArray(res.data?.data) ? res.data.data : []);
       setMessages(prev => {
         if (prev.length !== newMsgs.length) {
           setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 50);
@@ -109,8 +127,9 @@ const StudentMessages: React.FC = () => {
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     const content = newMsg.trim();
-    if (!content) return;
+    if (!content || sending) return;
 
+    setSending(true);
     try {
         if (viewMode === 'group' && selectedCourse) {
             await studentApi.sendGroupMessage({ courseId: selectedCourse, content });
@@ -121,7 +140,8 @@ const StudentMessages: React.FC = () => {
         }
         setNewMsg('');
         refreshConversations();
-    } catch (err) { showApiError(err); }
+      } catch (err) { showApiError(err); }
+      finally { setSending(false); }
   };
 
   const sendNewDM = async (e: React.FormEvent) => {
@@ -239,24 +259,27 @@ const StudentMessages: React.FC = () => {
                 </div>
                 
                 <div className="chat-messages" ref={chatRef}>
-                  {messages.map((m: any, i: number) => {
-                    const isMine = m.sender?.id === user?.id;
-                    const prevMsg = messages[i-1];
-                    const showAvatar = !isMine && (prevMsg?.sender?.id !== m.sender?.id);
+                  {messages.map((m: any) => {
+                    const isMine = isOwnMessage(m);
+                    const inGroup = viewMode === 'group';
+                    const senderName = isMine
+                      ? 'You'
+                      : `${m.sender?.firstName || m.firstName || ''} ${m.sender?.lastName || m.lastName || ''}`.trim() || `User ${m.sender?.id || m.senderId || ''}`.trim();
+                    const avatarUrl = typeof (m.sender?.avatarUrl || m.avatarUrl) === 'string' ? (m.sender?.avatarUrl || m.avatarUrl) : '';
+                    const roleLabel = isTeacherRole(m.sender?.role || m.role) ? 'Teacher' : 'Student';
                     
                     return (
-                      <div key={m.id} style={{ display: 'flex', gap: '8px', marginBottom: '2px', alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+                      <div key={m.id} className={`chat-message-row ${isMine ? 'mine' : 'theirs'}`}>
                         {!isMine && (
-                            <div style={{ width: 32, flexShrink: 0 }}>
-                                {showAvatar && (
-                                    <div className="sidebar-avatar" style={{ width: 32, height: 32, fontSize: '0.65rem' }}>{m.sender?.firstName?.[0]}</div>
-                                )}
+                            <div className="sidebar-avatar" style={{ width: 32, height: 32, fontSize: '0.65rem', overflow: 'hidden', marginTop: inGroup ? '2px' : 0 }}>
+                                {avatarUrl ? <img src={avatarUrl} alt="avatar" className="avatar-image" /> : <>{(m.sender?.firstName || m.firstName || 'U')?.[0]}{(m.sender?.lastName || m.lastName || '')?.[0]}</>}
                             </div>
                         )}
                         <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`} style={{ borderRadius: '18px', borderBottomRightRadius: isMine ? '4px' : '18px', borderBottomLeftRadius: !isMine ? '4px' : '18px' }}>
-                          {!isMine && showAvatar && viewMode === 'group' && (
-                            <div style={{ fontWeight: 700, fontSize: '0.7rem', color: isTeacherRole(m.sender?.role) ? 'var(--accent-red)' : 'var(--accent-blue)', marginBottom: '2px' }}>
-                                {m.sender?.firstName} {m.sender?.lastName} {isTeacherRole(m.sender?.role) && '• Teacher'}
+                          {inGroup && (
+                            <div style={{ fontWeight: 700, fontSize: '0.7rem', color: isMine ? 'rgba(255,255,255,0.92)' : (isTeacherRole(m.sender?.role) ? 'var(--accent-red)' : 'var(--accent-blue)'), marginBottom: '3px', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                {senderName}
+                                {!isMine && <span style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: 999, background: '#e2e8f0', color: '#334155' }}>{roleLabel}</span>}
                             </div>
                           )}
                           <div className="bubble-content">{m.content}</div>
@@ -264,6 +287,11 @@ const StudentMessages: React.FC = () => {
                               {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
+                        {isMine && inGroup && (
+                          <div className="sidebar-avatar" style={{ width: 32, height: 32, fontSize: '0.65rem', overflow: 'hidden', marginTop: '2px' }}>
+                            {avatarUrl ? <img src={avatarUrl} alt="avatar" className="avatar-image" /> : <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -283,7 +311,7 @@ const StudentMessages: React.FC = () => {
                     value={newMsg}
                     onChange={e => setNewMsg(e.target.value)}
                   />
-                  <button className="btn btn-primary" type="submit" disabled={!newMsg.trim()} style={{ width: '40px', height: '40px', borderRadius: '50%', padding: 0 }}>
+                  <button className="btn btn-primary" type="submit" disabled={!newMsg.trim() || sending} style={{ width: '40px', height: '40px', borderRadius: '50%', padding: 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                   </button>
                 </form>

@@ -360,12 +360,28 @@ public class StudentController {
         }
 
         @GetMapping("/messages/group/{courseId}")
-        public ResponseEntity<ApiResponse<List<CourseMessage>>> getGroupMessages(
+        public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getGroupMessages(
                         @PathVariable Long courseId, @AuthenticationPrincipal User student) {
                 enrollmentRepository.findByStudentIdAndCourseId(student.getId(), courseId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Not enrolled"));
-                return ResponseEntity.ok(ApiResponse.success(
-                                courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId)));
+                List<CourseMessage> messages = courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId);
+                List<Map<String, Object>> data = messages.stream().map(m -> {
+                        Map<String, Object> sender = new HashMap<>();
+                        sender.put("id", m.getSender().getId());
+                        sender.put("firstName", m.getSender().getFirstName());
+                        sender.put("lastName", m.getSender().getLastName());
+                        sender.put("role", m.getSender().getRole());
+                        sender.put("avatarUrl", m.getSender().getAvatar());
+
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("id", m.getId());
+                        item.put("content", m.getContent());
+                        item.put("createdAt", m.getCreatedAt());
+                        item.put("sender", sender);
+                        return item;
+                }).toList();
+
+                return ResponseEntity.ok(ApiResponse.success(data));
         }
 
         @GetMapping("/messages/dm")

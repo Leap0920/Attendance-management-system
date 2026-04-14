@@ -217,20 +217,24 @@ const StudentCourseDetail: React.FC = () => {
                                         Class comments ({comments.filter(c => !c.isPrivate).length})
                                     </h4>
                                     {comments.filter(c => !c.isPrivate).length === 0 && <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '1rem' }}>No comments yet</p>}
-                                    {comments.filter(c => !c.isPrivate).map((c: any) => (
-                                        <div key={c.id} style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem' }}>
-                                            <div style={{ width: 30, height: 30, borderRadius: '50%', background: c.user?.role === 'ROLE_TEACHER' ? 'var(--gradient-primary)' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
-                                                {c.user?.firstName?.[0]}{c.user?.lastName?.[0]}
-                                            </div>
-                                            <div>
-                                                <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                                                    <strong>{c.user?.firstName} {c.user?.lastName}</strong>
-                                                    <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                    {comments.filter(c => !c.isPrivate).map((c: any) => {
+                                        const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
+                                        return (
+                                            <div key={c.id} style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem', padding: '0.65rem', borderRadius: 10, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                                <div style={{ width: 30, height: 30, borderRadius: '50%', background: isTeacher ? 'var(--gradient-primary)' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0, overflow: 'hidden' }}>
+                                                    {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
                                                 </div>
-                                                <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
+                                                <div>
+                                                    <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                        <strong>{c.user?.firstName} {c.user?.lastName}</strong>
+                                                        {isTeacher && <span style={{ fontSize: '0.62rem', background: '#dbeafe', color: '#1d4ed8', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>Professor</span>}
+                                                        <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -302,17 +306,24 @@ const StudentCourseDetail: React.FC = () => {
                                         <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem' }}>Only visible to you and your teacher</p>
 
                                         {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '0.75rem', fontStyle: 'italic' }}>No private messages yet</p>}
-                                        {comments.filter(c => c.isPrivate).map((c: any) => (
-                                            <div key={c.id} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.65rem', padding: '0.5rem 0.65rem', background: '#fef2f2', borderRadius: 10 }}>
-                                                <div style={{ width: 26, height: 26, borderRadius: '50%', background: c.user?.role === 'ROLE_TEACHER' ? '#ef4444' : '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.58rem', fontWeight: 700, flexShrink: 0 }}>
-                                                    {c.user?.firstName?.[0]}{c.user?.lastName?.[0]}
+                                        {comments.filter(c => c.isPrivate).map((c: any) => {
+                                            const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
+                                            return (
+                                                <div key={c.id} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.65rem', padding: '0.5rem 0.65rem', background: '#fef2f2', borderRadius: 10 }}>
+                                                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: isTeacher ? '#ef4444' : '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.58rem', fontWeight: 700, flexShrink: 0, overflow: 'hidden' }}>
+                                                        {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                            <strong>{c.user?.firstName}</strong>
+                                                            {isTeacher && <span style={{ fontSize: '0.6rem', background: '#fee2e2', color: '#b91c1c', borderRadius: 999, padding: '1px 6px' }}>Professor</span>}
+                                                            <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.82rem', color: '#334155', marginTop: 1 }}>{c.content}</div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div style={{ fontSize: '0.72rem' }}><strong>{c.user?.firstName}</strong> <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span></div>
-                                                    <div style={{ fontSize: '0.82rem', color: '#334155', marginTop: 1 }}>{c.content}</div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
                                             <input className="form-input" style={{ borderRadius: 20, flex: 1, padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}

@@ -99,7 +99,7 @@ public class AuthService {
                 .mfaEnabled(false)
                 .build();
 
-        user = userRepository.save(user);
+        user = userRepository.save(java.util.Objects.requireNonNull(user));
         auditService.log(user, "register", "user", user.getId(), httpRequest);
 
         return generateAuthResponse(user, httpRequest);
@@ -138,7 +138,7 @@ public class AuthService {
                 .expiresAt(LocalDateTime.now().plusDays(7))
                 .revoked(false)
                 .build();
-        refreshTokenRepository.save(refreshToken);
+        refreshTokenRepository.save(java.util.Objects.requireNonNull(refreshToken));
 
         if (httpRequest != null) {
             auditService.log(user, "login", "user", user.getId(), httpRequest);
@@ -158,6 +158,6 @@ public class AuthService {
                 .ipAddress(request != null ? request.getRemoteAddr() : null)
                 .success(success)
                 .build();
-        loginAttemptRepository.save(attempt);
+        loginAttemptRepository.save(java.util.Objects.requireNonNull(attempt));
     }
 }

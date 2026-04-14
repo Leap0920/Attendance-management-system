@@ -253,20 +253,25 @@ const StudentMaterials: React.FC = () => {
                                         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No comments yet. Start the conversation!</div>
                                     )}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                                        {comments.filter(c => !c.isPrivate).map((c: any) => (
-                                            <div key={c.id} style={{ display: 'flex', gap: '1rem' }}>
-                                                <div className="sidebar-avatar" style={{ background: c.user?.role === 'ROLE_TEACHER' ? 'var(--gradient-primary)' : 'var(--accent-green)', width: 34, height: 34, fontSize: '0.7rem' }}>
-                                                    {c.user?.firstName?.[0]}{c.user?.lastName?.[0]}
-                                                </div>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
-                                                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{c.user?.firstName} {c.user?.lastName}</span>
-                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                        {comments.filter(c => !c.isPrivate).map((c: any) => {
+                                            const role = (c.user?.role || '').toLowerCase();
+                                            const isTeacher = role.includes('teacher');
+                                            return (
+                                                <div key={c.id} style={{ display: 'flex', gap: '0.85rem', padding: '0.75rem', borderRadius: 12, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                                    <div className="sidebar-avatar" style={{ background: isTeacher ? 'var(--gradient-primary)' : 'var(--accent-green)', width: 34, height: 34, fontSize: '0.7rem', overflow: 'hidden' }}>
+                                                        {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
                                                     </div>
-                                                    <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>{c.content}</div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '4px', flexWrap: 'wrap' }}>
+                                                            <span style={{ fontWeight: 700, fontSize: '0.86rem' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                            {isTeacher && <span style={{ fontSize: '0.64rem', fontWeight: 700, color: '#1d4ed8', background: '#dbeafe', borderRadius: 999, padding: '2px 8px' }}>Professor</span>}
+                                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.86rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>{c.content}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -340,15 +345,23 @@ const StudentMaterials: React.FC = () => {
                                             <h4 style={{ fontSize: '0.875rem', fontWeight: 700, margin: 0 }}>Private Comments</h4>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                                            {comments.filter(c => c.isPrivate).map((c: any) => (
-                                                <div key={c.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', background: c.user?.role === 'ROLE_TEACHER' ? '#fffbeb' : '#fff', borderRadius: 10, border: '1px solid var(--sidebar-border)' }}>
-                                                    <div className="sidebar-avatar" style={{ width: 26, height: 26, fontSize: '0.6rem', background: c.user?.role === 'ROLE_TEACHER' ? 'var(--accent-yellow)' : 'var(--accent-green)' }}>{c.user?.firstName?.[0]}</div>
-                                                    <div>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>{c.user?.firstName}</div>
-                                                        <div style={{ fontSize: '0.85rem' }}>{c.content}</div>
+                                            {comments.filter(c => c.isPrivate).map((c: any) => {
+                                                const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
+                                                return (
+                                                    <div key={c.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', background: isTeacher ? '#fffbeb' : '#fff', borderRadius: 10, border: '1px solid var(--sidebar-border)' }}>
+                                                        <div className="sidebar-avatar" style={{ width: 26, height: 26, fontSize: '0.6rem', background: isTeacher ? 'var(--accent-yellow)' : 'var(--accent-green)', overflow: 'hidden' }}>
+                                                            {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}</>}
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                                {c.user?.firstName}
+                                                                {isTeacher && <span style={{ fontSize: '0.62rem', background: '#fde68a', color: '#92400e', borderRadius: 999, padding: '1px 6px' }}>Professor</span>}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.85rem' }}>{c.content}</div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                             {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No private messages.</p>}
                                         </div>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>

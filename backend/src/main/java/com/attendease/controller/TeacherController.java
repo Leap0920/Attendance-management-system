@@ -57,13 +57,13 @@ public class TeacherController {
             for (AttendanceSession s : sessions) {
                 if (s.getEndTime().isBefore(now)) {
                     s.setStatus("closed");
-                    attendanceSessionRepository.save(s);
+                    attendanceSessionRepository.save(java.util.Objects.requireNonNull(s));
                     // Mark absent students for this auto-closed session
                     List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(c.getId(), "active");
                     for (Enrollment e : enrolls) {
                         if (!attendanceRecordRepository.existsBySessionIdAndStudentId(s.getId(), e.getStudent().getId())) {
-                            attendanceRecordRepository.save(AttendanceRecord.builder()
-                                    .session(s).student(e.getStudent()).course(c).status("absent").build());
+                            attendanceRecordRepository.save(java.util.Objects.requireNonNull(AttendanceRecord.builder()
+                                    .session(s).student(e.getStudent()).course(c).status("absent").build()));
                         }
                     }
                 } else {
@@ -141,15 +141,15 @@ public class TeacherController {
                 .status("active")
                 .build();
 
-        course = courseRepository.save(course);
-        auditService.log(teacher, "create_course", "course", course.getId(), request);
+        course = courseRepository.save(java.util.Objects.requireNonNull(course));
+        auditService.log(teacher, "create_course", "course", java.util.Objects.requireNonNull(course.getId()), request);
 
         return ResponseEntity.ok(ApiResponse.success("Course created! Join code: " + joinCode, course));
     }
 
     @GetMapping("/courses/{id}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCourseDetail(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -168,13 +168,13 @@ public class TeacherController {
         for (AttendanceSession s : sessions) {
             if ("active".equals(s.getStatus()) && s.getEndTime().isBefore(now)) {
                 s.setStatus("closed");
-                attendanceSessionRepository.save(s);
+                attendanceSessionRepository.save(java.util.Objects.requireNonNull(s));
                 // Mark absent
                 List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(id, "active");
                 for (Enrollment e : enrolls) {
                     if (!attendanceRecordRepository.existsBySessionIdAndStudentId(s.getId(), e.getStudent().getId())) {
-                        attendanceRecordRepository.save(AttendanceRecord.builder()
-                                .session(s).student(e.getStudent()).course(course).status("absent").build());
+                        attendanceRecordRepository.save(java.util.Objects.requireNonNull(AttendanceRecord.builder()
+                                .session(s).student(e.getStudent()).course(course).status("absent").build()));
                     }
                 }
             }
@@ -185,7 +185,7 @@ public class TeacherController {
 
     @PutMapping("/courses/{id}")
     public ResponseEntity<ApiResponse<Course>> updateCourse(
-            @PathVariable Long id, @RequestBody Map<String, String> body,
+            @PathVariable @org.springframework.lang.NonNull Long id, @RequestBody Map<String, String> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
@@ -198,26 +198,26 @@ public class TeacherController {
         if (body.containsKey("schedule")) course.setSchedule(body.get("schedule"));
         if (body.containsKey("room")) course.setRoom(body.get("room"));
 
-        course = courseRepository.save(course);
+        course = courseRepository.save(java.util.Objects.requireNonNull(course));
         auditService.log(teacher, "update_course", "course", id, request);
         return ResponseEntity.ok(ApiResponse.success("Course updated", course));
     }
 
     @DeleteMapping("/courses/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteCourse(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
         course.setStatus("deleted");
-        courseRepository.save(course);
+        courseRepository.save(java.util.Objects.requireNonNull(course));
         auditService.log(teacher, "delete_course", "course", id, request);
         return ResponseEntity.ok(ApiResponse.success("Course deleted", null));
     }
 
     @PostMapping("/courses/{id}/archive")
     public ResponseEntity<ApiResponse<Course>> archiveCourse(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -229,7 +229,7 @@ public class TeacherController {
 
     @PostMapping("/courses/{id}/unarchive")
     public ResponseEntity<ApiResponse<Course>> unarchiveCourse(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -247,7 +247,7 @@ public class TeacherController {
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
 
         Long courseId = Long.valueOf(body.get("courseId").toString());
-        courseRepository.findById(courseId)
+        courseRepository.findById(java.util.Objects.requireNonNull(courseId))
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
@@ -264,7 +264,7 @@ public class TeacherController {
         LocalDateTime now = LocalDateTime.now();
 
         AttendanceSession session = AttendanceSession.builder()
-                .course(courseRepository.findById(courseId).get())
+                .course(courseRepository.findById(java.util.Objects.requireNonNull(courseId)).get())
                 .teacher(teacher)
                 .sessionTitle(body.containsKey("sessionTitle") ? body.get("sessionTitle").toString() : null)
                 .attendanceCode(code)
@@ -276,7 +276,7 @@ public class TeacherController {
                 .lateMinutes(5)
                 .build();
 
-        session = attendanceSessionRepository.save(session);
+        session = attendanceSessionRepository.save(java.util.Objects.requireNonNull(session));
         auditService.log(teacher, "create_attendance_session", "attendance_session", session.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Attendance session started! Code: " + code, session));
     }
@@ -284,13 +284,13 @@ public class TeacherController {
     @PostMapping("/attendance/{id}/close")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> closeSession(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         AttendanceSession session = attendanceSessionRepository.findById(id)
                 .filter(s -> s.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
 
         session.setStatus("closed");
-        attendanceSessionRepository.save(session);
+        attendanceSessionRepository.save(java.util.Objects.requireNonNull(session));
 
         // Mark absent students
         List<Enrollment> enrollments = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
@@ -302,7 +302,7 @@ public class TeacherController {
                         .course(session.getCourse())
                         .status("absent")
                         .build();
-                attendanceRecordRepository.save(record);
+                attendanceRecordRepository.save(java.util.Objects.requireNonNull(record));
             }
         }
 
@@ -313,7 +313,7 @@ public class TeacherController {
     @PostMapping("/attendance/{id}/reopen")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<AttendanceSession>> reopenSession(
-            @PathVariable Long id, 
+            @PathVariable @org.springframework.lang.NonNull Long id, 
             @RequestBody(required = false) Map<String, Object> body,
             @AuthenticationPrincipal User teacher, 
             HttpServletRequest request) {
@@ -331,13 +331,13 @@ public class TeacherController {
         for (AttendanceSession as : activeSessions) {
             if (as.getEndTime().isBefore(now)) {
                 as.setStatus("closed");
-                attendanceSessionRepository.save(as);
+                attendanceSessionRepository.save(java.util.Objects.requireNonNull(as));
                 // Mark absent
                 List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
                 for (Enrollment e : enrolls) {
                     if (!attendanceRecordRepository.existsBySessionIdAndStudentId(as.getId(), e.getStudent().getId())) {
-                        attendanceRecordRepository.save(AttendanceRecord.builder()
-                                .session(as).student(e.getStudent()).course(session.getCourse()).status("absent").build());
+                        attendanceRecordRepository.save(java.util.Objects.requireNonNull(AttendanceRecord.builder()
+                                .session(as).student(e.getStudent()).course(session.getCourse()).status("absent").build()));
                     }
                 }
             }
@@ -382,7 +382,7 @@ public class TeacherController {
 
     @PostMapping("/attendance/{id}/extend")
     public ResponseEntity<ApiResponse<AttendanceSession>> extendSession(
-            @PathVariable Long id, @RequestBody Map<String, Object> body,
+            @PathVariable @org.springframework.lang.NonNull Long id, @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher) {
         AttendanceSession session = attendanceSessionRepository.findById(id)
                 .filter(s -> s.getTeacher().getId().equals(teacher.getId()) && "active".equals(s.getStatus()))
@@ -407,13 +407,13 @@ public class TeacherController {
 
     @PutMapping("/attendance/records/{id}")
     public ResponseEntity<ApiResponse<AttendanceRecord>> updateRecord(
-            @PathVariable Long id, @RequestBody Map<String, String> body,
+            @PathVariable @org.springframework.lang.NonNull Long id, @RequestBody Map<String, String> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         AttendanceRecord record = attendanceRecordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
         if (body.containsKey("status")) record.setStatus(body.get("status"));
         if (body.containsKey("notes")) record.setNotes(body.get("notes"));
-        record = attendanceRecordRepository.save(record);
+        record = attendanceRecordRepository.save(java.util.Objects.requireNonNull(record));
         auditService.log(teacher, "update_attendance_record", "attendance_record", id, request);
         return ResponseEntity.ok(ApiResponse.success("Record updated", record));
     }
@@ -443,7 +443,7 @@ public class TeacherController {
 
         for (String idStr : ids) {
             Long courseId = Long.valueOf(idStr.trim());
-            Course course = courseRepository.findById(courseId)
+            Course course = courseRepository.findById(java.util.Objects.requireNonNull(courseId))
                     .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                     .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
 
@@ -465,7 +465,7 @@ public class TeacherController {
                 material.setFileSize((int) file.getSize());
             }
 
-            material = courseMaterialRepository.save(material);
+            material = courseMaterialRepository.save(java.util.Objects.requireNonNull(material));
             createdItems.add(material);
             auditService.log(teacher, "create_material", "course_material", material.getId(), request);
         }
@@ -475,7 +475,7 @@ public class TeacherController {
 
     @PostMapping("/materials/{id}/share")
     public ResponseEntity<ApiResponse<Void>> shareMaterial(
-            @PathVariable Long id,
+            @PathVariable @org.springframework.lang.NonNull Long id,
             @RequestParam String courseIds,
             @AuthenticationPrincipal User teacher,
             HttpServletRequest request) {
@@ -488,7 +488,7 @@ public class TeacherController {
             Long courseId = Long.valueOf(idStr.trim());
             if (material.getCourse().getId().equals(courseId)) continue;
 
-            Course course = courseRepository.findById(courseId)
+            Course course = courseRepository.findById(java.util.Objects.requireNonNull(courseId))
                     .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                     .orElseThrow(() -> new ResourceNotFoundException("Course not found: " + courseId));
 
@@ -498,7 +498,7 @@ public class TeacherController {
                     .externalLink(material.getExternalLink()).dueDate(material.getDueDate())
                     .filePath(material.getFilePath()).fileName(material.getFileName())
                     .fileSize(material.getFileSize()).isPinned(false).isClosed(false).build();
-            courseMaterialRepository.save(copy);
+            courseMaterialRepository.save(java.util.Objects.requireNonNull(copy));
         }
         auditService.log(teacher, "share_material", "course_material", id, request);
         return ResponseEntity.ok(ApiResponse.success("Material shared successfully", null));
@@ -512,7 +512,7 @@ public class TeacherController {
 
     @PostMapping("/materials/{materialId}/comments")
     public ResponseEntity<ApiResponse<Comment>> addComment(
-            @PathVariable Long materialId,
+            @PathVariable @org.springframework.lang.NonNull Long materialId,
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher) {
         CourseMaterial material = courseMaterialRepository.findById(materialId)
@@ -526,7 +526,7 @@ public class TeacherController {
                 .isPrivate(body.containsKey("isPrivate") && (boolean) body.get("isPrivate"))
                 .build();
         
-        return ResponseEntity.ok(ApiResponse.success("Comment added", commentRepository.save(comment)));
+        return ResponseEntity.ok(ApiResponse.success("Comment added", commentRepository.save(java.util.Objects.requireNonNull(comment))));
     }
 
     @GetMapping("/materials/{materialId}/submissions")
@@ -536,7 +536,7 @@ public class TeacherController {
 
     @PutMapping("/submissions/{id}")
     public ResponseEntity<ApiResponse<AssignmentSubmission>> gradeSubmission(
-            @PathVariable Long id,
+            @PathVariable @org.springframework.lang.NonNull Long id,
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher) {
         AssignmentSubmission submission = assignmentSubmissionRepository.findById(id)
@@ -546,12 +546,12 @@ public class TeacherController {
         if (body.containsKey("feedback")) submission.setFeedback(body.get("feedback").toString());
         submission.setStatus("graded");
         
-        return ResponseEntity.ok(ApiResponse.success("Submission graded", assignmentSubmissionRepository.save(submission)));
+        return ResponseEntity.ok(ApiResponse.success("Submission graded", assignmentSubmissionRepository.save(java.util.Objects.requireNonNull(submission))));
     }
 
     @DeleteMapping("/materials/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteMaterial(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         CourseMaterial material = courseMaterialRepository.findById(id)
                 .filter(m -> m.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
@@ -571,7 +571,7 @@ public class TeacherController {
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Long receiverId = Long.valueOf(body.get("receiverId").toString());
-        User receiver = userRepository.findById(receiverId)
+        User receiver = userRepository.findById(java.util.Objects.requireNonNull(receiverId))
                 .orElseThrow(() -> new ResourceNotFoundException("Recipient not found"));
 
         Message msg = Message.builder()
@@ -579,7 +579,7 @@ public class TeacherController {
                 .subject(body.containsKey("subject") ? body.get("subject").toString() : null)
                 .content(body.get("content").toString())
                 .build();
-        msg = messageRepository.save(msg);
+        msg = messageRepository.save(java.util.Objects.requireNonNull(msg));
         auditService.log(teacher, "send_dm", "message", msg.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Message sent", msg));
     }
@@ -589,7 +589,7 @@ public class TeacherController {
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Long courseId = Long.valueOf(body.get("courseId").toString());
-        Course course = courseRepository.findById(courseId)
+        Course course = courseRepository.findById(java.util.Objects.requireNonNull(courseId))
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
@@ -597,7 +597,7 @@ public class TeacherController {
                 .course(course).sender(teacher)
                 .content(body.get("content").toString())
                 .build();
-        msg = courseMessageRepository.save(msg);
+        msg = courseMessageRepository.save(java.util.Objects.requireNonNull(msg));
         return ResponseEntity.ok(ApiResponse.success("Group message sent", msg));
     }
 
@@ -606,7 +606,7 @@ public class TeacherController {
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         Long courseId = Long.valueOf(body.get("courseId").toString());
-        Course course = courseRepository.findById(courseId)
+        Course course = courseRepository.findById(java.util.Objects.requireNonNull(courseId))
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
@@ -619,7 +619,7 @@ public class TeacherController {
             Message msg = Message.builder()
                     .sender(teacher).receiver(e.getStudent()).course(course)
                     .subject(subject).content(content).build();
-            messageRepository.save(msg);
+            messageRepository.save(java.util.Objects.requireNonNull(msg));
         }
 
         auditService.log(teacher, "broadcast_message", "course", courseId, request);
@@ -627,8 +627,8 @@ public class TeacherController {
     }
 
     @GetMapping("/messages/group/{courseId}")
-    public ResponseEntity<ApiResponse<List<CourseMessage>>> getGroupMessages(
-            @PathVariable Long courseId, @AuthenticationPrincipal User teacher) {
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getGroupMessages(
+            @PathVariable @org.springframework.lang.NonNull Long courseId, @AuthenticationPrincipal User teacher) {
         courseRepository.findById(courseId)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -638,7 +638,24 @@ public class TeacherController {
             String deleted = m.getDeletedForUsers();
             return deleted != null && deleted.contains("," + teacher.getId() + ",");
         });
-        return ResponseEntity.ok(ApiResponse.success(messages));
+
+        List<Map<String, Object>> data = messages.stream().map(m -> {
+            Map<String, Object> sender = new HashMap<>();
+            sender.put("id", m.getSender().getId());
+            sender.put("firstName", m.getSender().getFirstName());
+            sender.put("lastName", m.getSender().getLastName());
+            sender.put("role", m.getSender().getRole());
+            sender.put("avatarUrl", m.getSender().getAvatar());
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", m.getId());
+            item.put("content", m.getContent());
+            item.put("createdAt", m.getCreatedAt());
+            item.put("sender", sender);
+            return item;
+        }).toList();
+
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/messages/dm")
@@ -690,10 +707,30 @@ public class TeacherController {
                     contact.put("firstName", s.getFirstName());
                     contact.put("lastName", s.getLastName());
                     contact.put("email", s.getEmail());
+                    contact.put("role", s.getRole());
                     contactMap.put(s.getId(), contact);
                 }
             }
         }
+
+        // Include other active teachers for direct collaboration
+        List<User> allUsers = userRepository.findAll();
+        for (User u : allUsers) {
+            if (u.getId().equals(teacher.getId())) continue;
+            String role = u.getRole() != null ? u.getRole().toLowerCase() : "";
+            String status = u.getStatus() != null ? u.getStatus().toLowerCase() : "";
+            if (!role.contains("teacher") || !"active".equals(status)) continue;
+            if (!contactMap.containsKey(u.getId())) {
+                Map<String, Object> contact = new HashMap<>();
+                contact.put("id", u.getId());
+                contact.put("firstName", u.getFirstName());
+                contact.put("lastName", u.getLastName());
+                contact.put("email", u.getEmail());
+                contact.put("role", u.getRole());
+                contactMap.put(u.getId(), contact);
+            }
+        }
+
         return ResponseEntity.ok(ApiResponse.success(new ArrayList<>(contactMap.values())));
     }
 
@@ -711,11 +748,11 @@ public class TeacherController {
     @DeleteMapping("/messages/{id}")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> deleteMessageForEveryone(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher) {
         Message msg = messageRepository.findById(id)
                 .filter(m -> m.getSender().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found or not authorized"));
-        messageRepository.delete(msg);
+        messageRepository.delete(java.util.Objects.requireNonNull(msg));
         return ResponseEntity.ok(ApiResponse.success("Message deleted for everyone", null));
     }
 
@@ -723,7 +760,7 @@ public class TeacherController {
     @PostMapping("/messages/{id}/hide")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> hideMessage(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher) {
         Message msg = messageRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
 
@@ -732,7 +769,7 @@ public class TeacherController {
         } else if (msg.getReceiver().getId().equals(teacher.getId())) {
             msg.setDeletedForReceiver(true);
         }
-        messageRepository.save(msg);
+        messageRepository.save(java.util.Objects.requireNonNull(msg));
         return ResponseEntity.ok(ApiResponse.success("Message hidden", null));
     }
 
@@ -740,11 +777,11 @@ public class TeacherController {
     @DeleteMapping("/messages/group/{id}")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> deleteGroupMessageForEveryone(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher) {
         CourseMessage msg = courseMessageRepository.findById(id)
                 .filter(m -> m.getSender().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found or not authorized"));
-        courseMessageRepository.delete(msg);
+        courseMessageRepository.delete(java.util.Objects.requireNonNull(msg));
         return ResponseEntity.ok(ApiResponse.success("Group message deleted for everyone", null));
     }
 
@@ -752,14 +789,14 @@ public class TeacherController {
     @PostMapping("/messages/group/{id}/hide")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> hideGroupMessage(
-            @PathVariable Long id, @AuthenticationPrincipal User teacher) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher) {
         CourseMessage msg = courseMessageRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
         String deleted = msg.getDeletedForUsers() == null ? "" : msg.getDeletedForUsers();
         if (!deleted.contains("," + teacher.getId() + ",")) {
             deleted += "," + teacher.getId() + ",";
             msg.setDeletedForUsers(deleted);
-            courseMessageRepository.save(msg);
+            courseMessageRepository.save(java.util.Objects.requireNonNull(msg));
         }
         return ResponseEntity.ok(ApiResponse.success("Group message hidden", null));
     }
@@ -767,7 +804,7 @@ public class TeacherController {
     // ── Reports ────────────────────────────────────────────────────────
     @GetMapping("/reports")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getReport(
-            @RequestParam Long courseId, @AuthenticationPrincipal User teacher) {
+            @RequestParam @org.springframework.lang.NonNull Long courseId, @AuthenticationPrincipal User teacher) {
         Course course = courseRepository.findById(courseId)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -806,8 +843,8 @@ public class TeacherController {
 
     @GetMapping("/reports/student")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getStudentReport(
-            @RequestParam Long courseId,
-            @RequestParam Long studentId,
+            @RequestParam @org.springframework.lang.NonNull Long courseId,
+            @RequestParam @org.springframework.lang.NonNull Long studentId,
             @AuthenticationPrincipal User teacher) {
         Course course = courseRepository.findById(courseId)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
@@ -862,7 +899,7 @@ public class TeacherController {
         if (body.containsKey("lastName")) teacher.setLastName(body.get("lastName"));
         if (body.containsKey("department")) teacher.setDepartment(body.get("department"));
 
-        teacher = userRepository.save(teacher);
+        teacher = userRepository.save(java.util.Objects.requireNonNull(teacher));
         auditService.log(teacher, "update_profile", "user", teacher.getId(), request);
 
         Map<String, Object> userData = new HashMap<>();
@@ -893,7 +930,7 @@ public class TeacherController {
 
         String avatarPath = saveAvatar(file, teacher.getId());
         teacher.setAvatar(avatarPath);
-        teacher = userRepository.save(teacher);
+        teacher = userRepository.save(java.util.Objects.requireNonNull(teacher));
         auditService.log(teacher, "update_avatar", "user", teacher.getId(), request);
 
         Map<String, Object> userData = new HashMap<>();
@@ -928,7 +965,7 @@ public class TeacherController {
         }
 
         teacher.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(teacher);
+        userRepository.save(java.util.Objects.requireNonNull(teacher));
         auditService.log(teacher, "change_password", "user", teacher.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
@@ -969,7 +1006,8 @@ public class TeacherController {
         Path uploadPath = Paths.get(uploadDir);
         Files.createDirectories(uploadPath);
 
-        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "avatar";
+        String originalName = file.getOriginalFilename();
+        if (originalName == null) originalName = "avatar";
         String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
         String fileName = System.currentTimeMillis() + "_" + safeName;
 

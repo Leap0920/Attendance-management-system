@@ -31,7 +31,7 @@ public class AuditService {
                 .userAgent(request != null ? request.getHeader("User-Agent") : null)
                 .build();
 
-        auditLogRepository.save(log);
+        auditLogRepository.save(java.util.Objects.requireNonNull(log));
     }
 
     public void log(User user, String action, String entityType, Long entityId,

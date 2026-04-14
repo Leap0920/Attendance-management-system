@@ -37,8 +37,8 @@ public class SecurityConfig {
                 // Admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                // Teacher endpoints
-                .requestMatchers("/api/teacher/**").hasRole("TEACHER")
+                // Teacher endpoints (support legacy professor role too)
+                .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "PROFESSOR")
 
                 // Student endpoints
                 .requestMatchers("/api/student/**").hasRole("STUDENT")

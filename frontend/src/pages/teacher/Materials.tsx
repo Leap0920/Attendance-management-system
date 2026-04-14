@@ -341,20 +341,24 @@ const TeacherMaterials: React.FC = () => {
                                             Class comments ({comments.filter(c => !c.isPrivate).length})
                                         </h4>
                                         {comments.filter(c => !c.isPrivate).length === 0 && <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '1rem' }}>No comments yet</p>}
-                                        {comments.filter(c => !c.isPrivate).map((c: any) => (
-                                            <div key={c.id} style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem' }}>
-                                                <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
-                                                    {c.user?.firstName?.[0]}{c.user?.lastName?.[0]}
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                                                        <strong>{c.user?.firstName} {c.user?.lastName}</strong>
-                                                        <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                        {comments.filter(c => !c.isPrivate).map((c: any) => {
+                                            const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
+                                            return (
+                                                <div key={c.id} style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem', padding: '0.65rem', borderRadius: 10, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: isTeacher ? 'var(--gradient-primary)' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0, overflow: 'hidden' }}>
+                                                        {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
                                                     </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
+                                                    <div>
+                                                        <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                            <strong>{c.user?.firstName} {c.user?.lastName}</strong>
+                                                            {isTeacher && <span style={{ fontSize: '0.62rem', background: '#dbeafe', color: '#1d4ed8', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>Professor</span>}
+                                                            <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

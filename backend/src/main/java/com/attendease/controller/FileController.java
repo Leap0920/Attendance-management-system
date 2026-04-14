@@ -26,7 +26,7 @@ public class FileController {
     private final AssignmentSubmissionRepository assignmentSubmissionRepository;
 
     @GetMapping("/materials/{materialId}/download")
-    public ResponseEntity<Resource> downloadMaterialFile(@PathVariable Long materialId) throws MalformedURLException {
+    public ResponseEntity<Resource> downloadMaterialFile(@PathVariable @org.springframework.lang.NonNull Long materialId) throws MalformedURLException {
         CourseMaterial material = courseMaterialRepository.findById(materialId)
                 .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
 
@@ -35,7 +35,9 @@ public class FileController {
         }
 
         Path filePath = Paths.get(material.getFilePath()).toAbsolutePath().normalize();
-        Resource resource = new UrlResource(filePath.toUri());
+        Resource resource = new UrlResource(java.util.Objects.requireNonNull(filePath.toUri()));
+[... second chunk follows in the tool call ...]
+
 
         if (!resource.exists()) {
             throw new ResourceNotFoundException("File not found on disk");
@@ -51,7 +53,7 @@ public class FileController {
     }
 
     @GetMapping("/submissions/{submissionId}/download")
-    public ResponseEntity<Resource> downloadSubmissionFile(@PathVariable Long submissionId) throws MalformedURLException {
+    public ResponseEntity<Resource> downloadSubmissionFile(@PathVariable @org.springframework.lang.NonNull Long submissionId) throws MalformedURLException {
         AssignmentSubmission submission = assignmentSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
@@ -60,7 +62,7 @@ public class FileController {
         }
 
         Path filePath = Paths.get(submission.getFilePath()).toAbsolutePath().normalize();
-        Resource resource = new UrlResource(filePath.toUri());
+        Resource resource = new UrlResource(java.util.Objects.requireNonNull(filePath.toUri()));
 
         if (!resource.exists()) {
             throw new ResourceNotFoundException("File not found on disk");
