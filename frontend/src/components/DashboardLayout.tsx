@@ -21,6 +21,7 @@ const navSections: Record<string, NavSection[]> = {
       items: [
         { label: 'Dashboard', path: '/admin' },
         { label: 'Users', path: '/admin/users' },
+        { label: 'Courses', path: '/admin/courses' },
         { label: 'Audit Log', path: '/admin/audit-log' },
       ],
     },

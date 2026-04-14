@@ -36,8 +36,6 @@ public class FileController {
 
         Path filePath = Paths.get(material.getFilePath()).toAbsolutePath().normalize();
         Resource resource = new UrlResource(java.util.Objects.requireNonNull(filePath.toUri()));
-[... second chunk follows in the tool call ...]
-
 
         if (!resource.exists()) {
             throw new ResourceNotFoundException("File not found on disk");

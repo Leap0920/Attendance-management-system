@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
 import { User } from '../../types';
@@ -6,9 +6,16 @@ import { User } from '../../types';
 const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'student', department: '' });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [createForm, setCreateForm] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'student', department: '' });
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', role: 'student', department: '', status: 'active', password: '' });
   const [filter, setFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
 
   const loadUsers = () => {
     setLoading(true);
@@ -20,104 +27,374 @@ const AdminUsers: React.FC = () => {
 
   useEffect(() => { loadUsers(); }, [filter]);
 
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const filteredUsers = useMemo(() => {
+    if (!search.trim()) return users;
+    const q = search.toLowerCase();
+    return users.filter(u =>
+      u.fullName?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.department?.toLowerCase().includes(q) ||
+      u.studentId?.toLowerCase().includes(q)
+    );
+  }, [users, search]);
+
+  const roleStats = useMemo(() => ({
+    all: users.length,
+    admin: users.filter(u => u.role === 'admin').length,
+    teacher: users.filter(u => u.role === 'teacher').length,
+    student: users.filter(u => u.role === 'student').length,
+  }), [users]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      await adminApi.createUser(form);
-      setShowModal(false);
-      setForm({ firstName: '', lastName: '', email: '', password: '', role: 'student', department: '' });
+      await adminApi.createUser(createForm);
+      setShowCreateModal(false);
+      setCreateForm({ firstName: '', lastName: '', email: '', password: '', role: 'student', department: '' });
+      setToast({ type: 'success', text: 'User created successfully!' });
       loadUsers();
-    } catch {}
+    } catch (err: any) {
+      setToast({ type: 'error', text: err.response?.data?.message || 'Failed to create user' });
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      const payload: any = { ...editForm };
+      if (!payload.password) delete payload.password;
+      await adminApi.updateUser(editingUser.id, payload);
+      setShowEditModal(false);
+      setEditingUser(null);
+      setToast({ type: 'success', text: 'User updated successfully!' });
+      loadUsers();
+    } catch (err: any) {
+      setToast({ type: 'error', text: err.response?.data?.message || 'Failed to update user' });
+    }
+    setSaving(false);
+  };
+
+  const openEdit = (user: User) => {
+    setEditingUser(user);
+    setEditForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      department: user.department || '',
+      status: user.status,
+      password: '',
+    });
+    setShowEditModal(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Delete this user?')) {
+    try {
       await adminApi.deleteUser(id);
+      setToast({ type: 'success', text: 'User deleted successfully!' });
+      setShowDeleteConfirm(null);
       loadUsers();
+    } catch (err: any) {
+      setToast({ type: 'error', text: err.response?.data?.message || 'Failed to delete user' });
+    }
+  };
+
+  const handleToggleStatus = async (user: User) => {
+    const newStatus = user.status === 'active' ? 'suspended' : 'active';
+    try {
+      await adminApi.updateUser(user.id, { status: newStatus });
+      setToast({ type: 'success', text: `User ${newStatus === 'active' ? 'activated' : 'suspended'}` });
+      loadUsers();
+    } catch (err: any) {
+      setToast({ type: 'error', text: err.response?.data?.message || 'Action failed' });
     }
   };
 
   return (
     <DashboardLayout role="admin">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`admin-toast ${toast.type}`}>
+          <span>{toast.type === 'success' ? '✓' : '✕'}</span>
+          {toast.text}
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <h1 className="page-title">User Management</h1>
-          <p className="page-subtitle">{users.length} users registered</p>
+          <p className="page-subtitle">Manage all system accounts</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <select className="form-input" style={{ width: 'auto' }} value={filter} onChange={e => setFilter(e.target.value)}>
-            <option value="">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="teacher">Teacher</option>
-            <option value="student">Student</option>
-          </select>
-          <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>+ Add User</button>
+        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowCreateModal(true)}>
+          + Add User
+        </button>
+      </div>
+
+      {/* Role Filter Tabs */}
+      <div className="admin-filter-bar">
+        <div className="admin-filter-tabs">
+          {[
+            { key: '', label: 'All', count: roleStats.all },
+            { key: 'admin', label: 'Admins', count: roleStats.admin },
+            { key: 'teacher', label: 'Teachers', count: roleStats.teacher },
+            { key: 'student', label: 'Students', count: roleStats.student },
+          ].map(tab => (
+            <button key={tab.key}
+              className={`admin-filter-tab ${filter === tab.key ? 'active' : ''}`}
+              onClick={() => setFilter(tab.key)}>
+              {tab.label}
+              <span className="admin-filter-count">{tab.count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="admin-search-box">
+          <span className="admin-search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search by name, email, or department..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="admin-search-input"
+          />
+          {search && (
+            <button className="admin-search-clear" onClick={() => setSearch('')}>✕</button>
+          )}
         </div>
       </div>
 
-      <div className="data-table-wrapper">
-        <table className="data-table">
-          <thead>
-            <tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>Loading...</td></tr>
-            ) : users.map(u => (
-              <tr key={u.id}>
-                <td>{u.fullName}</td>
-                <td>{u.email}</td>
-                <td><span className={`badge badge-${u.role}`}>{u.role}</span></td>
-                <td>{u.department || '—'}</td>
-                <td><span className="badge badge-active">{u.status}</span></td>
-                <td>
-                  <button className="btn-icon" onClick={() => handleDelete(u.id)} title="Delete" style={{ fontSize: '0.75rem' }}>Del</button>
-                </td>
+      {/* Users Table */}
+      <div className="admin-section-card">
+        <div className="data-table-wrapper" style={{ border: 'none' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
+                  <div className="spinner" style={{ margin: '0 auto' }}></div>
+                </td></tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  {search ? `No users matching "${search}"` : 'No users found'}
+                </td></tr>
+              ) : filteredUsers.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div className="admin-table-avatar" style={{
+                        background: u.role === 'teacher' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' :
+                          u.role === 'admin' ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' :
+                            'linear-gradient(135deg, #10b981, #059669)'
+                      }}>
+                        {u.firstName?.[0]}{u.lastName?.[0]}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{u.fullName}</div>
+                        {u.studentId && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: {u.studentId}</div>}
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{u.email}</td>
+                  <td><span className={`badge badge-${u.role}`}>{u.role}</span></td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{u.department || '—'}</td>
+                  <td>
+                    <span className={`admin-status-pill ${u.status === 'active' ? 'active' : 'inactive'}`}
+                      onClick={() => handleToggleStatus(u)}
+                      style={{ cursor: 'pointer' }}
+                      title={`Click to ${u.status === 'active' ? 'suspend' : 'activate'}`}>
+                      <span className="admin-status-dot"></span>
+                      {u.status}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
+                      <button className="admin-action-btn edit" onClick={() => openEdit(u)} title="Edit">
+                        ✏️
+                      </button>
+                      <button className="admin-action-btn delete" onClick={() => setShowDeleteConfirm(u.id)} title="Delete">
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="admin-table-footer">
+          Showing {filteredUsers.length} of {users.length} users
+        </div>
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h3 className="modal-title">Create User</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+              <h3 className="modal-title">Create New User</h3>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>×</button>
             </div>
             <form onSubmit={handleCreate}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="form-group">
                   <label className="form-label">First Name</label>
-                  <input className="form-input" value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value})} required />
+                  <input className="form-input" value={createForm.firstName} onChange={e => setCreateForm({ ...createForm, firstName: e.target.value })} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Last Name</label>
-                  <input className="form-input" value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value})} required />
+                  <input className="form-input" value={createForm.lastName} onChange={e => setCreateForm({ ...createForm, lastName: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Email</label>
-                <input className="form-input" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+                <input className="form-input" type="email" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} required />
               </div>
               <div className="form-group">
                 <label className="form-label">Password</label>
-                <input className="form-input" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+                <input className="form-input" type="password" value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} required placeholder="Min 6 characters" />
               </div>
-              <div className="form-group">
-                <label className="form-label">Role</label>
-                <select className="form-input" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="admin">Admin</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Role</label>
+                  <select className="form-input" value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Department</label>
+                  <input className="form-input" value={createForm.department} onChange={e => setCreateForm({ ...createForm, department: e.target.value })} placeholder="Optional" />
+                </div>
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Create</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                  {saving ? 'Creating...' : 'Create User'}
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && editingUser && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Edit User</h3>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: 'var(--radius-sm)' }}>
+              <div className="admin-table-avatar" style={{
+                background: editingUser.role === 'teacher' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' :
+                  editingUser.role === 'admin' ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' :
+                    'linear-gradient(135deg, #10b981, #059669)',
+                width: 44, height: 44, fontSize: '0.85rem'
+              }}>
+                {editingUser.firstName?.[0]}{editingUser.lastName?.[0]}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700 }}>{editingUser.fullName}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Editing profile • ID #{editingUser.id}</div>
+              </div>
+            </div>
+            <form onSubmit={handleEdit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label">First Name</label>
+                  <input className="form-input" value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Last Name</label>
+                  <input className="form-input" value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} required />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input className="form-input" type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} required />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Role</label>
+                  <select className="form-input" value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <select className="form-input" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Department</label>
+                <input className="form-input" value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} placeholder="Optional" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">New Password <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(leave blank to keep current)</span></label>
+                <input className="form-input" type="password" value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="Enter new password..." />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm !== null && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%', background: '#fef2f2',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: '1rem', fontSize: '1.5rem',
+              }}>
+                🗑️
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>Delete User?</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                This action cannot be undone. All data associated with this user will be permanently removed.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(null)}>Cancel</button>
+              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => handleDelete(showDeleteConfirm)}>Delete User</button>
+            </div>
           </div>
         </div>
       )}

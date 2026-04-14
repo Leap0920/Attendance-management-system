@@ -16,6 +16,7 @@ export const adminApi = {
   createUser: (data: any) => api.post('/admin/users', data),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
+  getAllCourses: (status?: string) => api.get('/admin/courses', { params: { status } }),
   getAuditLogs: (page = 0, size = 20) =>
     api.get('/admin/audit-logs', { params: { page, size } }),
 };
