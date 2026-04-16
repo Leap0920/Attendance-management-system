@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
+import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
+import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -89,6 +91,7 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
    Main Component
    ═══════════════════════════════════════════════════════════════ */
 const TeacherMaterials: React.FC = () => {
+    const { user } = useAuth();
     const [courses, setCourses] = useState<any[]>([]);
     const [materials, setMaterials] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -345,9 +348,13 @@ const TeacherMaterials: React.FC = () => {
                                             const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                             return (
                                                 <div key={c.id} style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem', padding: '0.65rem', borderRadius: 10, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: isTeacher ? 'var(--gradient-primary)' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0, overflow: 'hidden' }}>
-                                                        {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
-                                                    </div>
+                                                    <Avatar
+                                                        firstName={c.user?.firstName}
+                                                        lastName={c.user?.lastName}
+                                                        avatarUrl={c.user?.avatarUrl}
+                                                        size={30}
+                                                        variant={isTeacher ? 'blue' : 'green'}
+                                                    />
                                                     <div>
                                                         <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
                                                             <strong>{c.user?.firstName} {c.user?.lastName}</strong>
@@ -364,7 +371,7 @@ const TeacherMaterials: React.FC = () => {
 
                                 {/* Comment input — class-level only */}
                                 <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0, background: '#fff' }}>
-                                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>T</div>
+                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} size={30} />
                                     <input className="form-input" style={{ borderRadius: 20, flex: 1, padding: '0.45rem 1rem', fontSize: '0.82rem' }}
                                         placeholder="Add a class comment…" value={newComment} onChange={e => setNewComment(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddComment(); } }} />
@@ -422,7 +429,7 @@ const TeacherMaterials: React.FC = () => {
                             )}
                         </div>
                         <div className="comment-input-area">
-                            <div className="comment-avatar">T</div>
+                            <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
                             <button className="comment-trigger" onClick={e => { e.stopPropagation(); openDetail(m); }}>Add class comment</button>
                         </div>
                     </>
@@ -483,7 +490,7 @@ const TeacherMaterials: React.FC = () => {
                     {/* Stream */}
                     <div className="classroom-stream">
                         <div className="stream-item" style={{ padding: '0.7rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', color: '#94a3b8' }} onClick={() => setShowModal(true)}>
-                            <div className="stream-avatar" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>T</div>
+                            <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
                             <span style={{ fontSize: '0.85rem' }}>Announce something to your class…</span>
                         </div>
                         {filtered.length > 0 ? filtered.map(renderStreamItem) : (

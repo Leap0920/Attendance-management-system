@@ -51,7 +51,7 @@ public class TeacherController {
         // Active sessions (auto-close expired ones)
         List<Map<String, Object>> activeSessionsList = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
-        
+
         for (Course c : courses) {
             List<AttendanceSession> sessions = attendanceSessionRepository.findByCourseIdAndStatus(c.getId(), "active");
             for (AttendanceSession s : sessions) {
@@ -61,7 +61,8 @@ public class TeacherController {
                     // Mark absent students for this auto-closed session
                     List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(c.getId(), "active");
                     for (Enrollment e : enrolls) {
-                        if (!attendanceRecordRepository.existsBySessionIdAndStudentId(s.getId(), e.getStudent().getId())) {
+                        if (!attendanceRecordRepository.existsBySessionIdAndStudentId(s.getId(),
+                                e.getStudent().getId())) {
                             attendanceRecordRepository.save(java.util.Objects.requireNonNull(AttendanceRecord.builder()
                                     .session(s).student(e.getStudent()).course(c).status("absent").build()));
                         }
@@ -90,7 +91,8 @@ public class TeacherController {
                     sessionMap.put("session", s);
                     sessionMap.put("courseName", s.getCourse().getCourseName());
                     sessionMap.put("submissions", attendanceRecordRepository.findBySessionId(s.getId()).size());
-                    sessionMap.put("enrolled", enrollmentRepository.countByCourseIdAndStatus(s.getCourse().getId(), "active"));
+                    sessionMap.put("enrolled",
+                            enrollmentRepository.countByCourseIdAndStatus(s.getCourse().getId(), "active"));
                     recentSessions.add(sessionMap);
                 });
         data.put("recentSessions", recentSessions);
@@ -123,9 +125,11 @@ public class TeacherController {
             HttpServletRequest request) {
 
         String joinCode;
-        do { joinCode = generateCode(6); } while (courseRepository.existsByJoinCode(joinCode));
+        do {
+            joinCode = generateCode(6);
+        } while (courseRepository.existsByJoinCode(joinCode));
 
-        String[] colors = {"#4285F4", "#EA4335", "#FBBC04", "#34A853", "#9C27B0", "#FF5722", "#00BCD4"};
+        String[] colors = { "#4285F4", "#EA4335", "#FBBC04", "#34A853", "#9C27B0", "#FF5722", "#00BCD4" };
         String coverColor = colors[new Random().nextInt(colors.length)];
 
         Course course = Course.builder()
@@ -158,8 +162,8 @@ public class TeacherController {
         data.put("course", course);
         List<Enrollment> activeEnrollments = enrollmentRepository.findByCourseIdAndStatus(id, "active");
         List<Map<String, Object>> enrollmentData = activeEnrollments.stream()
-            .map(this::mapEnrollment)
-            .toList();
+                .map(this::mapEnrollment)
+                .toList();
         data.put("enrollments", enrollmentData);
         data.put("materials", courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(id));
         // sessions (auto-close expired)
@@ -191,12 +195,18 @@ public class TeacherController {
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
-        if (body.containsKey("courseCode")) course.setCourseCode(body.get("courseCode"));
-        if (body.containsKey("courseName")) course.setCourseName(body.get("courseName"));
-        if (body.containsKey("description")) course.setDescription(body.get("description"));
-        if (body.containsKey("section")) course.setSection(body.get("section"));
-        if (body.containsKey("schedule")) course.setSchedule(body.get("schedule"));
-        if (body.containsKey("room")) course.setRoom(body.get("room"));
+        if (body.containsKey("courseCode"))
+            course.setCourseCode(body.get("courseCode"));
+        if (body.containsKey("courseName"))
+            course.setCourseName(body.get("courseName"));
+        if (body.containsKey("description"))
+            course.setDescription(body.get("description"));
+        if (body.containsKey("section"))
+            course.setSection(body.get("section"));
+        if (body.containsKey("schedule"))
+            course.setSchedule(body.get("schedule"));
+        if (body.containsKey("room"))
+            course.setRoom(body.get("room"));
 
         course = courseRepository.save(java.util.Objects.requireNonNull(course));
         auditService.log(teacher, "update_course", "course", id, request);
@@ -205,7 +215,8 @@ public class TeacherController {
 
     @DeleteMapping("/courses/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteCourse(
-            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -217,7 +228,8 @@ public class TeacherController {
 
     @PostMapping("/courses/{id}/archive")
     public ResponseEntity<ApiResponse<Course>> archiveCourse(
-            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -229,7 +241,8 @@ public class TeacherController {
 
     @PostMapping("/courses/{id}/unarchive")
     public ResponseEntity<ApiResponse<Course>> unarchiveCourse(
-            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
@@ -256,11 +269,13 @@ public class TeacherController {
         }
 
         String code;
-        do { code = generateCode(6); }
-        while (attendanceSessionRepository.findByAttendanceCodeAndStatus(code, "active").isPresent());
+        do {
+            code = generateCode(6);
+        } while (attendanceSessionRepository.findByAttendanceCodeAndStatus(code, "active").isPresent());
 
         int duration = body.containsKey("duration") ? Integer.parseInt(body.get("duration").toString()) : 10;
-        boolean allowLate = body.containsKey("allowLate") ? Boolean.parseBoolean(body.get("allowLate").toString()) : true;
+        boolean allowLate = body.containsKey("allowLate") ? Boolean.parseBoolean(body.get("allowLate").toString())
+                : true;
         LocalDateTime now = LocalDateTime.now();
 
         AttendanceSession session = AttendanceSession.builder()
@@ -284,7 +299,8 @@ public class TeacherController {
     @PostMapping("/attendance/{id}/close")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<Void>> closeSession(
-            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
         AttendanceSession session = attendanceSessionRepository.findById(id)
                 .filter(s -> s.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
@@ -293,7 +309,8 @@ public class TeacherController {
         attendanceSessionRepository.save(java.util.Objects.requireNonNull(session));
 
         // Mark absent students
-        List<Enrollment> enrollments = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
+        List<Enrollment> enrollments = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(),
+                "active");
         for (Enrollment e : enrollments) {
             if (!attendanceRecordRepository.existsBySessionIdAndStudentId(id, e.getStudent().getId())) {
                 AttendanceRecord record = AttendanceRecord.builder()
@@ -313,9 +330,9 @@ public class TeacherController {
     @PostMapping("/attendance/{id}/reopen")
     @jakarta.transaction.Transactional
     public ResponseEntity<ApiResponse<AttendanceSession>> reopenSession(
-            @PathVariable @org.springframework.lang.NonNull Long id, 
+            @PathVariable @org.springframework.lang.NonNull Long id,
             @RequestBody(required = false) Map<String, Object> body,
-            @AuthenticationPrincipal User teacher, 
+            @AuthenticationPrincipal User teacher,
             HttpServletRequest request) {
         AttendanceSession session = attendanceSessionRepository.findById(id)
                 .filter(s -> s.getTeacher().getId().equals(teacher.getId()))
@@ -326,18 +343,21 @@ public class TeacherController {
         }
 
         // Auto-close any expired active session for this course first
-        List<AttendanceSession> activeSessions = attendanceSessionRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
+        List<AttendanceSession> activeSessions = attendanceSessionRepository
+                .findByCourseIdAndStatus(session.getCourse().getId(), "active");
         LocalDateTime now = LocalDateTime.now();
         for (AttendanceSession as : activeSessions) {
             if (as.getEndTime().isBefore(now)) {
                 as.setStatus("closed");
                 attendanceSessionRepository.save(java.util.Objects.requireNonNull(as));
                 // Mark absent
-                List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(), "active");
+                List<Enrollment> enrolls = enrollmentRepository.findByCourseIdAndStatus(session.getCourse().getId(),
+                        "active");
                 for (Enrollment e : enrolls) {
                     if (!attendanceRecordRepository.existsBySessionIdAndStudentId(as.getId(), e.getStudent().getId())) {
                         attendanceRecordRepository.save(java.util.Objects.requireNonNull(AttendanceRecord.builder()
-                                .session(as).student(e.getStudent()).course(session.getCourse()).status("absent").build()));
+                                .session(as).student(e.getStudent()).course(session.getCourse()).status("absent")
+                                .build()));
                     }
                 }
             }
@@ -358,13 +378,14 @@ public class TeacherController {
 
         // Generate new code and reopen
         String code;
-        do { code = generateCode(6); }
-        while (attendanceSessionRepository.findByAttendanceCodeAndStatus(code, "active").isPresent());
+        do {
+            code = generateCode(6);
+        } while (attendanceSessionRepository.findByAttendanceCodeAndStatus(code, "active").isPresent());
 
         session.setStatus("active");
         session.setAttendanceCode(code);
         session.setStartTime(now);
-        
+
         int duration = 10;
         if (body != null && body.containsKey("duration")) {
             duration = Integer.parseInt(body.get("duration").toString());
@@ -372,7 +393,7 @@ public class TeacherController {
         } else if (session.getDurationMinutes() != null) {
             duration = session.getDurationMinutes();
         }
-        
+
         session.setEndTime(now.plusMinutes(duration));
         session = attendanceSessionRepository.save(session);
 
@@ -397,7 +418,8 @@ public class TeacherController {
 
     @GetMapping("/attendance/sessions")
     public ResponseEntity<ApiResponse<List<AttendanceSession>>> getSessions(@AuthenticationPrincipal User teacher) {
-        return ResponseEntity.ok(ApiResponse.success(attendanceSessionRepository.findByTeacherIdOrderByStartTimeDesc(teacher.getId())));
+        return ResponseEntity.ok(
+                ApiResponse.success(attendanceSessionRepository.findByTeacherIdOrderByStartTimeDesc(teacher.getId())));
     }
 
     @GetMapping("/attendance/records/{sessionId}")
@@ -411,8 +433,10 @@ public class TeacherController {
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
         AttendanceRecord record = attendanceRecordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
-        if (body.containsKey("status")) record.setStatus(body.get("status"));
-        if (body.containsKey("notes")) record.setNotes(body.get("notes"));
+        if (body.containsKey("status"))
+            record.setStatus(body.get("status"));
+        if (body.containsKey("notes"))
+            record.setNotes(body.get("notes"));
         record = attendanceRecordRepository.save(java.util.Objects.requireNonNull(record));
         auditService.log(teacher, "update_attendance_record", "attendance_record", id, request);
         return ResponseEntity.ok(ApiResponse.success("Record updated", record));
@@ -470,7 +494,8 @@ public class TeacherController {
             auditService.log(teacher, "create_material", "course_material", material.getId(), request);
         }
 
-        return ResponseEntity.ok(ApiResponse.success("Material added to " + createdItems.size() + " courses", createdItems));
+        return ResponseEntity
+                .ok(ApiResponse.success("Material added to " + createdItems.size() + " courses", createdItems));
     }
 
     @PostMapping("/materials/{id}/share")
@@ -486,7 +511,8 @@ public class TeacherController {
         String[] ids = courseIds.split(",");
         for (String idStr : ids) {
             Long courseId = Long.valueOf(idStr.trim());
-            if (material.getCourse().getId().equals(courseId)) continue;
+            if (material.getCourse().getId().equals(courseId))
+                continue;
 
             Course course = courseRepository.findById(java.util.Objects.requireNonNull(courseId))
                     .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
@@ -507,7 +533,7 @@ public class TeacherController {
     @GetMapping("/materials/{materialId}/comments")
 
     public ResponseEntity<ApiResponse<List<Comment>>> getComments(@PathVariable Long materialId) {
-        return ResponseEntity.ok(ApiResponse.success(commentRepository.findByMaterialIdOrderByCreatedAtAsc(materialId)));
+        return ResponseEntity.ok(ApiResponse.success(commentRepository.findByMaterialIdWithUser(materialId)));
     }
 
     @PostMapping("/materials/{materialId}/comments")
@@ -517,7 +543,7 @@ public class TeacherController {
             @AuthenticationPrincipal User teacher) {
         CourseMaterial material = courseMaterialRepository.findById(materialId)
                 .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
-        
+
         Comment comment = Comment.builder()
                 .course(material.getCourse())
                 .material(material)
@@ -525,8 +551,9 @@ public class TeacherController {
                 .content(body.get("content").toString())
                 .isPrivate(body.containsKey("isPrivate") && (boolean) body.get("isPrivate"))
                 .build();
-        
-        return ResponseEntity.ok(ApiResponse.success("Comment added", commentRepository.save(java.util.Objects.requireNonNull(comment))));
+
+        return ResponseEntity.ok(ApiResponse.success("Comment added",
+                commentRepository.save(java.util.Objects.requireNonNull(comment))));
     }
 
     @GetMapping("/materials/{materialId}/submissions")
@@ -541,23 +568,30 @@ public class TeacherController {
             @AuthenticationPrincipal User teacher) {
         AssignmentSubmission submission = assignmentSubmissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
-        
-        if (body.containsKey("grade")) submission.setGrade(body.get("grade").toString());
-        if (body.containsKey("feedback")) submission.setFeedback(body.get("feedback").toString());
+
+        if (body.containsKey("grade"))
+            submission.setGrade(body.get("grade").toString());
+        if (body.containsKey("feedback"))
+            submission.setFeedback(body.get("feedback").toString());
         submission.setStatus("graded");
-        
-        return ResponseEntity.ok(ApiResponse.success("Submission graded", assignmentSubmissionRepository.save(java.util.Objects.requireNonNull(submission))));
+
+        return ResponseEntity.ok(ApiResponse.success("Submission graded",
+                assignmentSubmissionRepository.save(java.util.Objects.requireNonNull(submission))));
     }
 
     @DeleteMapping("/materials/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteMaterial(
-            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+            @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
         CourseMaterial material = courseMaterialRepository.findById(id)
                 .filter(m -> m.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
 
         if (material.getFilePath() != null) {
-            try { Files.deleteIfExists(Paths.get(material.getFilePath())); } catch (IOException ignored) {}
+            try {
+                Files.deleteIfExists(Paths.get(material.getFilePath()));
+            } catch (IOException ignored) {
+            }
         }
 
         courseMaterialRepository.delete(material);
@@ -632,7 +666,7 @@ public class TeacherController {
         courseRepository.findById(courseId)
                 .filter(c -> c.getTeacher().getId().equals(teacher.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
-        List<CourseMessage> messages = courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId);
+        List<CourseMessage> messages = courseMessageRepository.findByCourseIdWithSender(courseId);
         // Filter out messages deleted for this user
         messages.removeIf(m -> {
             String deleted = m.getDeletedForUsers();
@@ -673,10 +707,12 @@ public class TeacherController {
 
         for (Message m : allMessages) {
             Long otherId = m.getSender().getId().equals(teacher.getId())
-                    ? m.getReceiver().getId() : m.getSender().getId();
+                    ? m.getReceiver().getId()
+                    : m.getSender().getId();
             if (!convMap.containsKey(otherId)) {
                 User other = m.getSender().getId().equals(teacher.getId())
-                        ? m.getReceiver() : m.getSender();
+                        ? m.getReceiver()
+                        : m.getSender();
                 Map<String, Object> conv = new HashMap<>();
                 conv.put("userId", other.getId());
                 conv.put("firstName", other.getFirstName());
@@ -716,10 +752,12 @@ public class TeacherController {
         // Include other active teachers for direct collaboration
         List<User> allUsers = userRepository.findAll();
         for (User u : allUsers) {
-            if (u.getId().equals(teacher.getId())) continue;
+            if (u.getId().equals(teacher.getId()))
+                continue;
             String role = u.getRole() != null ? u.getRole().toLowerCase() : "";
             String status = u.getStatus() != null ? u.getStatus().toLowerCase() : "";
-            if (!role.contains("teacher") || !"active".equals(status)) continue;
+            if (!role.contains("teacher") || !"active".equals(status))
+                continue;
             if (!contactMap.containsKey(u.getId())) {
                 Map<String, Object> contact = new HashMap<>();
                 contact.put("id", u.getId());
@@ -815,9 +853,11 @@ public class TeacherController {
         List<Map<String, Object>> studentsData = new ArrayList<>();
         for (Enrollment e : enrollments) {
             User s = e.getStudent();
-            long present = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId, "present");
+            long present = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId,
+                    "present");
             long late = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId, "late");
-            long absent = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId, "absent");
+            long absent = attendanceRecordRepository.countByStudentIdAndCourseIdAndStatus(s.getId(), courseId,
+                    "absent");
 
             Map<String, Object> sd = new HashMap<>();
             sd.put("id", s.getId());
@@ -828,7 +868,7 @@ public class TeacherController {
             sd.put("late", late);
             sd.put("absent", absent);
             long total = present + late + absent;
-            sd.put("rate", total > 0 ? Math.round(((double)(present + late) / total) * 1000.0) / 10.0 : 100);
+            sd.put("rate", total > 0 ? Math.round(((double) (present + late) / total) * 1000.0) / 10.0 : 100);
             studentsData.add(sd);
         }
 
@@ -883,8 +923,7 @@ public class TeacherController {
                 "id", student.getId(),
                 "name", student.getFullName(),
                 "studentId", student.getStudentId() != null ? student.getStudentId() : "",
-                "email", student.getEmail()
-        ));
+                "email", student.getEmail()));
         data.put("course", Map.of("courseCode", course.getCourseCode(), "courseName", course.getCourseName()));
         data.put("records", records);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -895,9 +934,12 @@ public class TeacherController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateProfile(
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
-        if (body.containsKey("firstName")) teacher.setFirstName(body.get("firstName"));
-        if (body.containsKey("lastName")) teacher.setLastName(body.get("lastName"));
-        if (body.containsKey("department")) teacher.setDepartment(body.get("department"));
+        if (body.containsKey("firstName"))
+            teacher.setFirstName(body.get("firstName"));
+        if (body.containsKey("lastName"))
+            teacher.setLastName(body.get("lastName"));
+        if (body.containsKey("department"))
+            teacher.setDepartment(body.get("department"));
 
         teacher = userRepository.save(java.util.Objects.requireNonNull(teacher));
         auditService.log(teacher, "update_profile", "user", teacher.getId(), request);
@@ -975,7 +1017,8 @@ public class TeacherController {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
-        for (int i = 0; i < length; i++) sb.append(chars.charAt(random.nextInt(chars.length())));
+        for (int i = 0; i < length; i++)
+            sb.append(chars.charAt(random.nextInt(chars.length())));
         return sb.toString();
     }
 
@@ -1007,7 +1050,8 @@ public class TeacherController {
         Files.createDirectories(uploadPath);
 
         String originalName = file.getOriginalFilename();
-        if (originalName == null) originalName = "avatar";
+        if (originalName == null)
+            originalName = "avatar";
         String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
         String fileName = System.currentTimeMillis() + "_" + safeName;
 

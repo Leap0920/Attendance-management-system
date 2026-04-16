@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
+import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
+import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -67,6 +69,7 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
    ═══════════════════════════════════════════════════════════════ */
 const StudentCourseDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<'stream' | 'history'>('stream');
@@ -222,9 +225,13 @@ const StudentCourseDetail: React.FC = () => {
                                         const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                         return (
                                             <div key={c.id} style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem', padding: '0.65rem', borderRadius: 10, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                                <div style={{ width: 30, height: 30, borderRadius: '50%', background: isTeacher ? 'var(--gradient-primary)' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0, overflow: 'hidden' }}>
-                                                    {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
-                                                </div>
+                                                <Avatar
+                                                    firstName={c.user?.firstName}
+                                                    lastName={c.user?.lastName}
+                                                    avatarUrl={c.user?.avatarUrl}
+                                                    size={30}
+                                                    variant={isTeacher ? 'blue' : 'green'}
+                                                />
                                                 <div>
                                                     <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
                                                         <strong>{c.user?.firstName} {c.user?.lastName}</strong>
@@ -241,7 +248,7 @@ const StudentCourseDetail: React.FC = () => {
 
                             {/* Comment input */}
                             <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0, background: '#fff' }}>
-                                <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>S</div>
+                                <Avatar firstName={user?.firstName} lastName={user?.lastName} size={30} variant="green" />
                                 <input className="form-input" style={{ borderRadius: 20, flex: 1, padding: '0.45rem 1rem', fontSize: '0.82rem' }}
                                     placeholder="Add a class comment…" value={newComment} onChange={e => setNewComment(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddComment(); } }} />

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
+import Avatar from '../../components/Avatar';
 import { teacherApi } from '../../api';
+import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
 const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ endTime, onExpire }) => {
@@ -32,6 +34,7 @@ const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ end
 const TeacherCourseDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<'students' | 'sessions' | 'materials'>('materials');
@@ -400,7 +403,7 @@ const TeacherCourseDetail: React.FC = () => {
                             <div className="comments-section">
                                 {comments[m.id]?.map((c: any) => (
                                     <div key={c.id} className="comment-item">
-                                        <div className="comment-avatar" style={{ background: c.isPrivate ? 'var(--accent-red)' : '' }}>{c.user?.firstName?.[0]}</div>
+                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={32} variant={c.isPrivate ? 'green' : 'blue'} style={c.isPrivate ? { background: 'var(--accent-red)' } : {}} />
                                         <div className="comment-body">
                                             <div className="comment-meta">
                                                 <strong>{c.user?.firstName} {c.user?.lastName}</strong> 
@@ -412,7 +415,7 @@ const TeacherCourseDetail: React.FC = () => {
                                     </div>
                                 ))}
                                 <div className="comment-input-area">
-                                    <div className="comment-avatar">T</div>
+                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
                                     <input 
                                         type="text" 
                                         className="comment-inline-input" 

@@ -71,6 +71,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   const location = useLocation();
   const [showLogout, setShowLogout] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [profileTab, setProfileTab] = useState<'info' | 'security'>('info');
   const [profileForm, setProfileForm] = useState({
@@ -95,6 +97,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     confirmLabel?: string;
   }>({ isOpen: false, title: '', message: '', type: 'alert' });
 
+  // Modal event listeners
   React.useEffect(() => {
     const handleAlert = (e: any) => {
       setModal({
@@ -122,6 +125,82 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       window.removeEventListener('ff-confirm', handleConfirm);
     };
   }, []);
+
+  // Swipe gesture variables
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (window.innerWidth > 900) return; // Only on mobile
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchEndX - touchStartX.current;
+    const deltaY = Math.abs(touchEndY - touchStartY.current);
+
+    // Only trigger if swipe is mostly horizontal
+    if (Math.abs(deltaX) > deltaY) {
+      setSidebarOpen(prev => {
+        // Swipe right to open (from anywhere)
+        if (!prev && deltaX > 50) {
+          return true;
+        }
+        // Swipe left to close
+        if (prev && deltaX < -50) {
+          return false;
+        }
+        return prev;
+      });
+    }
+  };
+
+  // Accessibility: trap focus and disable scroll when sidebar is open
+  React.useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('sidebar-open');
+      // Trap focus in sidebar
+      const sidebar = document.getElementById('sidebar-menu');
+      if (sidebar) {
+        sidebar.focus();
+      }
+      const handleTab = (e: KeyboardEvent) => {
+        if (!sidebarOpen) return;
+        const focusableEls = sidebar?.querySelectorAll<HTMLElement>(
+          'a, button, input, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusableEls || focusableEls.length === 0) return;
+        const first = focusableEls[0];
+        const last = focusableEls[focusableEls.length - 1];
+        if (e.key === 'Tab') {
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+        if (e.key === 'Escape') {
+          setSidebarOpen(false);
+        }
+      };
+      window.addEventListener('keydown', handleTab);
+      return () => {
+        document.body.classList.remove('sidebar-open');
+        window.removeEventListener('keydown', handleTab);
+      };
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+  }, [sidebarOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -233,8 +312,56 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   };
 
   return (
-    <div className="dashboard-layout">
-      <aside className="sidebar">
+    <div 
+      className={`dashboard-layout${sidebarOpen ? ' sidebar-open' : ''}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    > 
+      {/* Sidebar overlay for mobile */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' active' : ''}`}
+        style={{
+          display: sidebarOpen ? 'block' : 'none',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 200,
+        }}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <aside
+        id="sidebar-menu"
+        className={`sidebar${sidebarOpen ? ' open' : ''}`}
+        style={sidebarOpen ? { zIndex: 201 } : {}}
+        aria-modal="true"
+        role="dialog"
+        tabIndex={sidebarOpen ? 0 : -1}
+        aria-hidden={!sidebarOpen}
+      >
+        {/* Close button for mobile sidebar */}
+        <button
+          className="sidebar-close-btn"
+          aria-label="Close menu"
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            display: 'none',
+            position: 'absolute',
+            top: 18,
+            right: 18,
+            background: 'none',
+            border: 'none',
+            fontSize: 28,
+            color: 'var(--text-secondary)',
+            zIndex: 202,
+            cursor: 'pointer',
+          }}
+        >
+          &times;
+        </button>
         <div className="sidebar-brand">AttendEase</div>
         <nav className="sidebar-nav">
           {navSections[role]?.map((section) => (
@@ -274,6 +401,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             Logout
           </button>
         </div>
+
       </aside>
 
       <main className="main-content">{children}</main>

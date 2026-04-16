@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
+import Avatar from '../../components/Avatar';
 import { studentApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showApiError } from '../../utils/feedback';
@@ -18,6 +19,9 @@ const StudentMessages: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [selectedUserName, setSelectedUserName] = useState('');
+  
+  // Mobile state: toggle between chat list and chat view
+  const [showChatList, setShowChatList] = useState(true);
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMsg, setNewMsg] = useState('');
@@ -168,6 +172,7 @@ const StudentMessages: React.FC = () => {
     setSelectedCourse(courseId);
     setSelectedUser(null);
     setMessages([]);
+    setShowChatList(false);
   };
 
   const selectDmUser = (userId: number, name: string) => {
@@ -176,29 +181,30 @@ const StudentMessages: React.FC = () => {
     setSelectedUserName(name);
     setSelectedCourse(null);
     setMessages([]);
+    setShowChatList(false);
     studentApi.markDmRead(userId).catch(() => {});
   };
 
   return (
     <DashboardLayout role="student">
-      <div className="page-header">
+      <div className="page-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 className="page-title">Messages</h1>
-          <p className="page-subtitle">Stay connected with your classmates and teachers</p>
+          <p className="page-subtitle">Stay connected</p>
         </div>
         <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowNewDM(true)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          New Message
+          New
         </button>
       </div>
 
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
-        <div className="messages-layout" style={{ height: 'calc(100vh - 220px)' }}>
-          {/* Sidebar */}
-          <div className="messages-sidebar">
+        <div className="messages-layout" style={{ height: 'calc(100vh - 220px)', display: 'flex', flexDirection: 'column' }}>
+          {/* Sidebar - hidden on mobile when chat is selected */}
+          <div className="messages-sidebar" style={{ display: showChatList ? 'flex' : 'none', width: '100%' }}>
             <div className="messages-sidebar-header">
                 <h3>Chats</h3>
-                <input className="messages-search" placeholder="Search people or groups..." />
+                <input className="messages-search" placeholder="Search..." />
             </div>
             
             <div className="messages-sidebar-section">
@@ -227,9 +233,7 @@ const StudentMessages: React.FC = () => {
                   className={`message-channel ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''}`}
                   onClick={() => selectDmUser(conv.userId, `${conv.firstName} ${conv.lastName}`)}
                 >
-                  <div className="sidebar-avatar" style={{ width: 40, height: 40 }}>
-                    {conv.firstName?.[0]}{conv.lastName?.[0]}
-                  </div>
+                  <Avatar firstName={conv.firstName} lastName={conv.lastName} size={40} />
                   <div className="channel-info">
                     <div className="channel-name">{conv.firstName} {conv.lastName}</div>
                       <div className="channel-meta">{isTeacherRole(conv.role) ? 'Teacher' : 'Student'}</div>
@@ -242,13 +246,23 @@ const StudentMessages: React.FC = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="messages-main">
+          <div className="messages-main" style={{ display: !showChatList ? 'flex' : 'none', width: '100%', flexDirection: 'column' }}>
+            {/* Back button for mobile */}
+            <div style={{ display: showChatList ? 'none' : 'flex', padding: '8px 12px', borderBottom: '1px solid var(--border-glass)' }}>
+              <button onClick={() => setShowChatList(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', padding: '8px 0' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back
+              </button>
+            </div>
+            
             {(selectedCourse || selectedUser) ? (
               <>
                 <div className="chat-header">
-                  <div className="chat-header-avatar">
-                      {viewMode === 'group' ? 'G' : selectedUserName?.[0]}
-                  </div>
+                <Avatar
+                    firstName={viewMode === 'group' ? courses.find(c => c.id === selectedCourse)?.courseCode : selectedUserName?.split(' ')[0]}
+                    lastName={viewMode === 'group' ? undefined : selectedUserName?.split(' ').slice(1).join(' ')}
+                    size={36}
+                  />
                   <div style={{ flex: 1 }}>
                     <h3 style={{ margin: 0 }}>{viewMode === 'group' ? courses.find(c => c.id === selectedCourse)?.courseName : selectedUserName}</h3>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -271,9 +285,14 @@ const StudentMessages: React.FC = () => {
                     return (
                       <div key={m.id} className={`chat-message-row ${isMine ? 'mine' : 'theirs'}`}>
                         {!isMine && (
-                            <div className="sidebar-avatar" style={{ width: 32, height: 32, fontSize: '0.65rem', overflow: 'hidden', marginTop: inGroup ? '2px' : 0 }}>
-                                {avatarUrl ? <img src={avatarUrl} alt="avatar" className="avatar-image" /> : <>{(m.sender?.firstName || m.firstName || 'U')?.[0]}{(m.sender?.lastName || m.lastName || '')?.[0]}</>}
-                            </div>
+                            <Avatar
+                              firstName={m.sender?.firstName || m.firstName}
+                              lastName={m.sender?.lastName || m.lastName}
+                              avatarUrl={avatarUrl || undefined}
+                              size={32}
+                              variant={isTeacherRole(m.sender?.role || m.role) ? 'blue' : 'green'}
+                              style={{ marginTop: inGroup ? '2px' : 0 }}
+                            />
                         )}
                         <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`} style={{ borderRadius: '18px', borderBottomRightRadius: isMine ? '4px' : '18px', borderBottomLeftRadius: !isMine ? '4px' : '18px' }}>
                           {inGroup && (
@@ -288,9 +307,13 @@ const StudentMessages: React.FC = () => {
                           </div>
                         </div>
                         {isMine && inGroup && (
-                          <div className="sidebar-avatar" style={{ width: 32, height: 32, fontSize: '0.65rem', overflow: 'hidden', marginTop: '2px' }}>
-                            {avatarUrl ? <img src={avatarUrl} alt="avatar" className="avatar-image" /> : <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>}
-                          </div>
+                          <Avatar
+                            firstName={user?.firstName}
+                            lastName={user?.lastName}
+                            avatarUrl={avatarUrl || undefined}
+                            size={32}
+                            style={{ marginTop: '2px' }}
+                          />
                         )}
                       </div>
                     );
