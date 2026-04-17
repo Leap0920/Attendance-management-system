@@ -194,7 +194,7 @@ const StudentDashboard: React.FC = () => {
                       transition: 'width 1s ease-out',
                       background: cd.attendanceRate >= 80 ? 'var(--accent-green)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)' }} />
                   </div>
-                  <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{cd.totalSessions} total sessions</span>
                     <span>{Math.round((cd.attendanceRate / 100) * cd.totalSessions)} present</span>
                   </div>

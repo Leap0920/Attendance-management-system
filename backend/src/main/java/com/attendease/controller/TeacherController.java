@@ -987,6 +987,25 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.success("Avatar updated", userData));
     }
 
+    @DeleteMapping("/profile/avatar")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> deleteAvatar(
+            @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+        teacher.setAvatar(null);
+        teacher = userRepository.save(teacher);
+        auditService.log(teacher, "delete_avatar", "user", teacher.getId(), request);
+
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", teacher.getId());
+        userData.put("email", teacher.getEmail());
+        userData.put("firstName", teacher.getFirstName());
+        userData.put("lastName", teacher.getLastName());
+        userData.put("fullName", teacher.getFullName());
+        userData.put("role", teacher.getRole());
+        userData.put("department", teacher.getDepartment());
+        userData.put("avatar", teacher.getAvatar());
+        return ResponseEntity.ok(ApiResponse.success("Avatar removed", userData));
+    }
+
     @PutMapping("/profile/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(
             @RequestBody Map<String, String> body,

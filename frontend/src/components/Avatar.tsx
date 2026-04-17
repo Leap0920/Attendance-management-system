@@ -26,6 +26,14 @@ const Avatar: React.FC<AvatarProps> = ({
   variant = 'blue',
   style,
 }) => {
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const resolvedAvatarUrl =
+    avatarUrl && avatarUrl.trim()
+      ? avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')
+        ? avatarUrl
+        : `http://localhost:8080${avatarUrl.startsWith('/') ? avatarUrl : `/${avatarUrl}`}`
+      : '';
+
   const bg =
     variant === 'green'
       ? '#10b981'
@@ -48,13 +56,14 @@ const Avatar: React.FC<AvatarProps> = ({
     ...style,
   };
 
-  if (avatarUrl) {
+  if (resolvedAvatarUrl && !imageFailed) {
     return (
       <div style={baseStyle}>
         <img
-          src={avatarUrl}
+          src={resolvedAvatarUrl}
           alt="avatar"
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          onError={() => setImageFailed(true)}
         />
       </div>
     );

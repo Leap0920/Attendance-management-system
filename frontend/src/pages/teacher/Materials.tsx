@@ -371,7 +371,7 @@ const TeacherMaterials: React.FC = () => {
 
                                 {/* Comment input — class-level only */}
                                 <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0, background: '#fff' }}>
-                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} size={30} />
+                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={30} />
                                     <input className="form-input" style={{ borderRadius: 20, flex: 1, padding: '0.45rem 1rem', fontSize: '0.82rem' }}
                                         placeholder="Add a class comment…" value={newComment} onChange={e => setNewComment(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddComment(); } }} />
@@ -429,7 +429,7 @@ const TeacherMaterials: React.FC = () => {
                             )}
                         </div>
                         <div className="comment-input-area">
-                            <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
+                            <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={32} />
                             <button className="comment-trigger" onClick={e => { e.stopPropagation(); openDetail(m); }}>Add class comment</button>
                         </div>
                     </>
@@ -490,7 +490,7 @@ const TeacherMaterials: React.FC = () => {
                     {/* Stream */}
                     <div className="classroom-stream">
                         <div className="stream-item" style={{ padding: '0.7rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', color: '#94a3b8' }} onClick={() => setShowModal(true)}>
-                            <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
+                            <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={32} />
                             <span style={{ fontSize: '0.85rem' }}>Announce something to your class…</span>
                         </div>
                         {filtered.length > 0 ? filtered.map(renderStreamItem) : (

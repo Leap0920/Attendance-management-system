@@ -55,6 +55,7 @@ const TeacherCourseDetail: React.FC = () => {
     const [submissions, setSubmissions] = useState<any[]>([]);
     const [gradingSub, setGradingSub] = useState<any>(null);
     const [comments, setComments] = useState<Record<number, any[]>>({});
+    const [expandedThreads, setExpandedThreads] = useState<Record<number, boolean>>({});
     const [showStudentsPanel, setShowStudentsPanel] = useState(false);
 
     const load = () => {
@@ -400,22 +401,30 @@ const TeacherCourseDetail: React.FC = () => {
                             )}
 
                             {/* Comments Section */}
-                            <div className="comments-section">
-                                {comments[m.id]?.map((c: any) => (
-                                    <div key={c.id} className="comment-item">
-                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={32} variant={c.isPrivate ? 'green' : 'blue'} style={c.isPrivate ? { background: 'var(--accent-red)' } : {}} />
-                                        <div className="comment-body">
-                                            <div className="comment-meta">
-                                                <strong>{c.user?.firstName} {c.user?.lastName}</strong> 
-                                                <span>{new Date(c.createdAt).toLocaleDateString()}</span>
-                                                {c.isPrivate && <span className="pvt-tag">Private</span>}
+                            <div className="comments-section" style={{ borderTop: '1px solid #f1f5f9', marginTop: '1rem', paddingTop: '1rem' }}>
+                                {(expandedThreads[m.id] ? comments[m.id] : comments[m.id]?.slice(0, 2))?.map((c: any) => (
+                                    <div key={c.id} className="comment-item" style={{ display: 'flex', gap: '0.65rem', marginBottom: '0.85rem' }}>
+                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={30} variant={c.isPrivate ? 'green' : 'blue'} style={c.isPrivate ? { background: 'var(--accent-red)' } : {}} />
+                                        <div className="comment-body" style={{ flex: 1, fontSize: '0.85rem' }}>
+                                            <div className="comment-meta" style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: '2px' }}>
+                                                <strong style={{ fontWeight: 600 }}>{c.user?.firstName} {c.user?.lastName}</strong> 
+                                                <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                {c.isPrivate && <span className="pvt-tag" style={{ fontSize: '0.6rem', padding: '1px 6px', background: '#fee2e2', color: '#b91c1c', borderRadius: 999 }}>Private</span>}
                                             </div>
-                                            <div className="comment-text">{c.content}</div>
+                                            <div className="comment-text" style={{ color: '#334155' }}>{c.content}</div>
                                         </div>
                                     </div>
                                 ))}
-                                <div className="comment-input-area">
-                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
+                                {comments[m.id]?.length > 2 && !expandedThreads[m.id] && (
+                                    <button 
+                                        onClick={() => setExpandedThreads(prev => ({ ...prev, [m.id]: true }))}
+                                        style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: '0.85rem' }}
+                                    >
+                                        See {comments[m.id].length - 2} More Comments
+                                    </button>
+                                )}
+                                <div className="comment-input-area" style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', marginTop: '0.5rem' }}>
+                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} size={30} />
                                     <input 
                                         type="text" 
                                         className="comment-inline-input" 

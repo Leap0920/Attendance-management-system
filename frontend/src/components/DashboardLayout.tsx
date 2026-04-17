@@ -248,8 +248,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       const res = await apiForRole.updateProfile(profileForm);
       const updatedUser = res.data.data;
       if (updatedUser) {
-        setUser({ ...user, ...updatedUser } as any);
-        localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+        const nextUser = { ...user, ...updatedUser } as any;
+        setUser(nextUser);
+        localStorage.setItem('user', JSON.stringify(nextUser));
       }
       setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
       await refreshUser();
@@ -299,8 +300,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       const res = await apiForRole.uploadAvatar(formData);
       const updatedUser = res.data.data;
       if (updatedUser) {
-        setUser({ ...user, ...updatedUser } as any);
-        localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+        const nextUser = { ...user, ...updatedUser } as any;
+        setUser(nextUser);
+        localStorage.setItem('user', JSON.stringify(nextUser));
       }
       setProfileMsg({ type: 'success', text: 'Profile photo updated successfully!' });
       await refreshUser();
@@ -309,6 +311,40 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     } finally {
       setUploadingAvatar(false);
     }
+  };
+
+  const deleteAvatar = async () => {
+    if (!apiForRole) return;
+    
+    setUploadingAvatar(true);
+    setProfileMsg(null);
+    try {
+      const res = await apiForRole.deleteAvatar();
+      const updatedUser = res.data.data;
+      if (updatedUser) {
+        const nextUser = { ...user, ...updatedUser } as any;
+        setUser(nextUser);
+        localStorage.setItem('user', JSON.stringify(nextUser));
+      }
+      setProfileMsg({ type: 'success', text: 'Profile photo removed successfully!' });
+      await refreshUser();
+    } catch (err: any) {
+      setProfileMsg({ type: 'error', text: err.response?.data?.message || 'Error removing profile photo' });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleDeleteAvatar = () => {
+    if (!hasAvatar || uploadingAvatar) return;
+    setModal({
+      isOpen: true,
+      title: 'Delete Profile Picture',
+      message: 'Are you sure you want to remove your profile picture?',
+      type: 'confirm',
+      onConfirm: deleteAvatar,
+      confirmLabel: 'Delete',
+    });
   };
 
   return (
@@ -446,7 +482,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       {/* Profile Edit Modal */}
       {showProfile && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', width: 'min(92vw, 460px)', margin: '0 auto', maxHeight: '90vh', overflowY: 'auto', padding: 'clamp(1rem, 2vw, 2rem)' }}>
             <div className="modal-header">
               <h3 className="modal-title">Edit Profile</h3>
               <button className="modal-close" onClick={() => setShowProfile(false)}>×</button>
@@ -461,7 +497,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             </div>
 
             {(role === 'student' || role === 'teacher') && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '-0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
                 <input
                   ref={avatarInputRef}
                   type="file"
@@ -482,6 +518,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 >
                   {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
                 </button>
+                {hasAvatar && (
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    style={{ width: 'auto' }}
+                    onClick={handleDeleteAvatar}
+                    disabled={uploadingAvatar}
+                  >
+                    Delete Photo
+                  </button>
+                )}
               </div>
             )}
 
@@ -502,7 +549,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
             {profileTab === 'info' && (
               <form onSubmit={handleProfileUpdate}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                   <div className="form-group">
                     <label className="form-label">First Name</label>
                     <input className="form-input" value={profileForm.firstName} onChange={e => setProfileForm({ ...profileForm, firstName: e.target.value })} required />
