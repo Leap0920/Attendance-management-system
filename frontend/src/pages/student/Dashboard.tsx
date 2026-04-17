@@ -102,58 +102,60 @@ const StudentDashboard: React.FC = () => {
 
           {/* Active Sessions — Submit Attendance */}
           {data.activeSessions?.filter((s: any) => !s.alreadySubmitted).length > 0 && (
-            <div className="glass-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--accent-blue)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                <div className="live-dot" />
-                <h3 style={{ margin: 0 }}>Active Attendance Session</h3>
-              </div>
-              
-              {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
-                <div 
-                  key={s.session.id} 
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '1rem', 
-                    marginBottom: '0.75rem', 
-                    padding: '0.85rem 1.25rem', 
-                    background: selectedSession === s.session.id ? 'rgba(59, 130, 246, 0.05)' : 'var(--bg-glass)', 
-                    borderRadius: 'var(--radius-md)', 
-                    border: selectedSession === s.session.id ? '2px solid var(--accent-blue)' : '1px solid var(--border-glass)', 
-                    cursor: 'pointer', 
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: selectedSession === s.session.id ? '0 4px 12px rgba(59, 130, 246, 0.1)' : 'none'
-                  }} 
-                  onClick={() => setSelectedSession(s.session.id)}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <strong style={{ fontSize: '1.05rem', color: selectedSession === s.session.id ? 'var(--accent-blue)' : 'inherit' }}>
-                        {s.courseName}
-                      </strong>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                        {s.session.sessionTitle || 'Live Session'}
-                      </span>
-                    </div>
-                  </div>
-                  <span className={`badge ${selectedSession === s.session.id ? 'badge-active' : 'badge-active'}`} style={{ opacity: selectedSession === s.session.id ? 1 : 0.7 }}>
-                    {selectedSession === s.session.id ? 'Selected' : 'Click to select'}
-                  </span>
+            <>
+              <div className="glass-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--accent-blue)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                  <div className="live-dot" />
+                  <h3 style={{ margin: 0 }}>Active Attendance Session</h3>
                 </div>
-              ))}
-              
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
-                <input
-                  className="form-input" placeholder="0 0 0 0 0 0"
-                  value={attendCode} onChange={e => setAttendCode(e.target.value.toUpperCase())}
-                  maxLength={6}
-                  style={{ flex: 1, fontFamily: 'monospace', fontSize: '1.75rem', fontWeight: '800', letterSpacing: '0.5rem', textAlign: 'center', height: '60px', borderRadius: '12px' }}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
-                />
-                <button className="btn btn-primary" style={{ width: 'auto', paddingInline: '2.5rem', borderRadius: '12px', fontSize: '1rem' }} onClick={submitAttendance}
-                  disabled={!selectedSession || !attendCode || submitting}>{submitting ? 'Submitting…' : 'Submit Code'}</button>
+                
+                {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
+                  <div 
+                    key={s.session.id} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '1rem', 
+                      marginBottom: '0.75rem', 
+                      padding: '0.85rem 1.25rem', 
+                      background: selectedSession === s.session.id ? 'rgba(59, 130, 246, 0.05)' : 'var(--bg-glass)', 
+                      borderRadius: 'var(--radius-md)', 
+                      border: selectedSession === s.session.id ? '2px solid var(--accent-blue)' : '1px solid var(--border-glass)', 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: selectedSession === s.session.id ? '0 4px 12px rgba(59, 130, 246, 0.1)' : 'none'
+                    }} 
+                    onClick={() => setSelectedSession(s.session.id)}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <strong style={{ fontSize: '1.05rem', color: selectedSession === s.session.id ? 'var(--accent-blue)' : 'inherit' }}>
+                          {s.courseName}
+                        </strong>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                          {s.session.sessionTitle || 'Live Session'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`badge ${selectedSession === s.session.id ? 'badge-active' : 'badge-active'}`} style={{ opacity: selectedSession === s.session.id ? 1 : 0.7 }}>
+                      {selectedSession === s.session.id ? 'Selected' : 'Click to select'}
+                    </span>
+                  </div>
+                ))}
+                
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <input
+                    className="form-input" placeholder="0 0 0 0 0 0"
+                    value={attendCode} onChange={e => setAttendCode(e.target.value.toUpperCase())}
+                    maxLength={6}
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '1.75rem', fontWeight: '800', letterSpacing: '0.5rem', textAlign: 'center', height: '60px', borderRadius: '12px' }}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
+                  />
+                  <button className="btn btn-primary" style={{ width: 'auto', paddingInline: '2.5rem', borderRadius: '12px', fontSize: '1rem' }} onClick={submitAttendance}
+                    disabled={!selectedSession || !attendCode || submitting}>{submitting ? 'Submitting…' : 'Submit Code'}</button>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Courses */}
@@ -192,7 +194,7 @@ const StudentDashboard: React.FC = () => {
                       transition: 'width 1s ease-out',
                       background: cd.attendanceRate >= 80 ? 'var(--accent-green)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)' }} />
                   </div>
-                  <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{cd.totalSessions} total sessions</span>
                     <span>{Math.round((cd.attendanceRate / 100) * cd.totalSessions)} present</span>
                   </div>

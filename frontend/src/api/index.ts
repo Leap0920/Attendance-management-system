@@ -72,6 +72,7 @@ export const teacherApi = {
   changePassword: (data: any) => api.put('/teacher/profile/password', data),
   uploadAvatar: (data: FormData) =>
     api.post('/teacher/profile/avatar', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteAvatar: () => api.delete('/teacher/profile/avatar'),
 };
 
 export const studentApi = {
@@ -102,6 +103,7 @@ export const studentApi = {
   changePassword: (data: any) => api.put('/student/profile/password', data),
   uploadAvatar: (data: FormData) =>
     api.post('/student/profile/avatar', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteAvatar: () => api.delete('/student/profile/avatar'),
 };
 
 export const fileApi = {

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
+import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
+import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -83,6 +85,7 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
    Main Component
    ═══════════════════════════════════════════════════════════════ */
 const StudentMaterials: React.FC = () => {
+    const { user } = useAuth();
     const [courses, setCourses] = useState<any[]>([]);
     const [materials, setMaterials] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -215,9 +218,9 @@ const StudentMaterials: React.FC = () => {
                         <button className="modal-close" onClick={() => setDetail(null)}>&times;</button>
                     </div>
 
-                    <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: isAssignment ? 'row' : 'column' }}>
+                    <div className={`detail-layout ${isAssignment ? 'assignment-layout' : 'material-layout'}`}>
                         {/* Main Body */}
-                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#fff' }}>
+                        <div className="detail-main" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#fff' }}>
                             <div style={{ padding: '2rem', flex: 1 }}>
                                 {isAssignment && m.dueDate && (
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
@@ -258,9 +261,13 @@ const StudentMaterials: React.FC = () => {
                                             const isTeacher = role.includes('teacher');
                                             return (
                                                 <div key={c.id} style={{ display: 'flex', gap: '0.85rem', padding: '0.75rem', borderRadius: 12, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                                    <div className="sidebar-avatar" style={{ background: isTeacher ? 'var(--gradient-primary)' : 'var(--accent-green)', width: 34, height: 34, fontSize: '0.7rem', overflow: 'hidden' }}>
-                                                        {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}{c.user?.lastName?.[0]}</>}
-                                                    </div>
+                                                    <Avatar
+                                                        firstName={c.user?.firstName}
+                                                        lastName={c.user?.lastName}
+                                                        avatarUrl={c.user?.avatarUrl || c.user?.avatar}
+                                                        size={34}
+                                                        variant={isTeacher ? 'blue' : 'green'}
+                                                    />
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '4px', flexWrap: 'wrap' }}>
                                                             <span style={{ fontWeight: 700, fontSize: '0.86rem' }}>{c.user?.firstName} {c.user?.lastName}</span>
@@ -278,7 +285,13 @@ const StudentMaterials: React.FC = () => {
 
                             {/* Comment Input */}
                             <div style={{ padding: '1rem 2rem', borderTop: '1px solid var(--sidebar-border)', background: '#f8fafc', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <div className="sidebar-avatar" style={{ background: 'var(--accent-green)', width: 32, height: 32, fontSize: '0.7rem' }}>S</div>
+                                <Avatar
+                                    firstName={user?.firstName}
+                                    lastName={user?.lastName}
+                                    avatarUrl={user?.avatar}
+                                    size={32}
+                                    variant="green"
+                                />
                                 <input 
                                     ref={commentInputRef}
                                     className="form-input" 
@@ -294,7 +307,7 @@ const StudentMaterials: React.FC = () => {
 
                         {/* Sidebar (Assignments Only) */}
                         {isAssignment && (
-                            <div style={{ width: 360, borderLeft: '1px solid var(--sidebar-border)', background: '#f8fafc', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                            <div className="assignment-sidebar" style={{ borderLeft: '1px solid var(--sidebar-border)', background: '#f8fafc', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ padding: '2rem' }}>
                                     <h4 className="section-title" style={{ marginBottom: '1.5rem' }}>Your work</h4>
                                     
@@ -349,9 +362,13 @@ const StudentMaterials: React.FC = () => {
                                                 const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                                 return (
                                                     <div key={c.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', background: isTeacher ? '#fffbeb' : '#fff', borderRadius: 10, border: '1px solid var(--sidebar-border)' }}>
-                                                        <div className="sidebar-avatar" style={{ width: 26, height: 26, fontSize: '0.6rem', background: isTeacher ? 'var(--accent-yellow)' : 'var(--accent-green)', overflow: 'hidden' }}>
-                                                            {c.user?.avatarUrl ? <img src={c.user.avatarUrl} alt="avatar" className="avatar-image" /> : <>{c.user?.firstName?.[0]}</>}
-                                                        </div>
+                                                        <Avatar
+                                                            firstName={c.user?.firstName}
+                                                            lastName={c.user?.lastName}
+                                                            avatarUrl={c.user?.avatarUrl || c.user?.avatar}
+                                                            size={26}
+                                                            variant={isTeacher ? 'blue' : 'green'}
+                                                        />
                                                         <div>
                                                             <div style={{ fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                                                                 {c.user?.firstName}
@@ -388,8 +405,8 @@ const StudentMaterials: React.FC = () => {
                     <h1 className="page-title">Classwork</h1>
                     <p className="page-subtitle">View and complete assignments shared by your teachers</p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <select className="form-input" style={{ width: 'auto', minWidth: '240px' }} value={selectedCourse || ''} onChange={e => setSelectedCourse(Number(e.target.value))}>
+                <div style={{ display: 'flex', gap: '0.75rem', flex: 1, maxWidth: 400 }}>
+                    <select className="form-input" style={{ width: '100%' }} value={selectedCourse || ''} onChange={e => setSelectedCourse(Number(e.target.value))}>
                         {courses.map((c: any) => <option key={c.id} value={c.id}>{c.courseCode} — {c.courseName}</option>)}
                     </select>
                 </div>
@@ -419,7 +436,12 @@ const StudentMaterials: React.FC = () => {
                                     {!isSimple ? (
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <div className="stream-header">
-                                                <div className="stream-avatar" style={{ background: tc.color }}>{m.teacher?.firstName?.[0]}{m.teacher?.lastName?.[0]}</div>
+                                                <Avatar
+                                                    firstName={m.teacher?.firstName}
+                                                    lastName={m.teacher?.lastName}
+                                                    avatarUrl={m.teacher?.avatarUrl || m.teacher?.avatar}
+                                                    size={40}
+                                                />
                                                 <div className="stream-info">
                                                     <div className="stream-author">{m.teacher?.firstName} {m.teacher?.lastName}</div>
                                                     <div className="stream-date">{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
@@ -431,7 +453,13 @@ const StudentMaterials: React.FC = () => {
                                                 {m.type === 'link' && m.externalLink && <VideoPreview url={m.externalLink} />}
                                             </div>
                                             <div className="comment-input-area" onClick={e => { e.stopPropagation(); openDetail(m, true); }}>
-                                                <div className="comment-avatar">s</div>
+                                                <Avatar
+                                                    firstName={user?.firstName}
+                                                    lastName={user?.lastName}
+                                                    avatarUrl={user?.avatar}
+                                                    size={32}
+                                                    variant="green"
+                                                />
                                                 <div className="comment-trigger">Add class comment...</div>
                                             </div>
                                         </div>

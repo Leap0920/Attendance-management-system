@@ -288,7 +288,7 @@ public class StudentController {
 
     @GetMapping("/materials/{materialId}/comments")
     public ResponseEntity<ApiResponse<List<Comment>>> getComments(@PathVariable Long materialId) {
-        return ResponseEntity.ok(ApiResponse.success(commentRepository.findByMaterialIdOrderByCreatedAtAsc(materialId)));
+        return ResponseEntity.ok(ApiResponse.success(commentRepository.findByMaterialIdWithUser(materialId)));
     }
 
     @PostMapping("/materials/{materialId}/comments")
@@ -543,6 +543,16 @@ public class StudentController {
                 auditService.log(student, "update_avatar", "user", student.getId(), request);
 
                 return ResponseEntity.ok(ApiResponse.success("Avatar updated", buildUserData(student)));
+        }
+
+        @DeleteMapping("/profile/avatar")
+        public ResponseEntity<ApiResponse<Map<String, Object>>> deleteAvatar(
+                        @AuthenticationPrincipal User student,
+                        HttpServletRequest request) {
+                student.setAvatar(null);
+                student = userRepository.save(student);
+                auditService.log(student, "delete_avatar", "user", student.getId(), request);
+                return ResponseEntity.ok(ApiResponse.success("Avatar removed", buildUserData(student)));
         }
 
         @PostMapping("/courses/{id}/leave")
