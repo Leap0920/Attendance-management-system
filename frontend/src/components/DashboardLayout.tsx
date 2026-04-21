@@ -216,7 +216,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     const value = avatar.trim();
     if (!value) return '';
     if (value.startsWith('http://') || value.startsWith('https://')) return value;
-    return `http://localhost:8080${value.startsWith('/') ? value : `/${value}`}`;
+    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
   };
 
   const isActive = (path: string) => {
