@@ -1,190 +1,349 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
+import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
+import Avatar from '../../components/Avatar';
 
 const TeacherAttendance: React.FC = () => {
-    const [sessions, setSessions] = useState<any[]>([]);
-    const [courses, setCourses] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [showRecords, setShowRecords] = useState<any>(null);
-    const [records, setRecords] = useState<any[]>([]);
-    const [form, setForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [showRecords, setShowRecords] = useState<any>(null);
+  const [records, setRecords] = useState<any[]>([]);
+  const [form, setForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showReopenModal, setShowReopenModal] = useState(false);
+  const [targetReopen, setTargetReopen] = useState<any>(null);
+  const [reopenDuration, setReopenDuration] = useState('10');
+  const itemsPerPage = 8;
 
-    const load = () => {
-        Promise.all([teacherApi.getSessions(), teacherApi.getCourses()]).then(([sessRes, courseRes]) => {
-            setSessions(sessRes.data.data || []);
-            setCourses(courseRes.data.data || []);
-            setLoading(false);
-        }).catch(() => setLoading(false));
-    };
+  const load = () => {
+    Promise.all([teacherApi.getSessions(), teacherApi.getCourses()]).then(([sessRes, courseRes]) => {
+      setSessions(sessRes.data.data || []);
+      setCourses(courseRes.data.data || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  };
 
-    useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await teacherApi.createAttendance({ courseId: Number(form.courseId), sessionTitle: form.sessionTitle, duration: Number(form.duration), allowLate: true });
-            setShowModal(false);
-            setForm({ courseId: '', sessionTitle: '', duration: '10' });
-            load();
-            showAlert('Success', 'Attendance session started!');
-        } catch (err: any) { showApiError(err); }
-    };
-
-    const closeSession = async (id: number) => {
-        showConfirm('Close Session', 'Are you sure you want to close this session? Absent students will be auto-marked.', async () => {
-            try {
-                await teacherApi.closeAttendance(id);
-                load();
-                showAlert('Success', 'Session closed.');
-            } catch (err: any) { showApiError(err); }
-        });
-    };
-
-    const reopenSession = async (id: number) => {
-        showConfirm('Reopen Session', 'Reopen this session? A new code will be generated.', async () => {
-            try {
-                await teacherApi.reopenAttendance(id);
-                load();
-                showAlert('Success', 'Session reopened.');
-            } catch (err: any) { showApiError(err); }
-        });
-    };
-
-    const viewRecords = async (session: any) => {
-        const res = await teacherApi.getRecords(session.id);
-        setRecords(res.data.data || []);
-        setShowRecords(session);
-    };
-
+  // Polling for active sessions
+  useEffect(() => {
     const activeSessions = sessions.filter(s => s.status === 'active');
-    const closedSessions = sessions.filter(s => s.status !== 'active');
+    if (activeSessions.length === 0) return;
+    const interval = setInterval(() => {
+      teacherApi.getSessions().then(res => setSessions(res.data.data || [])).catch(() => {});
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [sessions]);
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await teacherApi.createAttendance({ courseId: Number(form.courseId), sessionTitle: form.sessionTitle, duration: Number(form.duration), allowLate: true });
+      setShowModal(false);
+      setForm({ courseId: '', sessionTitle: '', duration: '10' });
+      const code = res.data?.data?.attendanceCode || '';
+      showAlert('Success', `Session started! Code: ${code}`, 'success');
+      load();
+    } catch (err: any) { showApiError(err); }
+  };
+
+  const closeSession = (id: number) => {
+    showConfirm('Close Session', 'Close this session? Absent students will be auto-marked.', async () => {
+      try { await teacherApi.closeAttendance(id); showAlert('Success', 'Session closed.', 'success'); load(); }
+      catch (err: any) { showApiError(err); }
+    });
+  };
+
+  const openReopenModal = (session: any) => {
+    setTargetReopen(session);
+    setReopenDuration('10');
+    setShowReopenModal(true);
+  };
+
+  const confirmReopen = async () => {
+    if (!targetReopen) return;
+    try {
+      const res = await teacherApi.reopenAttendance(targetReopen.id, Number(reopenDuration));
+      const code = res.data?.data?.attendanceCode || '';
+      showAlert('Success', `Session reopened! Code: ${code}`, 'success');
+      setShowReopenModal(false);
+      setTargetReopen(null);
+      load();
+    } catch (err: any) { showApiError(err); }
+  };
+
+  const viewRecords = async (session: any) => {
+    try {
+      const res = await teacherApi.getRecords(session.id);
+      setRecords(res.data.data || []);
+      setShowRecords(session);
+    } catch { setRecords([]); setShowRecords(session); }
+  };
+
+  const getAvatarUrl = (avatar?: unknown) => {
+    if (typeof avatar !== 'string') return undefined;
+    const v = avatar.trim();
+    if (!v) return undefined;
+    if (v.startsWith('http')) return v;
+    return `http://${window.location.hostname}:8080${v.startsWith('/') ? v : `/${v}`}`;
+  };
+
+  const activeSessions = sessions.filter(s => s.status === 'active');
+  const closedSessions = sessions.filter(s => s.status !== 'active');
+
+  // Filtered sessions
+  const filteredSessions = sessions.filter(s => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
     return (
-        <DashboardLayout role="teacher">
-            <div className="page-header">
-                <div><h1 className="page-title">Attendance Management</h1><p className="page-subtitle">View and manage all attendance sessions</p></div>
-                <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>+ New Session</button>
-            </div>
-
-            {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
-                <>
-                    {/* Stats */}
-                    <div className="stats-grid">
-                        <div className="stat-card blue"><div className="stat-value">{sessions.length}</div><div className="stat-label">Total Sessions</div></div>
-                        <div className="stat-card green"><div className="stat-value">{activeSessions.length}</div><div className="stat-label">Active Now</div></div>
-                        <div className="stat-card purple"><div className="stat-value">{closedSessions.length}</div><div className="stat-label">Completed</div></div>
-                    </div>
-
-                    {/* Active Sessions */}
-                    {activeSessions.length > 0 && (
-                        <div style={{ marginBottom: '2rem' }}>
-                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-green)' }}>Active Sessions</h3>
-                            {activeSessions.map(s => (
-                                <div key={s.id} className="glass-card" style={{ marginBottom: '1rem', borderLeft: '3px solid var(--accent-green)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                                        <div>
-                                            <h4>{s.course?.courseName || 'Course'}</h4>
-                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{s.sessionTitle || 'Session'} • {s.durationMinutes} min</p>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <div className="attendance-code-display" style={{ padding: '0.5rem 1rem' }}>
-                                                <div className="code" style={{ fontSize: '1.5rem' }}>{s.attendanceCode}</div>
-                                            </div>
-                                            <button className="btn btn-secondary btn-sm" onClick={() => viewRecords(s)}>Records</button>
-                                            <button className="btn btn-danger btn-sm" onClick={() => closeSession(s.id)}>Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* All Sessions Table */}
-                    <div className="glass-card">
-                        <h3 style={{ marginBottom: '1rem' }}>All Sessions</h3>
-                        <div className="data-table-wrapper">
-                            <table className="data-table">
-                                <thead><tr><th>Course</th><th>Session</th><th>Code</th><th>Duration</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-                                <tbody>
-                                    {sessions.map(s => (
-                                        <tr key={s.id}>
-                                            <td style={{ fontWeight: 600 }}>{s.course?.courseCode || '—'}</td>
-                                            <td>{s.sessionTitle || 'Session'}</td>
-                                            <td><span className="join-code">{s.attendanceCode}</span></td>
-                                            <td>{s.durationMinutes} min</td>
-                                            <td><span className={`badge badge-${s.status === 'active' ? 'present' : 'absent'}`}>{s.status}</span></td>
-                                            <td style={{ color: 'var(--text-secondary)' }}>{new Date(s.startTime).toLocaleString()}</td>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => viewRecords(s)}>View</button>
-                                                    {s.status === 'active' && <button className="btn btn-danger btn-sm" onClick={() => closeSession(s.id)}>Close</button>}
-                                                    {s.status === 'closed' && <button className="btn btn-success btn-sm" onClick={() => reopenSession(s.id)}>Reopen</button>}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {sessions.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No sessions yet</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {/* Create Modal */}
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header"><h3 className="modal-title">New Attendance Session</h3><button className="modal-close" onClick={() => setShowModal(false)}>×</button></div>
-                        <form onSubmit={handleCreate}>
-                            <div className="form-group"><label className="form-label">Course</label>
-                                <select className="form-input" value={form.courseId} onChange={e => setForm({ ...form, courseId: e.target.value })} required>
-                                    <option value="">Select course...</option>
-                                    {courses.map((c: any) => <option key={c.id} value={c.id}>{c.courseCode} — {c.courseName}</option>)}
-                                </select>
-                            </div>
-                            <div className="form-group"><label className="form-label">Session Title (optional)</label><input className="form-input" value={form.sessionTitle} onChange={e => setForm({ ...form, sessionTitle: e.target.value })} /></div>
-                            <div className="form-group"><label className="form-label">Duration (minutes)</label><input className="form-input" type="number" min="1" max="120" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} /></div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Start Session</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Records Modal */}
-            {showRecords && (
-                <div className="modal-overlay" onClick={() => setShowRecords(null)}>
-                    <div className="modal" style={{ maxWidth: '700px' }} onClick={e => e.stopPropagation()}>
-                        <div className="modal-header"><h3 className="modal-title">Attendance Records — {showRecords.sessionTitle || 'Session'}</h3><button className="modal-close" onClick={() => setShowRecords(null)}>×</button></div>
-                        <div className="data-table-wrapper">
-                            <table className="data-table">
-                                <thead><tr><th>Student</th><th>Status</th><th>Time</th></tr></thead>
-                                <tbody>
-                                    {records.map((r: any) => (
-                                        <tr key={r.id}>
-                                            <td style={{ fontWeight: 500 }}>
-                                                {r.student?.firstName} {r.student?.lastName}
-                                                {r.student?.studentId && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>{r.student.studentId}</div>}
-                                            </td>
-                                            <td><span className={`badge badge-${r.status}`}>{r.status}</span></td>
-                                            <td style={{ color: 'var(--text-secondary)' }}>{r.submittedAt ? new Date(r.submittedAt).toLocaleString() : '—'}</td>
-                                        </tr>
-                                    ))}
-                                    {records.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No records</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </DashboardLayout>
+      s.course?.courseName?.toLowerCase().includes(q) ||
+      s.course?.courseCode?.toLowerCase().includes(q) ||
+      s.sessionTitle?.toLowerCase().includes(q) ||
+      s.attendanceCode?.toLowerCase().includes(q)
     );
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+  const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  return (
+    <DashboardLayout role="teacher">
+      {/* ── Top Bar ──────────────────────────────────────── */}
+      <div className="td-topbar">
+        <span className="ta-brand">Attendance Management</span>
+        <div className="td-topbar-actions" style={{ marginLeft: 'auto' }}>
+          <button className="btn btn-secondary td-topbar-btn" onClick={() => setShowModal(true)}>+ Create Course</button>
+          <button className="btn btn-primary td-topbar-btn" onClick={() => setShowModal(true)}>+ New Session</button>
+        </div>
+        <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={getAvatarUrl(user?.avatar)} size={38} />
+      </div>
+
+      {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
+        <>
+          {/* ── Stats Row ─────────────────────────────────── */}
+          <div className="ta-stats-row">
+            <div className="ta-stat-card">
+              <div className="ta-stat-top">
+                <span className="ta-stat-label">Total Sessions</span>
+                <div className="ta-stat-icon-box ta-stat-icon-gray">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+              </div>
+              <div className="ta-stat-value">{sessions.length}</div>
+              <span className="ta-stat-badge ta-stat-blue">THIS SEMESTER</span>
+            </div>
+            <div className="ta-stat-card">
+              <div className="ta-stat-top">
+                <span className="ta-stat-label">Active Now</span>
+                <div className="ta-stat-icon-box ta-stat-icon-yellow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+              </div>
+              <div className="ta-stat-value">{activeSessions.length}</div>
+              <span className="ta-stat-badge ta-stat-live">
+                <span className="td-live-dot-sm" style={{ background: '#f97316' }}></span>
+                LIVE TRACKING
+              </span>
+            </div>
+            <div className="ta-stat-card">
+              <div className="ta-stat-top">
+                <span className="ta-stat-label">Completed</span>
+                <div className="ta-stat-icon-box ta-stat-icon-green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </div>
+              </div>
+              <div className="ta-stat-value">{closedSessions.length}</div>
+              <span className="ta-stat-badge ta-stat-neutral">ARCHIVED SESSIONS</span>
+            </div>
+          </div>
+
+          {/* ── Active Sessions ───────────────────────────── */}
+          {activeSessions.length > 0 && (
+            <div className="ta-active-section">
+              <div className="ta-active-header">
+                <h2>Active Sessions</h2>
+                <span className="ta-live-indicator">LIVE INDICATOR</span>
+              </div>
+              {activeSessions.map(s => (
+                <div key={s.id} className="ta-active-card">
+                  <div className="ta-active-info">
+                    <span className="ta-active-ongoing">ONGOING NOW</span>
+                    <h3>{s.course?.courseName || 'Course'}</h3>
+                    <p>{s.sessionTitle || 'Regular Session'} • {s.course?.section || ''}</p>
+                  </div>
+                  <div className="ta-access-code">
+                    <span className="ta-code-label">ACCESS CODE</span>
+                    <div className="ta-code-value" onClick={() => { navigator.clipboard.writeText(s.attendanceCode || ''); showAlert('Copied', 'Code copied!', 'success'); }}>{s.attendanceCode}</div>
+                  </div>
+                  <div className="ta-active-actions">
+                    <button className="btn btn-secondary" onClick={() => viewRecords(s)} style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                      Records
+                    </button>
+                    <button className="btn btn-danger" onClick={() => closeSession(s.id)} style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── All Sessions Table ────────────────────────── */}
+          <div className="ta-table-section">
+            <div className="ta-table-header">
+              <h2>All Sessions</h2>
+              <div className="td-search-wrapper" style={{ maxWidth: '260px' }}>
+                <svg className="td-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input className="td-search-input" placeholder="Search sessions..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+              </div>
+            </div>
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>COURSE</th>
+                    <th>SESSION</th>
+                    <th>CODE</th>
+                    <th>DURATION</th>
+                    <th>STATUS</th>
+                    <th>DATE</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedSessions.map(s => (
+                    <tr key={s.id}>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{s.course?.courseName || '—'}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{s.course?.courseCode} • {s.course?.section || ''}</div>
+                      </td>
+                      <td>{s.sessionTitle || 'Regular Session'}</td>
+                      <td>
+                        <span className="ta-table-code" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(s.attendanceCode || ''); showAlert('Copied', 'Code copied!', 'success'); }}>
+                          {s.attendanceCode}
+                        </span>
+                      </td>
+                      <td>{s.status === 'active' ? 'Ongoing' : `${s.durationMinutes} Mins`}</td>
+                      <td>
+                        <span className={`ta-status-pill ${s.status === 'active' ? 'active' : 'closed'}`}>
+                          {s.status === 'active' ? 'ACTIVE' : 'CLOSED'}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{new Date(s.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          {s.status === 'active' ? (
+                            <>
+                              <button className="ta-action-btn" title="View Records" onClick={() => viewRecords(s)}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                              </button>
+                              <button className="btn btn-danger btn-sm" onClick={() => closeSession(s.id)} style={{ width: 'auto', borderRadius: '20px', fontSize: '0.7rem' }}>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="ta-reopen-btn" onClick={() => openReopenModal(s)}>REOPEN</button>
+                              <button className="ta-action-btn" title="History" onClick={() => viewRecords(s)}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredSessions.length === 0 && (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No sessions found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* ── Pagination ──────────────────────────────── */}
+            <div className="ta-pagination">
+              <span className="ta-page-info">Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredSessions.length)} to {Math.min(currentPage * itemsPerPage, filteredSessions.length)} of {filteredSessions.length} entries</span>
+              <div className="ta-page-btns">
+                <button className="ta-page-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button key={i} className={`ta-page-num ${currentPage === i + 1 ? 'active' : ''}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
+                ))}
+                <button className="ta-page-btn" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => p + 1)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── New Session Modal ──────────────────────────────── */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header"><h3 className="modal-title">New Attendance Session</h3><button className="modal-close" onClick={() => setShowModal(false)}>×</button></div>
+            <form onSubmit={handleCreate}>
+              <div className="form-group"><label className="form-label">Course</label>
+                <select className="form-input" value={form.courseId} onChange={e => setForm({ ...form, courseId: e.target.value })} required>
+                  <option value="">Select course...</option>
+                  {courses.filter(c => c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.courseCode} — {c.courseName}</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">Session Title (optional)</label><input className="form-input" value={form.sessionTitle} onChange={e => setForm({ ...form, sessionTitle: e.target.value })} placeholder="e.g. Week 5" /></div>
+              <div className="form-group"><label className="form-label">Duration (minutes)</label><input className="form-input" type="number" min="1" max="120" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} /></div>
+              <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button><button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Start Session</button></div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Records Modal ─────────────────────────────────── */}
+      {showRecords && (
+        <div className="modal-overlay" onClick={() => setShowRecords(null)}>
+          <div className="modal" style={{ maxWidth: '700px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header"><h3 className="modal-title">Attendance Records — {showRecords.sessionTitle || 'Session'}</h3><button className="modal-close" onClick={() => setShowRecords(null)}>×</button></div>
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead><tr><th>Student</th><th>Status</th><th>Time</th></tr></thead>
+                <tbody>
+                  {records.map((r: any) => (
+                    <tr key={r.id}>
+                      <td style={{ fontWeight: 500 }}>{r.student?.firstName} {r.student?.lastName}{r.student?.studentId && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{r.student.studentId}</div>}</td>
+                      <td><span className={`badge badge-${r.status}`}>{r.status}</span></td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{r.submittedAt ? new Date(r.submittedAt).toLocaleString() : '—'}</td>
+                    </tr>
+                  ))}
+                  {records.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No records</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reopen Modal ──────────────────────────────────── */}
+      {showReopenModal && (
+        <div className="modal-overlay" onClick={() => setShowReopenModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header"><h3 className="modal-title">Reopen Session</h3><button className="modal-close" onClick={() => setShowReopenModal(false)}>×</button></div>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Reopening: <strong>{targetReopen?.sessionTitle || 'Session'}</strong>. A new code will be generated.</p>
+            <div className="form-group"><label className="form-label">Extended Duration (minutes)</label><input type="number" className="form-input" value={reopenDuration} onChange={e => setReopenDuration(e.target.value)} min="1" max="120" /></div>
+            <div className="modal-actions"><button className="btn btn-secondary" onClick={() => setShowReopenModal(false)}>Cancel</button><button className="btn btn-primary" style={{ width: 'auto' }} onClick={confirmReopen}>Confirm Reopen</button></div>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
+  );
 };
 
 export default TeacherAttendance;
