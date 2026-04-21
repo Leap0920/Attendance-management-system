@@ -2,9 +2,77 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
-import { teacherApi } from '../../api';
+import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
+
+const getYouTubeId = (url: string): string | null => {
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+};
+
+const downloadFile = async (type: 'material' | 'submission', id: number, fileName: string) => {
+    try {
+        const res = type === 'material'
+            ? await fileApi.downloadMaterial(id)
+            : await fileApi.downloadSubmission(id);
+        const blob = new Blob([res.data]);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName || 'download';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    } catch { showAlert('Error', 'Could not download file', 'error'); }
+};
+
+const typeConfig: Record<string, { color: string; bg: string; label: string }> = {
+    file:         { color: '#4285F4', bg: '#eff6ff', label: 'Material' },
+    link:         { color: '#8b5cf6', bg: '#f5f3ff', label: 'Link' },
+    announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement' },
+    assignment:   { color: '#EA4335', bg: '#fef2f2', label: 'Assignment' },
+};
+
+const TypeIcon = ({ type, size = 20 }: { type: string; size?: number }) => {
+    const s = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+    if (type === 'file') return <svg {...s}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
+    if (type === 'link') return <svg {...s}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
+    if (type === 'assignment') return <svg {...s}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
+    return <svg {...s}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+};
+
+const VideoPreview = ({ url }: { url: string }) => {
+    const ytId = getYouTubeId(url);
+    if (!ytId) return null;
+    return (
+        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 12, overflow: 'hidden', marginBottom: '1rem', background: '#000' }}>
+            <iframe
+                src={`https://www.youtube.com/embed/${ytId}`}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen title="Video preview"
+            />
+        </div>
+    );
+};
+
+const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
+    <div onClick={e => { e.stopPropagation(); onDownload(); }} style={{
+        display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+        background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', cursor: 'pointer',
+        transition: 'all 0.15s', marginBottom: '0.5rem'
+    }} onMouseEnter={e => (e.currentTarget.style.background = '#eff6ff')} onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}>
+        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'}
+            </div>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+);
 
 const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ endTime, onExpire }) => {
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -57,6 +125,9 @@ const TeacherCourseDetail: React.FC = () => {
     const [comments, setComments] = useState<Record<number, any[]>>({});
     const [expandedThreads, setExpandedThreads] = useState<Record<number, boolean>>({});
     const [showStudentsPanel, setShowStudentsPanel] = useState(false);
+    const [detail, setDetail] = useState<any>(null);
+    const [showForward, setShowForward] = useState<number | null>(null);
+    const [forwardCourses, setForwardCourses] = useState<number[]>([]);
 
     const load = () => {
         teacherApi.getCourse(Number(id)).then(res => {
@@ -99,9 +170,33 @@ const TeacherCourseDetail: React.FC = () => {
         } catch (err: any) { showApiError(err); } finally { setPosting(false); }
     };
 
-    const viewSubmissions = (material: any) => {
-        setShowSubmissions(material);
-        teacherApi.getSubmissions(material.id).then(res => setSubmissions(res.data.data || []));
+    const openDetail = async (material: any) => {
+        setDetail(material);
+        if (material.type === 'assignment') {
+            teacherApi.getSubmissions(material.id).then(res => setSubmissions(res.data.data || []));
+        }
+    };
+
+    const handleForward = async () => {
+        if (!showForward || forwardCourses.length === 0 || posting) return;
+        setPosting(true);
+        try {
+            await teacherApi.shareMaterial(showForward, forwardCourses.join(','));
+            setShowForward(null);
+            setForwardCourses([]);
+            showAlert('Success', 'Material shared with other courses');
+        } catch (err: any) { showApiError(err); } finally { setPosting(false); }
+    };
+
+    const handleDeleteMaterial = (mid: number) => {
+        showConfirm('Delete', 'Are you sure you want to delete this post?', async () => {
+            try {
+                await teacherApi.deleteMaterial(mid);
+                setDetail(null);
+                load();
+                showAlert('Deleted', 'Post removed', 'error');
+            } catch (err: any) { showApiError(err); }
+        });
     };
 
     const gradeSubmission = async (e: React.FormEvent) => {
@@ -109,7 +204,7 @@ const TeacherCourseDetail: React.FC = () => {
         try {
             await teacherApi.gradeSubmission(gradingSub.id, { grade: gradingSub.grade, feedback: gradingSub.feedback });
             setGradingSub(null);
-            teacherApi.getSubmissions(showSubmissions.id).then(res => setSubmissions(res.data.data || []));
+            teacherApi.getSubmissions(detail.id).then(res => setSubmissions(res.data.data || []));
             showAlert('Success', 'Graded successfully');
         } catch (err: any) { showApiError(err); }
     };
@@ -369,36 +464,36 @@ const TeacherCourseDetail: React.FC = () => {
 
                     {data.materials?.length > 0 ? data.materials.map((m: any) => (
                         <div key={m.id} className="stream-item">
-                            {m.type === 'announcement' ? (
-                                <>
-                                    <div className="stream-header">
-                                        <div className="stream-avatar">{m.teacher?.firstName?.[0]}{m.teacher?.lastName?.[0]}</div>
-                                        <div className="stream-info">
-                                            <div className="stream-author">{m.teacher?.firstName} {m.teacher?.lastName}</div>
-                                            <div className="stream-date">{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                            <div onClick={() => openDetail(m)} style={{ cursor: 'pointer' }}>
+                                {m.type === 'announcement' ? (
+                                    <>
+                                        <div className="stream-header">
+                                            <div className="stream-avatar">{m.teacher?.firstName?.[0]}{m.teacher?.lastName?.[0]}</div>
+                                            <div className="stream-info">
+                                                <div className="stream-author">{m.teacher?.firstName} {m.teacher?.lastName}</div>
+                                                <div className="stream-date">{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                                            </div>
                                         </div>
+                                        <div className="stream-content">
+                                            {m.title && <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{m.title}</div>}
+                                            <div style={{ whiteSpace: 'pre-wrap', color: '#334155' }}>{m.description}</div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="stream-item-material">
+                                        <div className="material-badge" style={{ background: typeConfig[m.type]?.bg || '#f1f5f9', color: typeConfig[m.type]?.color || '#64748b' }}>
+                                            <TypeIcon type={m.type} />
+                                        </div>
+                                        <div className="stream-info" style={{ flex: 1 }}>
+                                            <h4 style={{ fontSize: '0.95rem', fontWeight: 600 }}>{m.teacher?.firstName} {m.teacher?.lastName} posted a new {m.type}: {m.title}</h4>
+                                            <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                                        </div>
+                                        {m.type === 'assignment' && (
+                                            <button className="btn btn-secondary btn-sm" onClick={(e) => { e.stopPropagation(); openDetail(m); }}>Submissions</button>
+                                        )}
                                     </div>
-                                    <div className="stream-content">
-                                        {m.title && <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{m.title}</div>}
-                                        {m.description}
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="stream-item-material">
-                                    <div className="material-badge">
-                                        {m.type === 'file' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>}
-                                        {m.type === 'link' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>}
-                                        {m.type === 'assignment' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>}
-                                    </div>
-                                    <div className="stream-info" style={{ flex: 1 }}>
-                                        <h4>{m.teacher?.firstName} {m.teacher?.lastName} posted a new {m.type}: {m.title}</h4>
-                                        <p>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
-                                    </div>
-                                    {m.type === 'assignment' && (
-                                        <button className="btn btn-secondary btn-sm" onClick={() => viewSubmissions(m)}>Submissions</button>
-                                    )}
-                                </div>
-                            )}
+                                )}
+                            </div>
 
                             {/* Comments Section */}
                             <div className="comments-section" style={{ borderTop: '1px solid #f1f5f9', marginTop: '1rem', paddingTop: '1rem' }}>
@@ -559,31 +654,151 @@ const TeacherCourseDetail: React.FC = () => {
                     </div>
                 </div>
             )}
-            {/* Submissions Modal */}
-            {showSubmissions && (
-                <div className="modal-overlay" onClick={() => setShowSubmissions(null)}>
-                    <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3 className="modal-title">Submissions: {showSubmissions.title}</h3>
-                            <button className="modal-close" onClick={() => setShowSubmissions(null)}>×</button>
+            {/* Material Detail Modal */}
+            {detail && (
+                <div className="modal-overlay" onClick={() => setDetail(null)}>
+                    <div className={`modal ${detail.type === 'assignment' ? 'modal-xl' : 'modal-lg'}`} 
+                         onClick={e => e.stopPropagation()} 
+                         style={{ maxWidth: detail.type === 'assignment' ? 1100 : 780, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        
+                        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: '50%', background: typeConfig[detail.type]?.color || '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                <TypeIcon type={detail.type} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{detail.title}</h3>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+                                    {detail.teacher?.firstName} {detail.teacher?.lastName} • {new Date(detail.createdAt).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button className="btn-icon" title="Forward" onClick={() => setShowForward(detail.id)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+                                <button className="btn-icon" title="Delete" onClick={() => handleDeleteMaterial(detail.id)} style={{ color: 'var(--accent-red)' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                                <button className="modal-close" onClick={() => setDetail(null)} style={{ position: 'static' }}>×</button>
+                            </div>
                         </div>
-                        <div className="data-table-wrapper">
-                            <table className="data-table">
-                                <thead><tr><th>Student</th><th>Date</th><th>File</th><th>Grade</th><th>Actions</th></tr></thead>
-                                <tbody>
-                                    {submissions.map(s => (
-                                        <tr key={s.id}>
-                                            <td>{s.student?.firstName} {s.student?.lastName}</td>
-                                            <td>{new Date(s.submittedAt).toLocaleString()}</td>
-                                            <td>{s.fileName ? <a href={`/${s.filePath}`} target="_blank" rel="noreferrer">📄 {s.fileName}</a> : '—'}</td>
-                                            <td>{s.grade || 'Not graded'}</td>
-                                            <td>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => setGradingSub(s)}>Grade</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+
+                        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+                                {detail.description && <div style={{ fontSize: '0.95rem', lineHeight: 1.6, color: '#334155', marginBottom: '1.5rem', whiteSpace: 'pre-wrap' }}>{detail.description}</div>}
+                                {detail.externalLink && <VideoPreview url={detail.externalLink} />}
+                                {detail.fileName && <FileCard fileName={detail.fileName} fileSize={detail.fileSize} onDownload={() => downloadFile('material', detail.id, detail.fileName)} />}
+                                {detail.externalLink && !getYouTubeId(detail.externalLink) && (
+                                    <a href={detail.externalLink} target="_blank" rel="noreferrer" className="link-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', textDecoration: 'none', color: 'inherit' }}>
+                                        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#f5f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                        </div>
+                                        <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.85rem' }}>{detail.externalLink}</div>
+                                    </a>
+                                )}
+
+                                <div style={{ marginTop: '2.5rem' }}>
+                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '1rem' }}>Class Comments</h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        {comments[detail.id]?.map((c: any) => (
+                                            <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
+                                                <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={32} />
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2px' }}>
+                                                        <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                        <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.88rem', color: '#334155' }}>{c.content}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {detail.type === 'assignment' && (
+                                <div style={{ width: 420, background: '#f8fafc', borderLeft: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ padding: '1.25rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700 }}>Students</h4>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <span style={{ fontSize: '0.7rem', background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>{submissions.length} Turned-in</span>
+                                            <span style={{ fontSize: '0.7rem', background: '#e2e8f0', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>{data.enrollments?.length || 0} Total</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                                        {data.enrollments?.length === 0 ? (
+                                            <div style={{ padding: '3rem 1.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                                                <p style={{ fontSize: '0.85rem' }}>No alternate students enrolled.</p>
+                                            </div>
+                                        ) : (
+                                            data.enrollments?.map((e: any) => {
+                                                const s = submissions.find(x => x.student?.id === e.student?.id);
+                                                const isGrading = gradingSub?.id === s?.id;
+                                                return (
+                                                    <div key={e.id} style={{ 
+                                                        padding: '1rem 1.25rem', 
+                                                        borderBottom: '1px solid #f1f5f9', 
+                                                        background: isGrading ? '#eff6ff' : 'transparent',
+                                                        transition: 'all 0.15s'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: s ? '0.75rem' : 0 }}>
+                                                            <Avatar firstName={e.student?.firstName} lastName={e.student?.lastName} size={32} />
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{e.student?.firstName} {e.student?.lastName}</div>
+                                                                {s ? (
+                                                                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                                                        {s.status === 'graded' ? <span style={{ color: 'var(--accent-green)', fontWeight: 700 }}>Graded</span> : <span style={{ color: '#3b82f6', fontWeight: 700 }}>Turned in</span>}
+                                                                        {" • "}{new Date(s.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Assigned</div>
+                                                                )}
+                                                            </div>
+                                                            {s?.grade && <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-green)' }}>{s.grade}/100</span>}
+                                                        </div>
+                                                        
+                                                        {s && (
+                                                            <div style={{ marginTop: '0.5rem' }}>
+                                                                {s.fileName && (
+                                                                    <div onClick={() => downloadFile('submission', s.id, s.fileName)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', marginBottom: '0.5rem' }}>
+                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                                        <div style={{ flex: 1, fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.fileName}</div>
+                                                                    </div>
+                                                                )}
+                                                                {s.content && <div style={{ fontSize: '0.8rem', color: '#334155', background: '#fff', padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: '0.5rem', whiteSpace: 'pre-wrap' }}>{s.content}</div>}
+                                                                <button className="btn btn-secondary btn-sm" style={{ width: '100%', height: '32px' }} onClick={() => setGradingSub(s)}>
+                                                                    {s.status === 'graded' ? 'Edit Grade' : 'Grade'}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Forward Modal */}
+            {showForward && (
+                <div className="modal-overlay" onClick={() => setShowForward(null)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header"><h3 className="modal-title">Share to other courses</h3><button className="modal-close" onClick={() => setShowForward(null)}>×</button></div>
+                        <div style={{ padding: '1.5rem' }}>
+                            <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1rem' }}>Select which courses to share this content with:</p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                                {courses.filter(c => c.id !== Number(id)).map(c => (
+                                    <label key={c.id} className={`chip-select ${forwardCourses.includes(c.id) ? 'selected' : ''}`}>
+                                        <input type="checkbox" checked={forwardCourses.includes(c.id)} onChange={e => {
+                                            setForwardCourses(prev => e.target.checked ? [...prev, c.id] : prev.filter(x => x !== c.id));
+                                        }} style={{ display: 'none' }} />
+                                        {c.courseCode} {c.section}
+                                    </label>
+                                ))}
+                            </div>
+                            <div className="modal-actions">
+                                <button className="btn btn-secondary" onClick={() => setShowForward(null)}>Cancel</button>
+                                <button className="btn btn-primary" onClick={handleForward} disabled={posting || forwardCourses.length === 0}>{posting ? 'Sharing...' : 'Share Now'}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -592,7 +807,7 @@ const TeacherCourseDetail: React.FC = () => {
             {/* Grading Modal */}
             {gradingSub && (
                 <div className="modal-overlay" onClick={() => setGradingSub(null)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ zIndex: 2000 }}>
                         <div className="modal-header"><h3 className="modal-title">Grade Submission</h3><button className="modal-close" onClick={() => setGradingSub(null)}>×</button></div>
                         <form onSubmit={gradeSubmission}>
                             <div className="form-group"><label className="form-label">Grade</label><input className="form-input" value={gradingSub.grade || ''} onChange={e => setGradingSub({ ...gradingSub, grade: e.target.value })} required /></div>

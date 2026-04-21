@@ -216,7 +216,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     const value = avatar.trim();
     if (!value) return '';
     if (value.startsWith('http://') || value.startsWith('https://')) return value;
-    return `http://localhost:8080${value.startsWith('/') ? value : `/${value}`}`;
+    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
   };
 
   const isActive = (path: string) => {
@@ -315,7 +315,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   const deleteAvatar = async () => {
     if (!apiForRole) return;
-    
+
     setUploadingAvatar(true);
     setProfileMsg(null);
     try {
@@ -348,11 +348,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   };
 
   return (
-    <div 
+    <div
       className={`dashboard-layout${sidebarOpen ? ' sidebar-open' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-    > 
+    >
       {/* Sidebar overlay for mobile */}
       <div
         className={`sidebar-overlay${sidebarOpen ? ' active' : ''}`}
@@ -418,11 +418,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         <div className="sidebar-footer">
           <div className="sidebar-profile" onClick={openProfile} title="Edit Profile">
             <div className="sidebar-avatar">
-                {hasAvatar ? (
-                  <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
-                ) : (
-                  <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
-                )}
+              {hasAvatar ? (
+                <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
+              ) : (
+                <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+              )}
             </div>
             <div>
               <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{user?.fullName}</div>
@@ -605,7 +605,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         </div>
       )}
 
-      <Modal 
+      <Modal
         isOpen={modal.isOpen}
         onClose={() => setModal({ ...modal, isOpen: false })}
         title={modal.title}

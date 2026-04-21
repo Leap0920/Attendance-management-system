@@ -31,7 +31,7 @@ const Avatar: React.FC<AvatarProps> = ({
     avatarUrl && avatarUrl.trim()
       ? avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')
         ? avatarUrl
-        : `http://localhost:8080${avatarUrl.startsWith('/') ? avatarUrl : `/${avatarUrl}`}`
+        : `http://${window.location.hostname}:8080${avatarUrl.startsWith('/') ? avatarUrl : `/${avatarUrl}`}`
       : '';
 
   const bg =

@@ -129,11 +129,14 @@ const StudentMaterials: React.FC = () => {
     const filtered = typeFilter ? materials.filter(m => m.type === typeFilter) : materials;
 
     const openDetail = async (m: any, focusComment = false) => {
+        // Reset state immediately to prevent stale data from previous modal
         setDetail(m);
+        setMySubmission(null);
         setSubmitFile(null);
         setSubmitContent('');
         setNewComment('');
         setPrivateComment('');
+        
         try { 
             const r = await studentApi.getComments(m.id); 
             setComments(Array.isArray(r.data?.data) ? r.data.data : []); 
@@ -141,9 +144,15 @@ const StudentMaterials: React.FC = () => {
                 setTimeout(() => commentInputRef.current?.focus(), 300);
             }
         } catch {}
+
         if (m.type === 'assignment') {
-            try { const r = await studentApi.getSubmission(m.id); setMySubmission(r.data.data || null); } catch { setMySubmission(null); }
-        } else { setMySubmission(null); }
+            try { 
+                const r = await studentApi.getSubmission(m.id); 
+                setMySubmission(r.data.data || null); 
+            } catch { 
+                setMySubmission(null); 
+            }
+        }
     };
 
     /* ── Comments ─────────────────────────────────────── */
@@ -311,7 +320,7 @@ const StudentMaterials: React.FC = () => {
                                 <div style={{ padding: '2rem' }}>
                                     <h4 className="section-title" style={{ marginBottom: '1.5rem' }}>Your work</h4>
                                     
-                                    {mySubmission ? (
+                                    {mySubmission && !submitting ? (
                                         <div className="glass-card" style={{ background: '#fff', borderLeft: `4px solid ${mySubmission.grade ? 'var(--accent-green)' : 'var(--accent-blue)'}` }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                                 <span className={`badge ${mySubmission.status === 'graded' ? 'badge-present' : 'badge-active'}`}>
@@ -325,7 +334,7 @@ const StudentMaterials: React.FC = () => {
                                             {mySubmission.fileName && (
                                                 <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />
                                             )}
-                                            {mySubmission.content && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: '#f8fafc', padding: '0.75rem', borderRadius: 8, marginTop: '0.5rem' }}>{mySubmission.content}</div>}
+                                            {mySubmission.content && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: '#f8fafc', padding: '0.75rem', borderRadius: 8, marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>{mySubmission.content}</div>}
                                             
                                             {mySubmission.feedback && (
                                                 <div style={{ marginTop: '1.5rem', padding: '1rem', borderTop: '1px solid var(--sidebar-border)' }}>
@@ -333,19 +342,61 @@ const StudentMaterials: React.FC = () => {
                                                     <div style={{ fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-primary)' }}>"{mySubmission.feedback}"</div>
                                                 </div>
                                             )}
+
+                                            {mySubmission.status !== 'graded' && (
+                                                <button className="btn btn-secondary" style={{ marginTop: '1rem', width: '100%', fontSize: '0.8rem' }} onClick={() => {
+                                                    setSubmitContent(mySubmission.content || '');
+                                                    setMySubmission(null); // Return to editing mode
+                                                }}>
+                                                    Edit Submission
+                                                </button>
+                                            )}
                                         </div>
                                     ) : (
-                                        <div className="glass-card" style={{ background: '#fff' }}>
-                                            <textarea className="form-input" rows={4} placeholder="Write a text response (optional)..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} style={{ marginBottom: '1rem' }} />
-                                            <label style={{
-                                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '1.5rem',
-                                                border: '2px dashed var(--border-glass)', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'var(--transition)'
-                                            }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-blue)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-glass)'}>
-                                                <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{submitFile ? submitFile.name : 'Attach File'}</span>
-                                            </label>
-                                            <button className="btn btn-primary" style={{ marginTop: '1.5rem' }} onClick={handleSubmit} disabled={submitting}>
+                                        <div className="glass-card" style={{ background: '#fff', padding: '1.25rem' }}>
+                                            <div className="form-group">
+                                                <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>YOUR RESPONSE</label>
+                                                <textarea 
+                                                    className="form-input" 
+                                                    rows={4} 
+                                                    placeholder="Write your response here..." 
+                                                    value={submitContent} 
+                                                    onChange={e => setSubmitContent(e.target.value)} 
+                                                    style={{ marginBottom: '1rem', background: '#fff' }} 
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>ATTACHMENTS</label>
+                                                {submitFile ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{submitFile.name}</div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#60a5fa' }}>Ready to upload</div>
+                                                        </div>
+                                                        <button className="btn-icon" onClick={() => setSubmitFile(null)} style={{ background: '#fff', color: '#ef4444' }}>
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <label className="upload-zone" style={{
+                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '1.5rem',
+                                                        border: '2px dashed var(--border-glass)', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'var(--transition)',
+                                                        background: '#f8fafc'
+                                                    }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-blue)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-glass)'}>
+                                                        <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
+                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Attach File</span>
+                                                    </label>
+                                                )}
+                                            </div>
+
+                                            <button 
+                                                className="btn btn-primary" 
+                                                style={{ marginTop: '0.5rem', borderRadius: 12 }} 
+                                                onClick={handleSubmit} 
+                                                disabled={submitting || (!submitFile && !submitContent.trim())}
+                                            >
                                                 {submitting ? 'Submitting...' : 'Turn In'}
                                             </button>
                                         </div>
