@@ -41,8 +41,19 @@ export const teacherApi = {
   updateRecord: (id: number, data: any) => api.put(`/teacher/attendance/records/${id}`, data),
 
   getMaterials: (courseId: number) => api.get('/teacher/materials', { params: { courseId } }),
-  createMaterial: (data: FormData) =>
-    api.post('/teacher/materials', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  createMaterial: (data: FormData) => {
+    const params = new URLSearchParams();
+    params.set('courseIds', String(data.get('courseIds')));
+    params.set('type', String(data.get('type')));
+    params.set('title', String(data.get('title')));
+    const desc = data.get('description');
+    if (desc) params.set('description', String(desc));
+    const link = data.get('externalLink');
+    if (link) params.set('externalLink', String(link));
+    const due = data.get('dueDate');
+    if (due) params.set('dueDate', String(due));
+    return api.post(`/teacher/materials?${params.toString()}`, data);
+  },
   deleteMaterial: (id: number) => api.delete(`/teacher/materials/${id}`),
   shareMaterial: (id: number, courseIds: string) => 
     api.post(`/teacher/materials/${id}/share`, null, { params: { courseIds } }),
@@ -71,7 +82,7 @@ export const teacherApi = {
   updateProfile: (data: any) => api.put('/teacher/profile', data),
   changePassword: (data: any) => api.put('/teacher/profile/password', data),
   uploadAvatar: (data: FormData) =>
-    api.post('/teacher/profile/avatar', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    api.post('/teacher/profile/avatar', data),
   deleteAvatar: () => api.delete('/teacher/profile/avatar'),
 };
 
@@ -98,11 +109,11 @@ export const studentApi = {
   addComment: (materialId: number, data: any) => api.post(`/student/materials/${materialId}/comments`, data),
   getSubmission: (materialId: number) => api.get(`/student/materials/${materialId}/submission`),
   submitHomework: (data: FormData) =>
-    api.post('/student/submissions', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    api.post('/student/submissions', data),
   updateProfile: (data: any) => api.put('/student/profile', data),
   changePassword: (data: any) => api.put('/student/profile/password', data),
   uploadAvatar: (data: FormData) =>
-    api.post('/student/profile/avatar', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    api.post('/student/profile/avatar', data),
   deleteAvatar: () => api.delete('/student/profile/avatar'),
 };
 

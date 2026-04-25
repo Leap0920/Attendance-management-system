@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, MessageSquare, X, Upload, ChevronRight, BookOpen, ArrowUpRight } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, MessageSquare, X, Upload, ChevronRight, BookOpen, ArrowUpRight, Users } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -96,7 +96,16 @@ const StudentMaterials: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const commentInputRef = useRef<HTMLInputElement>(null);
+    const [showAll, setShowAll] = useState(false);
+    const [showAllAssignments, setShowAllAssignments] = useState(false);
+    const [classmateCount, setClassmateCount] = useState(0);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const getYouTubeId = (url: string): string | null => {
+        if (!url) return null;
+        const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+        return m ? m[1] : null;
+    };
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -141,9 +150,16 @@ const StudentMaterials: React.FC = () => {
     useEffect(() => {
         if (selectedCourse) {
             setSearchParams({ courseId: selectedCourse.toString() }, { replace: true });
+            setShowAll(false);
+            setShowAllAssignments(false);
             studentApi.getMaterials(selectedCourse)
                 .then(r => setMaterials(Array.isArray(r.data?.data) ? r.data.data : []))
                 .catch(() => setMaterials([]));
+            // Get classmate count from course detail
+            studentApi.getCourse(selectedCourse).then(r => {
+                const enrolled = r.data?.data?.enrollments?.length || r.data?.data?.studentCount || 0;
+                setClassmateCount(enrolled);
+            }).catch(() => {});
         }
     }, [selectedCourse]);
 
@@ -160,6 +176,8 @@ const StudentMaterials: React.FC = () => {
         }
         return true;
     });
+
+    const displayMaterials = showAll ? filtered.filter(m => m.type !== 'assignment') : filtered.filter(m => m.type !== 'assignment').slice(0, 5);
 
     const activeCourseData = courses.find(c => c.id === selectedCourse);
 
@@ -341,7 +359,18 @@ const StudentMaterials: React.FC = () => {
                         {/* Assignment Sidebar */}
                         {isAssignment && (
                             <div style={{ width: 340, borderLeft: '1px solid #f1f5f9', background: '#fafbfc', overflowY: 'auto', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                                <div style={{ padding: '1.75rem' }}>
+                                <div style={{ padding: '2rem 1.75rem', overflowY: 'auto', flex: 1 }}>
+                                    {detail.externalLink && getYouTubeId(detail.externalLink) && (
+                                        <div style={{ marginBottom: '1.5rem', borderRadius: 16, overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
+                                            <iframe 
+                                                width="100%" height="100%" 
+                                                src={`https://www.youtube.com/embed/${getYouTubeId(detail.externalLink)}`}
+                                                title="YouTube video player" frameBorder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowFullScreen
+                                            ></iframe>
+                                        </div>
+                                    )}
                                     <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1.5rem', color: '#1e293b' }}>Your Work</h4>
 
                                     {mySubmission && !submitting ? (
@@ -591,9 +620,10 @@ const StudentMaterials: React.FC = () => {
 
                         {/* Material rows */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '3rem' }}>
-                            {filtered.filter(m => m.type !== 'assignment').map(m => {
+                            {displayMaterials.map(m => {
                                 const rt = figureOutType(m);
                                 const tc = typeConfig[rt] || typeConfig.file;
+                                const ytId = rt === 'video' && m.externalLink ? getYouTubeId(m.externalLink) : null;
                                 return (
                                     <div key={m.id} onClick={() => openDetail(m)} style={{
                                         display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
@@ -604,9 +634,18 @@ const StudentMaterials: React.FC = () => {
                                         onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.08)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                                         onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                                     >
-                                        <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg, transition: 'all .2s' }}>
-                                            {tc.icon}
-                                        </div>
+                                        {ytId ? (
+                                            <div style={{ width: 120, height: 68, borderRadius: 12, overflow: 'hidden', flexShrink: 0, position: 'relative', background: '#000' }}>
+                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.25)' }}>
+                                                    <Play size={22} color="#fff" fill="#fff" />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg, transition: 'all .2s' }}>
+                                                {tc.icon}
+                                            </div>
+                                        )}
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
@@ -614,12 +653,28 @@ const StudentMaterials: React.FC = () => {
                                                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
                                                 <span>{m.fileSize ? (m.fileSize > 1024 * 1024 ? `${(m.fileSize / 1024 / 1024).toFixed(1)} MB` : `${Math.round(m.fileSize / 1024)} KB`) : 'Resource'}</span>
                                                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
-                                                <span>Updated {new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                <span>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(m.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</span>
                                             </div>
                                         </div>
                                     </div>
                                 );
                             })}
+
+                            {!showAll && filtered.filter(m => m.type !== 'assignment').length > 5 && (
+                                <button 
+                                    onClick={() => setShowAll(true)}
+                                    style={{
+                                        width: '100%', padding: '1rem', background: '#fff', borderRadius: 18, 
+                                        border: '1px solid #f1f5f9', color: '#3b82f6', fontWeight: 800, fontSize: '0.88rem',
+                                        cursor: 'pointer', transition: 'all 0.2s', marginTop: '0.5rem'
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#3b82f6'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#f1f5f9'; }}
+                                >
+                                    See {filtered.filter(m => m.type !== 'assignment').length - 5} More Materials
+                                </button>
+                            )}
+
                             {filtered.filter(m => m.type !== 'assignment').length === 0 && (
                                 <div style={{ textAlign: 'center', padding: '3rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
                                     <BookOpen size={32} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
@@ -634,10 +689,14 @@ const StudentMaterials: React.FC = () => {
                         {/* ── Active Assignments ── */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
                             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>View All</span>
+                            {materials.filter(m => m.type === 'assignment').length > 4 && (
+                                <span onClick={() => setShowAllAssignments(!showAllAssignments)} style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>
+                                    {showAllAssignments ? 'Show Less' : `View All (${materials.filter(m => m.type === 'assignment').length})`}
+                                </span>
+                            )}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                            {materials.filter(m => m.type === 'assignment').slice(0, 4).map(m => {
+                            {(showAllAssignments ? materials.filter(m => m.type === 'assignment') : materials.filter(m => m.type === 'assignment').slice(0, 4)).map(m => {
                                 const isUrgent = m.dueDate && new Date(m.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
                                 const isPast = m.dueDate && new Date(m.dueDate) < new Date();
                                 return (
@@ -725,6 +784,28 @@ const StudentMaterials: React.FC = () => {
                             >
                                 <MessageSquare size={16} /> Message Professor
                             </button>
+                        </div>
+
+                        {/* Class Roster */}
+                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Users size={18} color="#3b82f6" /> Class Info
+                                </h3>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: 14 }}>
+                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Users size={20} color="#3b82f6" />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{classmateCount}</div>
+                                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>Enrolled Students</div>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '1rem', padding: '0.85rem 1rem', background: '#f0fdf4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <BookOpen size={16} color="#16a34a" />
+                                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#16a34a' }}>{materials.length} Materials Available</span>
+                            </div>
                         </div>
                     </div>
                 </div>

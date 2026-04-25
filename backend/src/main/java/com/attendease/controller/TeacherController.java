@@ -450,11 +450,11 @@ public class TeacherController {
                 courseMaterialRepository.findByCourseIdOrderByIsPinnedDescCreatedAtDesc(courseId)));
     }
 
-    @PostMapping("/materials")
+    @PostMapping(value = "/materials", consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<List<CourseMaterial>>> createMaterial(
-            @RequestParam String courseIds,
-            @RequestParam String type,
-            @RequestParam String title,
+            @RequestParam("courseIds") String courseIds,
+            @RequestParam("type") String type,
+            @RequestParam("title") String title,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String externalLink,
             @RequestParam(required = false) String dueDate,
