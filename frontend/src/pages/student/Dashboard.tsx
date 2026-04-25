@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Zap, BarChart3, X, Plus } from 'lucide-react';
+import { BookOpen, BarChart3, X, Plus, Clock, FileText, Megaphone, ClipboardList } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { useAuth } from '../../auth/AuthContext';
 import { studentApi } from '../../api';
 import { showAlert } from '../../utils/feedback';
 
+/* ── Gradient palette for course cards ─────────────────────── */
+const CARD_GRADIENTS = [
+  'linear-gradient(135deg, #2563eb 0%, #3b82f6 60%, #60a5fa 100%)',
+  'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 60%, #a78bfa 100%)',
+  'linear-gradient(135deg, #0891b2 0%, #06b6d4 60%, #22d3ee 100%)',
+  'linear-gradient(135deg, #059669 0%, #10b981 60%, #34d399 100%)',
+  'linear-gradient(135deg, #d97706 0%, #f59e0b 60%, #fbbf24 100%)',
+];
+
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [attendCode, setAttendCode] = useState('');
@@ -64,170 +75,265 @@ const StudentDashboard: React.FC = () => {
     } finally { setJoining(false); }
   };
 
+  /* ── Computed values ─────────────────────────────────────── */
+  const avgAttendance = data?.courses?.length > 0
+    ? Math.round(data.courses.reduce((acc: number, c: any) => acc + c.attendanceRate, 0) / data.courses.length)
+    : 0;
+
+  const pendingAssignments = 0; // Could be extended via API later
+
+  /* Today's schedule — derive from course schedule strings */
+  const todaysSchedule: { time: string; courseCode: string; room: string }[] = [];
+  if (data?.courses) {
+    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const today = dayNames[new Date().getDay()];
+    const shortDay: Record<string, string[]> = {
+      'M': ['MON'], 'T': ['TUE'], 'W': ['WED'], 'TH': ['THU'], 'F': ['FRI'],
+      'S': ['SAT'], 'SU': ['SUN'],
+      'MWF': ['MON', 'WED', 'FRI'], 'TTH': ['TUE', 'THU'], 'TTHS': ['TUE', 'THU', 'SAT'],
+      'MW': ['MON', 'WED'], 'MF': ['MON', 'FRI'], 'WF': ['WED', 'FRI'],
+    };
+    data.courses.forEach((cd: any) => {
+      const schedule = cd.course.schedule || '';
+      const room = cd.course.room || '';
+      // Try to parse schedule like "MWF 9:00 AM" or "TTH 11:00 AM - 12:30 PM"
+      const parts = schedule.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        const dayPart = parts[0].toUpperCase();
+        const timePart = parts.slice(1).join(' ');
+        const matchedDays = shortDay[dayPart] || [];
+        if (matchedDays.includes(today)) {
+          todaysSchedule.push({
+            time: timePart,
+            courseCode: cd.course.courseCode,
+            room: room ? `Room ${room}` : '',
+          });
+        }
+      }
+    });
+  }
+
+  /* Recent activity — we gather recent materials info from courses if available */
+  const recentActivity: { icon: 'file' | 'announcement'; title: string; subtitle: string }[] = [];
+
   return (
     <DashboardLayout role="student">
-      <div className="page-header">
+      {/* ── Sticky Mobile Topbar ───────────────────────── */}
+      <div className="sd-header">
         <div>
-          <h1 className="page-title">Student Dashboard</h1>
-          <p className="page-subtitle">Your courses and attendance overview</p>
+          <h1 className="sd-header-title">Welcome back, {user?.firstName || 'Student'}!</h1>
+          <p className="sd-header-subtitle">Here's your learning overview.</p>
         </div>
-        <button 
-          className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" 
-          style={{ width: 'auto' }} 
+        <button
+          className="sd-join-btn"
           onClick={() => setShowJoin(true)}
         >
-          <Plus size={18} strokeWidth={2.5} />
-          Join Course
+          <Plus size={16} strokeWidth={2.5} />
+          Join New Course
         </button>
       </div>
 
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : data && (
         <>
-          <div className="stats-grid">
-            <div className="stat-card blue">
-              <div className="stat-icon blue">
-                <BookOpen size={20} />
-              </div>
-              <div className="stat-value">{data.totalCourses}</div>
-              <div className="stat-label">Enrolled Courses</div>
-            </div>
-            <div className="stat-card green">
-              <div className="stat-icon green">
-                <Zap size={20} />
-              </div>
-              <div className="stat-value">{data.activeSessions?.length || 0}</div>
-              <div className="stat-label">Active Sessions</div>
-            </div>
-            <div className="stat-card purple">
-              <div className="stat-icon purple">
-                <BarChart3 size={20} />
-              </div>
-              <div className="stat-value">
-                {data.courses?.length > 0 
-                  ? Math.round(data.courses.reduce((acc: number, c: any) => acc + c.attendanceRate, 0) / data.courses.length) 
-                  : 100}%
-              </div>
-              <div className="stat-label">Avg. Attendance</div>
-            </div>
-          </div>
-
-          {/* Active Sessions — Submit Attendance */}
+          {/* ── Active Sessions — Submit Attendance ── */}
           {data.activeSessions?.filter((s: any) => !s.alreadySubmitted).length > 0 && (
-            <>
-              <div className="glass-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--accent-blue)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem' }}>
-                  <div className="live-dot" />
-                  <h3 style={{ margin: 0 }}>Active Attendance Session</h3>
-                </div>
-                
-                {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
-                  <div 
-                    key={s.session.id} 
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '1rem', 
-                      marginBottom: '0.75rem', 
-                      padding: '0.85rem 1.25rem', 
-                      background: selectedSession === s.session.id ? 'rgba(59, 130, 246, 0.05)' : 'var(--bg-glass)', 
-                      borderRadius: 'var(--radius-md)', 
-                      border: selectedSession === s.session.id ? '2px solid var(--accent-blue)' : '1px solid var(--border-glass)', 
-                      cursor: 'pointer', 
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxShadow: selectedSession === s.session.id ? '0 4px 12px rgba(59, 130, 246, 0.1)' : 'none'
-                    }} 
-                    onClick={() => setSelectedSession(s.session.id)}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <strong style={{ fontSize: '1.05rem', color: selectedSession === s.session.id ? 'var(--accent-blue)' : 'inherit' }}>
-                          {s.courseName}
-                        </strong>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                          {s.session.sessionTitle || 'Live Session'}
-                        </span>
-                      </div>
-                    </div>
-                    <span className={`badge ${selectedSession === s.session.id ? 'badge-active' : 'badge-active'}`} style={{ opacity: selectedSession === s.session.id ? 1 : 0.7 }}>
-                      {selectedSession === s.session.id ? 'Selected' : 'Click to select'}
-                    </span>
-                  </div>
-                ))}
-                
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
-                  <input
-                    className="form-input" placeholder="0 0 0 0 0 0"
-                    value={attendCode} onChange={e => setAttendCode(e.target.value.toUpperCase())}
-                    maxLength={6}
-                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '1.75rem', fontWeight: '800', letterSpacing: '0.5rem', textAlign: 'center', height: '60px', borderRadius: '12px' }}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
-                  />
-                  <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" 
-                    style={{ width: 'auto', paddingInline: '2.5rem', borderRadius: '12px', fontSize: '1rem' }} onClick={submitAttendance}
-                    disabled={!selectedSession || !attendCode || submitting}>{submitting ? 'Submitting…' : 'Submit Code'}</button>
-                </div>
+            <div className="sd-active-session-banner">
+              <div className="sd-active-dot-row">
+                <div className="live-dot" />
+                <h3 className="sd-active-title">Active Attendance Session</h3>
               </div>
-            </>
+
+              {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
+                <div
+                  key={s.session.id}
+                  className={`sd-session-item ${selectedSession === s.session.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedSession(s.session.id)}
+                >
+                  <div style={{ flex: 1 }}>
+                    <strong className={selectedSession === s.session.id ? 'sd-session-name-active' : ''}>
+                      {s.courseName}
+                    </strong>
+                    <span className="sd-session-sub">{s.session.sessionTitle || 'Live Session'}</span>
+                  </div>
+                  <span className={`badge badge-active`} style={{ opacity: selectedSession === s.session.id ? 1 : 0.7 }}>
+                    {selectedSession === s.session.id ? 'Selected' : 'Click to select'}
+                  </span>
+                </div>
+              ))}
+
+              <div className="sd-attend-input-row">
+                <input
+                  className="form-input sd-code-input"
+                  placeholder="0 0 0 0 0 0"
+                  value={attendCode}
+                  onChange={e => setAttendCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
+                />
+                <button
+                  className="btn btn-primary sd-submit-btn"
+                  onClick={submitAttendance}
+                  disabled={!selectedSession || !attendCode || submitting}
+                >
+                  {submitting ? 'Submitting…' : 'Submit Code'}
+                </button>
+              </div>
+            </div>
           )}
 
-          {/* Courses */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h3 style={{ margin: 0 }}>My Courses</h3>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-sm btn-secondary transition-all hover:bg-gray-200" onClick={() => navigate('/student/courses')}>Open All</button>
-              <button className="btn btn-sm btn-secondary transition-all hover:bg-gray-200" onClick={() => load()}>Refresh</button>
+          {/* ── Stats + Schedule Row ─────────────────── */}
+          <div className="sd-top-grid">
+            {/* Stats cards */}
+            <div className="sd-stats-section">
+              <div className="sd-stat-card">
+                <div className="sd-stat-tag blue">Total Enrolled</div>
+                <div className="sd-stat-icon-wrap blue">
+                  <BookOpen size={18} />
+                </div>
+                <div className="sd-stat-value">{data.totalCourses}</div>
+                <div className="sd-stat-label">Enrolled Courses</div>
+              </div>
+
+              <div className="sd-stat-card">
+                <div className="sd-stat-tag blue">Avg. Attendance %</div>
+                <div className="sd-stat-value lg">{avgAttendance}%</div>
+                <div className="sd-stat-bar-track">
+                  <div className="sd-stat-bar-fill blue" style={{ width: `${avgAttendance}%` }} />
+                </div>
+                <div className="sd-stat-label">Average Attendance</div>
+              </div>
+
+              <div className="sd-stat-card">
+                <div className="sd-stat-tag amber">Pending Assignments</div>
+                <div className="sd-stat-icon-wrap amber">
+                  <ClipboardList size={18} />
+                </div>
+                <div className="sd-stat-value">{pendingAssignments}</div>
+                <div className="sd-stat-label">Assignments to Complete</div>
+              </div>
+            </div>
+
+            {/* Today's Schedule panel */}
+            <div className="sd-schedule-panel">
+              <h3 className="sd-panel-title">Today's Schedule</h3>
+              {todaysSchedule.length > 0 ? todaysSchedule.map((item, i) => (
+                <div key={i} className={`sd-schedule-item ${i === 0 ? 'highlight' : ''}`}>
+                  <div className="sd-schedule-time">{item.time}</div>
+                  <div className="sd-schedule-meta">{item.courseCode}{item.room ? `, ${item.room}` : ''}</div>
+                </div>
+              )) : (
+                <div className="sd-schedule-empty">
+                  <Clock size={20} />
+                  <span>No classes scheduled today</span>
+                </div>
+              )}
             </div>
           </div>
-          
-          <div className="course-grid">
-            {data.courses?.map((cd: any) => (
-              <div
-                key={cd.course.id}
-                className="course-card hover:translate-y-[-4px] transition-all duration-300"
-                style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/student/courses/${cd.course.id}`)}
-              >
-                <div className="course-card-header" style={{ background: cd.course.coverColor || 'var(--accent-blue)' }}>
-                  <h3>{cd.course.courseName}</h3>
-                  <p>{cd.course.courseCode}</p>
-                  <div className="teacher-avatar">
-                    {cd.course.teacher?.firstName?.[0]}{cd.course.teacher?.lastName?.[0] || 'T'}
-                  </div>
-                </div>
-                <div className="course-card-body">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Attendance Rate</span>
-                    <span style={{ fontWeight: 700, fontSize: '0.95rem', color: cd.attendanceRate >= 80 ? 'var(--accent-green)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)' }}>
-                      {cd.attendanceRate}%
-                    </span>
-                  </div>
-                  <div style={{ height: 8, borderRadius: 4, background: '#f1f5f9', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${cd.attendanceRate}%`, borderRadius: 4,
-                      transition: 'width 1s ease-out',
-                      background: cd.attendanceRate >= 80 ? 'var(--accent-green)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)' }} />
-                  </div>
-                  <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{cd.totalSessions} total sessions</span>
-                    <span>{Math.round((cd.attendanceRate / 100) * cd.totalSessions)} present</span>
-                  </div>
+
+          {/* ── My Courses + Recent Activity Row ────── */}
+          <div className="sd-bottom-grid">
+            <div className="sd-courses-section">
+              <div className="sd-section-header">
+                <h3 className="sd-section-title">My Courses</h3>
+                <div className="sd-section-actions">
+                  <button className="sd-link-btn" onClick={() => navigate('/student/courses')}>Open All</button>
+                  <button className="sd-link-btn" onClick={() => load()}>Refresh</button>
                 </div>
               </div>
-            ))}
-            {data.courses?.length === 0 && (
-                <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '4rem 2rem', background: '#fff', borderRadius: '16px', border: '1px dashed var(--border-glass)' }}>
-                    <div style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
-                      <BookOpen size={48} />
+
+              <div className="sd-course-cards">
+                {data.courses?.map((cd: any, idx: number) => (
+                  <div
+                    key={cd.course.id}
+                    className="sd-course-card"
+                    onClick={() => navigate(`/student/courses/${cd.course.id}`)}
+                  >
+                    <div
+                      className="sd-course-card-top"
+                      style={{ background: cd.course.coverColor
+                        ? `linear-gradient(135deg, ${cd.course.coverColor} 0%, ${adjustColor(cd.course.coverColor, 30)} 100%)`
+                        : CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
+                      }}
+                    >
+                      <span className="sd-course-code">{cd.course.courseCode}</span>
+                      <h4 className="sd-course-name">{cd.course.courseName}</h4>
+                      <span className="sd-course-teacher">
+                        {cd.course.teacher ? `${cd.course.teacher.firstName} ${cd.course.teacher.lastName}` : 'Instructor'}
+                      </span>
+                      {cd.course.description && (
+                        <p className="sd-course-desc">{cd.course.description}</p>
+                      )}
                     </div>
+                    <div className="sd-course-card-bottom">
+                      <div className="sd-attendance-row">
+                        <span className="sd-attendance-label">Attendance</span>
+                        <span className="sd-attendance-pct" style={{
+                          color: cd.attendanceRate >= 80 ? 'var(--accent-blue)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)'
+                        }}>{cd.attendanceRate}%</span>
+                      </div>
+                      <div className="sd-attendance-bar-track">
+                        <div
+                          className="sd-attendance-bar-fill"
+                          style={{
+                            width: `${cd.attendanceRate}%`,
+                            background: cd.course.coverColor
+                              ? `linear-gradient(90deg, ${cd.course.coverColor}, ${adjustColor(cd.course.coverColor, 20)})`
+                              : idx % 2 === 0
+                                ? 'linear-gradient(90deg, #2563eb, #3b82f6)'
+                                : 'linear-gradient(90deg, #7c3aed, #8b5cf6)',
+                          }}
+                        />
+                      </div>
+                      <div className="sd-course-meta-row">
+                        {cd.course.room && <span>{cd.course.room}</span>}
+                        {cd.course.schedule && <span>{cd.course.schedule}</span>}
+                        {!cd.course.room && !cd.course.schedule && (
+                          <span>{cd.totalSessions} sessions</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {data.courses?.length === 0 && (
+                  <div className="sd-empty-courses">
+                    <BookOpen size={48} />
                     <h3>No courses enrolled</h3>
                     <p>Enter a join code from your teacher to get started.</p>
-                    <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto', marginTop: '1.25rem' }} onClick={() => setShowJoin(true)}>Join Course</button>
+                    <button className="sd-join-btn" onClick={() => setShowJoin(true)}>
+                      <Plus size={16} />
+                      Join Course
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Activity panel */}
+            <div className="sd-activity-panel">
+              <h3 className="sd-panel-title">Recent Activity</h3>
+              {recentActivity.length > 0 ? recentActivity.map((act, i) => (
+                <div key={i} className="sd-activity-item">
+                  <div className={`sd-activity-icon ${act.icon}`}>
+                    {act.icon === 'file' ? <FileText size={16} /> : <Megaphone size={16} />}
+                  </div>
+                  <div>
+                    <div className="sd-activity-title">{act.title}</div>
+                    <div className="sd-activity-sub">{act.subtitle}</div>
+                  </div>
                 </div>
-            )}
+              )) : (
+                <div className="sd-activity-empty">
+                  <FileText size={20} />
+                  <span>No recent activity yet</span>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
 
-      {/* Join Course Modal */}
+      {/* ── Join Course Modal ──────────────────────── */}
       {showJoin && (
         <div className="modal-overlay" onClick={() => setShowJoin(false)}>
           <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
@@ -243,11 +349,11 @@ const StudentDashboard: React.FC = () => {
             <form onSubmit={handleJoin}>
               <div className="form-group">
                 <label className="form-label">Course Code</label>
-                <input 
-                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all" 
-                  autoFocus 
+                <input
+                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all"
+                  autoFocus
                   placeholder="EX: ABC123"
-                  value={joinCode} 
+                  value={joinCode}
                   onChange={e => setJoinCode(e.target.value.toUpperCase())}
                   maxLength={6}
                   required
@@ -267,5 +373,19 @@ const StudentDashboard: React.FC = () => {
     </DashboardLayout>
   );
 };
+
+/* ── Helper: lighten a hex color ───────────────────────────── */
+function adjustColor(hex: string, amount: number): string {
+  try {
+    const h = hex.replace('#', '');
+    const num = parseInt(h, 16);
+    let r = Math.min(255, ((num >> 16) & 0xff) + amount);
+    let g = Math.min(255, ((num >> 8) & 0xff) + amount);
+    let b = Math.min(255, (num & 0xff) + amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  } catch {
+    return hex;
+  }
+}
 
 export default StudentDashboard;
