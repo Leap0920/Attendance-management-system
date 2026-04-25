@@ -5,13 +5,14 @@ import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, MessageSquare, X, Upload, ChevronRight, BookOpen, ArrowUpRight, Users } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, MessageSquare, X, Upload, ChevronRight, ChevronDown, BookOpen, ArrowUpRight, Users, Share, Trash2, Edit2 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════════════════════════ */
 const getYouTubeId = (url: string): string | null => {
-    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+    if (!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/i);
     return m ? m[1] : null;
 };
 
@@ -34,11 +35,14 @@ const typeConfig: Record<string, { color: string; bg: string; label: string; ico
     link:         { color: '#10b981', bg: '#ecfdf5', label: 'External Link',  icon: <LinkIcon size={20} color="#10b981" /> },
     announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement',   icon: <Bell size={20} color="#f59e0b" /> },
     assignment:   { color: '#3b82f6', bg: '#eff6ff', label: 'Assignment',     icon: <FileText size={20} color="#3b82f6" /> },
-    video:        { color: '#3b82f6', bg: '#eff6ff', label: 'Video Lecture',  icon: <Play size={20} color="#3b82f6" /> },
+    video:        { color: '#8b5cf6', bg: '#f5f3ff', label: 'Video Lecture',  icon: <Play size={20} color="#8b5cf6" /> },
 };
 
+const getMLink = (m: any) => m.externalLink || m.external_link || '';
+
 const figureOutType = (m: any) => {
-    if (m.type === 'link' && m.externalLink && (m.externalLink.includes('youtube') || m.externalLink.includes('youtu.be'))) return 'video';
+    const link = m.externalLink || m.external_link || '';
+    if (m.type === 'link' && link && (link.toLowerCase().includes('youtube') || link.toLowerCase().includes('youtu.be'))) return 'video';
     return m.type;
 };
 
@@ -118,8 +122,8 @@ const StudentMaterials: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    /* detail state */
-    const [detail, setDetail] = useState<any | null>(null);
+    /* detail state (inline expand) */
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
 
@@ -129,6 +133,7 @@ const StudentMaterials: React.FC = () => {
     const [submitFile, setSubmitFile] = useState<File | null>(null);
     const [submitContent, setSubmitContent] = useState('');
     const [privateComment, setPrivateComment] = useState('');
+    const [detailTab, setDetailTab] = useState<'instructions' | 'submissions'>('instructions');
 
     /* ── Data ──────────────────────────────────────────────── */
     useEffect(() => {
@@ -181,18 +186,19 @@ const StudentMaterials: React.FC = () => {
 
     const activeCourseData = courses.find(c => c.id === selectedCourse);
 
-    /* ── Open / close detail ──────────────────────────────── */
-    const openDetail = async (m: any, focusComment = false) => {
-        setDetail(m);
+    /* ── Inline Expand ──────────────────────────────────── */
+    const toggleExpand = async (m: any) => {
+        if (expandedId === m.id) { setExpandedId(null); return; }
+        setExpandedId(m.id);
         setMySubmission(null);
         setSubmitFile(null);
         setSubmitContent('');
         setNewComment('');
         setPrivateComment('');
+        setDetailTab('instructions');
         try {
             const r = await studentApi.getComments(m.id);
             setComments(Array.isArray(r.data?.data) ? r.data.data : []);
-            if (focusComment) setTimeout(() => commentInputRef.current?.focus(), 300);
         } catch {}
         if (m.type === 'assignment') {
             try { const r = await studentApi.getSubmission(m.id); setMySubmission(r.data.data || null); }
@@ -202,38 +208,38 @@ const StudentMaterials: React.FC = () => {
 
     /* ── Comments ─────────────────────────────────────── */
     const handleAddComment = async () => {
-        if (!newComment.trim() || !detail) return;
+        if (!newComment.trim() || !expandedId) return;
         try {
-            await studentApi.addComment(detail.id, { content: newComment.trim(), isPrivate: false });
+            await studentApi.addComment(expandedId, { content: newComment.trim(), isPrivate: false });
             setNewComment('');
-            const r = await studentApi.getComments(detail.id);
+            const r = await studentApi.getComments(expandedId);
             setComments(Array.isArray(r.data?.data) ? r.data.data : []);
         } catch (err: any) { showApiError(err); }
     };
 
     const handlePrivateComment = async () => {
-        if (!privateComment.trim() || !detail) return;
+        if (!privateComment.trim() || !expandedId) return;
         try {
-            await studentApi.addComment(detail.id, { content: privateComment.trim(), isPrivate: true });
+            await studentApi.addComment(expandedId, { content: privateComment.trim(), isPrivate: true });
             setPrivateComment('');
-            const r = await studentApi.getComments(detail.id);
+            const r = await studentApi.getComments(expandedId);
             setComments(Array.isArray(r.data?.data) ? r.data.data : []);
         } catch (err: any) { showApiError(err); }
     };
 
     /* ── Submit Assignment ─────────────────────────────────── */
     const handleSubmit = async () => {
-        if (!detail || submitting) return;
+        if (!expandedId || submitting) return;
         if (!submitFile && !submitContent.trim()) { showAlert('Error', 'Please attach a file or write a response.', 'error'); return; }
         setSubmitting(true);
         const fd = new FormData();
-        fd.append('materialId', detail.id.toString());
+        fd.append('materialId', expandedId.toString());
         if (submitContent.trim()) fd.append('content', submitContent.trim());
         if (submitFile) fd.append('file', submitFile);
         try {
             await studentApi.submitHomework(fd);
             showAlert('Success', 'Assignment turned in successfully!', 'success');
-            const r = await studentApi.getSubmission(detail.id);
+            const r = await studentApi.getSubmission(expandedId);
             setMySubmission(r.data.data || null);
             setSubmitFile(null);
             setSubmitContent('');
@@ -243,259 +249,8 @@ const StudentMaterials: React.FC = () => {
     /* ══════════════════════════════════════════════════════════
        DETAIL MODAL
        ══════════════════════════════════════════════════════════ */
-    const renderDetail = () => {
-        if (!detail) return null;
-        const m = detail;
-        const tc = typeConfig[figureOutType(m)] || typeConfig.file;
-        const isAssignment = m.type === 'assignment';
 
-        return (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,.4)', backdropFilter: 'blur(6px)' }} onClick={() => setDetail(null)} />
-                <div style={{
-                    position: 'relative', zIndex: 1, background: '#fff', width: '100%', maxWidth: isAssignment ? 1100 : 780,
-                    borderRadius: 24, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                    boxShadow: '0 25px 60px rgba(0,0,0,.18)'
-                }}>
-                    {/* Header */}
-                    <div style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: tc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-                            {tc.icon}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, lineHeight: 1.3 }}>{m.title}</h2>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <span>{m.teacher?.firstName} {m.teacher?.lastName}</span>
-                                <span>·</span>
-                                <span>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                {isAssignment && m.dueDate && <>
-                                    <span>·</span>
-                                    <span style={{
-                                        padding: '2px 8px', borderRadius: 6, fontSize: '0.72rem', fontWeight: 700,
-                                        background: new Date(m.dueDate) < new Date() ? '#fef2f2' : '#f0fdf4',
-                                        color: new Date(m.dueDate) < new Date() ? '#dc2626' : '#16a34a'
-                                    }}>
-                                        Due {new Date(m.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                    </span>
-                                </>}
-                            </div>
-                        </div>
-                        <button onClick={() => setDetail(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', lineHeight: 1 }}>
-                            <X size={22} />
-                        </button>
-                    </div>
 
-                    {/* Body */}
-                    <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-                        {/* Main content area */}
-                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ padding: '1.75rem', flex: 1 }}>
-                                {m.description && <div style={{ fontSize: '0.95rem', color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap', marginBottom: '1.5rem' }}>{m.description}</div>}
-                                {m.type === 'link' && m.externalLink && <VideoPreview url={m.externalLink} />}
-                                {m.type === 'link' && m.externalLink && (
-                                    <a href={m.externalLink} target="_blank" rel="noopener noreferrer" style={{
-                                        display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
-                                        background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0',
-                                        textDecoration: 'none', color: 'inherit', marginBottom: '1.25rem', transition: 'all .15s'
-                                    }}>
-                                        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                            <ArrowUpRight size={18} color="#3b82f6" />
-                                        </div>
-                                        <div style={{ flex: 1, overflow: 'hidden' }}>
-                                            <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Open Link</div>
-                                            <div style={{ fontSize: '0.78rem', color: '#3b82f6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.externalLink}</div>
-                                        </div>
-                                    </a>
-                                )}
-                                {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
-
-                                {/* Class Comments */}
-                                <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '2.5rem', paddingTop: '1.5rem' }}>
-                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', marginBottom: '1rem' }}>
-                                        Class Comments ({comments.filter(c => !c.isPrivate).length})
-                                    </h4>
-                                    {comments.filter(c => !c.isPrivate).length === 0 && (
-                                        <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '1rem' }}>No comments yet. Start the conversation!</p>
-                                    )}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                                        {comments.filter(c => !c.isPrivate).map((c: any) => {
-                                            const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
-                                            return (
-                                                <div key={c.id} style={{ display: 'flex', gap: '0.7rem', padding: '0.7rem 0.85rem', borderRadius: 12, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                                    <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={30} variant={isTeacher ? 'blue' : 'green'} />
-                                                    <div>
-                                                        <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                            <strong>{c.user?.firstName} {c.user?.lastName}</strong>
-                                                            {isTeacher && <span style={{ fontSize: '0.62rem', background: '#dbeafe', color: '#1d4ed8', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>Professor</span>}
-                                                            <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                                                        </div>
-                                                        <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Comment Input */}
-                            <div style={{ padding: '0.85rem 1.75rem', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '0.6rem', alignItems: 'center', flexShrink: 0, background: '#fafbfc' }}>
-                                <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={30} variant="green" />
-                                <input
-                                    ref={commentInputRef}
-                                    style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.5rem 1rem', fontSize: '0.82rem', outline: 'none', fontFamily: 'inherit' }}
-                                    placeholder="Add a class comment…"
-                                    value={newComment}
-                                    onChange={e => setNewComment(e.target.value)}
-                                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddComment(); } }}
-                                />
-                                <button
-                                    style={{ padding: '0.42rem 1rem', borderRadius: 20, background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: newComment.trim() ? 1 : 0.5 }}
-                                    disabled={!newComment.trim()} onClick={handleAddComment}
-                                >Post</button>
-                            </div>
-                        </div>
-
-                        {/* Assignment Sidebar */}
-                        {isAssignment && (
-                            <div style={{ width: 340, borderLeft: '1px solid #f1f5f9', background: '#fafbfc', overflowY: 'auto', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                                <div style={{ padding: '2rem 1.75rem', overflowY: 'auto', flex: 1 }}>
-                                    {detail.externalLink && getYouTubeId(detail.externalLink) && (
-                                        <div style={{ marginBottom: '1.5rem', borderRadius: 16, overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
-                                            <iframe 
-                                                width="100%" height="100%" 
-                                                src={`https://www.youtube.com/embed/${getYouTubeId(detail.externalLink)}`}
-                                                title="YouTube video player" frameBorder="0" 
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowFullScreen
-                                            ></iframe>
-                                        </div>
-                                    )}
-                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1.5rem', color: '#1e293b' }}>Your Work</h4>
-
-                                    {mySubmission && !submitting ? (
-                                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.25rem', borderLeft: `4px solid ${mySubmission.grade != null ? '#16a34a' : '#3b82f6'}` }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                                <span style={{
-                                                    padding: '3px 10px', borderRadius: 6, fontSize: '0.72rem', fontWeight: 700,
-                                                    background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff',
-                                                    color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6'
-                                                }}>
-                                                    {mySubmission.status === 'graded' ? 'GRADED' : 'SUBMITTED'}
-                                                </span>
-                                                {mySubmission.grade != null && (
-                                                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b' }}>{mySubmission.grade}/100</span>
-                                                )}
-                                            </div>
-                                            {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />}
-                                            {mySubmission.content && <div style={{ fontSize: '0.85rem', color: '#64748b', background: '#f8fafc', padding: '0.75rem', borderRadius: 10, marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>{mySubmission.content}</div>}
-                                            {mySubmission.feedback && (
-                                                <div style={{ marginTop: '1.25rem', padding: '0.85rem', borderTop: '1px solid #e2e8f0' }}>
-                                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Teacher Feedback</div>
-                                                    <div style={{ fontSize: '0.88rem', fontStyle: 'italic', color: '#334155' }}>"{mySubmission.feedback}"</div>
-                                                </div>
-                                            )}
-                                            {mySubmission.status !== 'graded' && (
-                                                <button onClick={() => { setSubmitContent(mySubmission.content || ''); setMySubmission(null); }}
-                                                    style={{ marginTop: '1rem', width: '100%', padding: '0.55rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'inherit', color: '#3b82f6' }}>
-                                                    Edit Submission
-                                                </button>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.25rem' }}>
-                                            <div style={{ marginBottom: '1rem' }}>
-                                                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Your Response</label>
-                                                <textarea
-                                                    style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem', fontSize: '0.85rem', resize: 'vertical', minHeight: 90, fontFamily: 'inherit', outline: 'none' }}
-                                                    placeholder="Write your response here..."
-                                                    value={submitContent}
-                                                    onChange={e => setSubmitContent(e.target.value)}
-                                                />
-                                            </div>
-                                            <div style={{ marginBottom: '1rem' }}>
-                                                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Attachments</label>
-                                                {submitFile ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
-                                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.82rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{submitFile.name}</div>
-                                                            <div style={{ fontSize: '0.7rem', color: '#60a5fa' }}>Ready to upload</div>
-                                                        </div>
-                                                        <button onClick={() => setSubmitFile(null)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            <X size={12} color="#ef4444" />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <label style={{
-                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', padding: '1.25rem',
-                                                        border: '2px dashed #cbd5e1', borderRadius: 14, cursor: 'pointer', transition: 'all .15s', background: '#fafbfc'
-                                                    }}
-                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#93c5fd'; e.currentTarget.style.background = '#eff6ff'; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#fafbfc'; }}
-                                                    >
-                                                        <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
-                                                        <Upload size={20} color="#94a3b8" />
-                                                        <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>Attach File</span>
-                                                    </label>
-                                                )}
-                                            </div>
-                                            <button
-                                                style={{
-                                                    width: '100%', padding: '0.65rem', borderRadius: 12, background: '#3b82f6', color: '#fff',
-                                                    fontWeight: 700, fontSize: '0.88rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                                                    opacity: submitting || (!submitFile && !submitContent.trim()) ? 0.5 : 1
-                                                }}
-                                                onClick={handleSubmit}
-                                                disabled={submitting || (!submitFile && !submitContent.trim())}
-                                            >
-                                                {submitting ? 'Submitting...' : 'Turn In'}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Private Comments */}
-                                    <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '2rem', paddingTop: '1.5rem' }}>
-                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>Private Comments</h4>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
-                                            {comments.filter(c => c.isPrivate).map((c: any) => {
-                                                const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
-                                                return (
-                                                    <div key={c.id} style={{ display: 'flex', gap: '0.6rem', padding: '0.6rem', background: isTeacher ? '#fffbeb' : '#fff', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-                                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={24} variant={isTeacher ? 'blue' : 'green'} />
-                                                        <div>
-                                                            <div style={{ fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                                                {c.user?.firstName}
-                                                                {isTeacher && <span style={{ fontSize: '0.6rem', background: '#fde68a', color: '#92400e', borderRadius: 999, padding: '1px 5px' }}>Prof</span>}
-                                                            </div>
-                                                            <div style={{ fontSize: '0.82rem' }}>{c.content}</div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle: 'italic' }}>No private messages.</p>}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.4rem' }}>
-                                            <input
-                                                style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.42rem 0.85rem', fontSize: '0.82rem', outline: 'none', fontFamily: 'inherit' }}
-                                                placeholder="Ask teacher..."
-                                                value={privateComment}
-                                                onChange={e => setPrivateComment(e.target.value)}
-                                                onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }}
-                                            />
-                                            <button
-                                                style={{ padding: '0.42rem 0.85rem', borderRadius: 20, background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.78rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: privateComment.trim() ? 1 : 0.5 }}
-                                                disabled={!privateComment.trim()} onClick={handlePrivateComment}
-                                            >Send</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     /* ══════════════════════════════════════════════════════════
        RENDER
@@ -623,39 +378,79 @@ const StudentMaterials: React.FC = () => {
                             {displayMaterials.map(m => {
                                 const rt = figureOutType(m);
                                 const tc = typeConfig[rt] || typeConfig.file;
-                                const ytId = rt === 'video' && m.externalLink ? getYouTubeId(m.externalLink) : null;
+                                const mLink = getMLink(m);
+                                const ytId = rt === 'video' && mLink ? getYouTubeId(mLink) : null;
+                                const isExpanded = expandedId === m.id;
                                 return (
-                                    <div key={m.id} onClick={() => openDetail(m)} style={{
-                                        display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
-                                        background: '#fff', borderRadius: 18, border: '1px solid #f1f5f9',
-                                        cursor: 'pointer', transition: 'all .2s',
-                                        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
-                                    }}
-                                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.08)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                                    >
-                                        {ytId ? (
-                                            <div style={{ width: 120, height: 68, borderRadius: 12, overflow: 'hidden', flexShrink: 0, position: 'relative', background: '#000' }}>
-                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.25)' }}>
-                                                    <Play size={22} color="#fff" fill="#fff" />
+                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#93c5fd' : '#f1f5f9'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
+                                        {/* Row */}
+                                        <div onClick={() => toggleExpand(m)} style={{
+                                            display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
+                                            background: isExpanded ? '#f8fafc' : '#fff', cursor: 'pointer', transition: 'all .2s',
+                                        }}
+                                            onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#fafbfc'; }}
+                                            onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = '#fff'; }}
+                                        >
+                                            <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg }}>{tc.icon}</div>
+                                            {ytId && (
+                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '1px solid #e2e8f0' }} />
+                                            )}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                    <span style={{ color: tc.color }}>{tc.label}</span>
+                                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
+                                                    <span>Resource</span>
+                                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
+                                                    <span>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(m.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg, transition: 'all .2s' }}>
-                                                {tc.icon}
+                                            <ChevronDown size={20} color="#94a3b8" style={{ transition: 'transform .2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }} />
+                                        </div>
+                                        {/* Expand panel */}
+                                        {isExpanded && (
+                                            <div style={{ borderTop: '1px solid #e2e8f0', padding: '1.5rem', background: '#fff' }}>
+                                                {m.description && <div style={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.25rem' }}>{m.description}</div>}
+                                                {ytId && <VideoPreview url={mLink} />}
+                                                {mLink && !ytId && (
+                                                    <a href={mLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', textDecoration: 'none', color: '#3b82f6', fontWeight: 600, fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                                        <ArrowUpRight size={16} /> Open External Link
+                                                    </a>
+                                                )}
+                                                {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
+
+                                                {/* Comments section */}
+                                                <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
+                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '1rem' }}>Class Comments ({comments.filter(c => !c.isPrivate).length})</h4>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                                                        {comments.filter(c => !c.isPrivate).map((c: any) => {
+                                                            const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
+                                                            return (
+                                                                <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
+                                                                    <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={32} variant={isTeacher ? 'blue' : 'green'} />
+                                                                    <div style={{ flex: 1, background: isTeacher ? '#f5f3ff' : '#f8fafc', padding: '0.75rem 1rem', borderRadius: '0 12px 12px 12px', border: `1px solid ${isTeacher ? '#ede9fe' : '#f1f5f9'}` }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName} {isTeacher && ' (Professor)'}</span>
+                                                                            <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                                                                        </div>
+                                                                        <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                        <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={32} />
+                                                        <div style={{ flex: 1, position: 'relative' }}>
+                                                            <input style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 99, padding: '0.5rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#f8fafc' }}
+                                                                placeholder="Add a class comment..." value={newComment} onChange={e => setNewComment(e.target.value)}
+                                                                onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
+                                                            <button onClick={handleAddComment} style={{ position: 'absolute', right: 4, top: 4, bottom: 4, border: 'none', background: '#3b82f6', color: '#fff', borderRadius: 99, padding: '0 1rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>Post</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                                                <span>{tc.label}</span>
-                                                <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
-                                                <span>{m.fileSize ? (m.fileSize > 1024 * 1024 ? `${(m.fileSize / 1024 / 1024).toFixed(1)} MB` : `${Math.round(m.fileSize / 1024)} KB`) : 'Resource'}</span>
-                                                <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
-                                                <span>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(m.createdAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</span>
-                                            </div>
-                                        </div>
                                     </div>
                                 );
                             })}
@@ -695,39 +490,109 @@ const StudentMaterials: React.FC = () => {
                                 </span>
                             )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                             {(showAllAssignments ? materials.filter(m => m.type === 'assignment') : materials.filter(m => m.type === 'assignment').slice(0, 4)).map(m => {
                                 const isUrgent = m.dueDate && new Date(m.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
                                 const isPast = m.dueDate && new Date(m.dueDate) < new Date();
+                                const isExpanded = expandedId === m.id;
+                                const mLink = getMLink(m);
+                                const ytId = mLink ? getYouTubeId(mLink) : null;
+
                                 return (
-                                    <div key={m.id} onClick={() => openDetail(m)} style={{
-                                        background: '#fff', borderRadius: 18, padding: '1.25rem', cursor: 'pointer',
-                                        borderLeft: `6px solid ${isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}`,
-                                        border: '1px solid #f1f5f9',
-                                        borderLeftWidth: 6, borderLeftStyle: 'solid',
-                                        borderLeftColor: isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6',
-                                        transition: 'all .2s', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
-                                    }}
-                                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.08)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)'; }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                                            <span style={{
-                                                fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em',
-                                                padding: '3px 8px', borderRadius: 6,
-                                                background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff',
-                                                color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb'
-                                            }}>
-                                                {isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : 'OPEN'}
-                                            </span>
-                                            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8' }}>
-                                                {m.dueDate ? `Due in ${Math.max(0, Math.ceil((new Date(m.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days` : 'No due date'}
-                                            </span>
+                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#3b82f6' : '#f1f5f9'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
+                                        <div onClick={() => toggleExpand(m)} style={{ padding: '1.25rem', background: isExpanded ? '#f8fafc' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{ width: 48, height: 48, borderRadius: 12, background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <BookOpen size={20} color={isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'} />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                                                    <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4, background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>{isPast ? 'Overdue' : isUrgent ? 'Urgent' : 'Open'}</span>
+                                                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>{m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
+                                                </div>
+                                                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>{m.title}</h4>
+                                            </div>
+                                            <ChevronDown size={20} color="#94a3b8" style={{ transition: 'transform .2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }} />
                                         </div>
-                                        <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem', lineHeight: 1.35 }}>{m.title}</h4>
-                                        <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {m.description || 'View details to submit your work.'}
-                                        </p>
+                                        {isExpanded && (
+                                            <div style={{ borderTop: '1px solid #f1f5f9', background: '#fff', display: 'grid', gridTemplateColumns: '1fr 320px' }}>
+                                                {/* Left: Instructions */}
+                                                <div style={{ padding: '1.5rem', borderRight: '1px solid #f1f5f9' }}>
+                                                    <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.5rem' }}>
+                                                        <button onClick={() => setDetailTab('instructions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'instructions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'instructions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>Instructions</button>
+                                                        <button onClick={() => setDetailTab('submissions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'submissions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'submissions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>My Submission</button>
+                                                    </div>
+
+                                                    {detailTab === 'instructions' ? (
+                                                        <div style={{ animation: 'fadeIn .2s' }}>
+                                                            {m.description && <p style={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{m.description}</p>}
+                                                            {ytId && <VideoPreview url={mLink} />}
+                                                            {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ animation: 'fadeIn .2s' }}>
+                                                            {mySubmission ? (
+                                                                <div style={{ background: '#f8fafc', borderRadius: 16, padding: '1.25rem', border: '1px solid #e2e8f0' }}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                                                        <span style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', padding: '3px 8px', borderRadius: 6, background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff', color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6' }}>{mySubmission.status}</span>
+                                                                        {mySubmission.grade !== null && <span style={{ fontWeight: 900, color: '#1e293b' }}>{mySubmission.grade}/100</span>}
+                                                                    </div>
+                                                                    {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />}
+                                                                    {mySubmission.content && <p style={{ fontSize: '0.88rem', color: '#475569', background: '#fff', padding: '0.75rem', borderRadius: 8, border: '1px solid #f1f5f9' }}>{mySubmission.content}</p>}
+                                                                    {mySubmission.feedback && (
+                                                                        <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: 8, background: '#fffbeb', border: '1px solid #fef3c7' }}>
+                                                                            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#92400e', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Feedback</span>
+                                                                            <p style={{ fontSize: '0.85rem', color: '#78350f', margin: 0 }}>{mySubmission.feedback}</p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <div style={{ background: '#f8fafc', borderRadius: 16, padding: '1.25rem', border: '2px dashed #e2e8f0' }}>
+                                                                    <textarea style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem', fontSize: '0.85rem', minHeight: 100, marginBottom: '1rem', outline: 'none' }} placeholder="Write your submission content..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} />
+                                                                    <div style={{ marginBottom: '1rem' }}>
+                                                                        {submitFile ? (
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                                                                <FileText size={16} color="#3b82f6" />
+                                                                                <span style={{ fontSize: '0.8rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{submitFile.name}</span>
+                                                                                <X size={14} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => setSubmitFile(null)} />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#3b82f6', fontWeight: 600, fontSize: '0.85rem' }}>
+                                                                                <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
+                                                                                <Upload size={16} /> Attach File
+                                                                            </label>
+                                                                        )}
+                                                                    </div>
+                                                                    <button onClick={handleSubmit} disabled={submitting} style={{ width: '100%', padding: '0.75rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>{submitting ? 'Submitting...' : 'Submit Work'}</button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {/* Right: Private Comments */}
+                                                <div style={{ padding: '1.5rem', background: '#fafbfc' }}>
+                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '1rem' }}>Private Comments</h4>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: 250, overflowY: 'auto', marginBottom: '1rem' }}>
+                                                        {comments.filter(c => c.isPrivate).map((c: any) => {
+                                                            const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
+                                                            return (
+                                                                <div key={c.id} style={{ display: 'flex', gap: '0.6rem' }}>
+                                                                    <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={24} variant={isTeacher ? 'blue' : 'green'} />
+                                                                    <div style={{ flex: 1, background: isTeacher ? '#fffbeb' : '#fff', padding: '0.5rem 0.75rem', borderRadius: '0 10px 10px 10px', border: '1px solid #e2e8f0' }}>
+                                                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: 2 }}>{c.user?.firstName}</div>
+                                                                        <div style={{ fontSize: '0.8rem', color: '#475569' }}>{c.content}</div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No private messages yet.</p>}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 6 }}>
+                                                        <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.4rem 0.75rem', fontSize: '0.8rem', outline: 'none' }} placeholder="Ask professor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
+                                                        <button onClick={handlePrivateComment} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Play size={14} fill="#fff" /></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -762,57 +627,61 @@ const StudentMaterials: React.FC = () => {
 
                         {/* Instructor Office */}
                         <div style={{
-                            background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
-                            borderRadius: 22, padding: '1.5rem', color: '#fff', position: 'relative', overflow: 'hidden',
-                            boxShadow: '0 8px 30px rgba(59,130,246,.25)'
+                            background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+                            borderRadius: 22, padding: '1.75rem', color: '#fff', position: 'relative', overflow: 'hidden',
+                            boxShadow: '0 15px 35px rgba(15,23,42,.2)'
                         }}>
-                            <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, background: 'rgba(255,255,255,.1)', borderRadius: '50%', filter: 'blur(20px)', pointerEvents: 'none' }} />
-                            <h3 style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,.7)', marginBottom: '1rem' }}>INSTRUCTOR OFFICE</h3>
-                            <h2 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.6rem' }}>{activeCourseData?.teacher ? `${activeCourseData.teacher.firstName} ${activeCourseData.teacher.lastName}` : 'Instructor'}</h2>
-                            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,.8)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                                "Design is the silent ambassador of your brand."
-                            </p>
-                            <button onClick={() => navigate('/student/messages')} style={{
-                                width: '100%', padding: '0.75rem', borderRadius: 14, border: 'none',
-                                background: 'rgba(255,255,255,.2)', backdropFilter: 'blur(8px)',
-                                color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
-                                fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                                transition: 'all .15s'
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.3)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.2)'; }}
-                            >
-                                <MessageSquare size={16} /> Message Professor
-                            </button>
-                        </div>
-
-                        {/* Class Roster */}
-                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <Users size={18} color="#3b82f6" /> Class Info
-                                </h3>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: 14 }}>
-                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, background: 'rgba(59,130,246,.15)', borderRadius: '50%', filter: 'blur(30px)' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Users size={20} color="#3b82f6" />
                                 </div>
                                 <div>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{classmateCount}</div>
-                                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>Enrolled Students</div>
+                                    <h3 style={{ fontSize: '0.65rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Lead Instructor</h3>
+                                    <h2 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0 }}>{activeCourseData?.teacher ? `${activeCourseData.teacher.firstName} ${activeCourseData.teacher.lastName}` : 'Professor'}</h2>
                                 </div>
                             </div>
-                            <div style={{ marginTop: '1rem', padding: '0.85rem 1rem', background: '#f0fdf4', borderRadius: 12, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                <BookOpen size={16} color="#16a34a" />
-                                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#16a34a' }}>{materials.length} Materials Available</span>
+                            <p style={{ fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '1.5rem', fontStyle: 'italic' }}>
+                                Connect with your professor for guidance on materials or assignment feedback.
+                            </p>
+                            <button onClick={() => navigate('/student/messages')} style={{
+                                width: '100%', padding: '0.85rem', borderRadius: 14, border: 'none',
+                                background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.88rem', 
+                                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', 
+                                justifyContent: 'center', gap: '0.6rem', transition: 'all .2s',
+                                boxShadow: '0 4px 12px rgba(59,130,246,0.3)'
+                            }}
+                                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                            >
+                                <MessageSquare size={16} /> Send Message
+                            </button>
+                        </div>
+
+                        {/* Class Info */}
+                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9', marginTop: '1.25rem' }}>
+                            <h3 style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Users size={18} color="#3b82f6" /> Course Roster
+                            </h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #f1f5f9' }}>
+                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                                    <Users size={20} color="#3b82f6" />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>{classmateCount}</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Enrolled Students</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-
-            {/* Detail Modal */}
-            {detail && renderDetail()}
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </DashboardLayout>
     );
 };
