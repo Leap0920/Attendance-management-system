@@ -1,14 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
-import { User } from '../../types';
+import { User as UserType } from '../../types';
+import { 
+  Search, 
+  X, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Check
+} from 'lucide-react';
 
 const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserType | null>(null);
   const [createForm, setCreateForm] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'student', department: '' });
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', role: 'student', department: '', status: 'active', password: '' });
   const [filter, setFilter] = useState('');
@@ -85,7 +93,7 @@ const AdminUsers: React.FC = () => {
     setSaving(false);
   };
 
-  const openEdit = (user: User) => {
+  const openEdit = (user: UserType) => {
     setEditingUser(user);
     setEditForm({
       firstName: user.firstName,
@@ -110,7 +118,7 @@ const AdminUsers: React.FC = () => {
     }
   };
 
-  const handleToggleStatus = async (user: User) => {
+  const handleToggleStatus = async (user: UserType) => {
     const newStatus = user.status === 'active' ? 'suspended' : 'active';
     try {
       await adminApi.updateUser(user.id, { status: newStatus });
@@ -125,8 +133,8 @@ const AdminUsers: React.FC = () => {
     <DashboardLayout role="admin">
       {/* Toast Notification */}
       {toast && (
-        <div className={`admin-toast ${toast.type}`}>
-          <span>{toast.type === 'success' ? '✓' : '✕'}</span>
+        <div className={`admin-toast ${toast.type} animate-in slide-in-from-top-4 duration-300`}>
+          <span>{toast.type === 'success' ? <Check size={18} /> : <X size={18} />}</span>
           {toast.text}
         </div>
       )}
@@ -136,8 +144,8 @@ const AdminUsers: React.FC = () => {
           <h1 className="page-title">User Management</h1>
           <p className="page-subtitle">Manage all system accounts</p>
         </div>
-        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowCreateModal(true)}>
-          + Add User
+        <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-2" style={{ width: 'auto' }} onClick={() => setShowCreateModal(true)}>
+          <Plus size={18} /> Add User
         </button>
       </div>
 
@@ -158,8 +166,8 @@ const AdminUsers: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="admin-search-box">
-          <span className="admin-search-icon">🔍</span>
+        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <span className="admin-search-icon"><Search size={18} /></span>
           <input
             type="text"
             placeholder="Search by name, email, or department..."
@@ -168,7 +176,7 @@ const AdminUsers: React.FC = () => {
             className="admin-search-input"
           />
           {search && (
-            <button className="admin-search-clear" onClick={() => setSearch('')}>✕</button>
+            <button className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => setSearch('')}><X size={16} /></button>
           )}
         </div>
       </div>
@@ -231,11 +239,11 @@ const AdminUsers: React.FC = () => {
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
-                      <button className="admin-action-btn edit" onClick={() => openEdit(u)} title="Edit">
-                        ✏️
+                      <button className="admin-action-btn edit hover:bg-blue-50 transition-colors" onClick={() => openEdit(u)} title="Edit">
+                        <Edit2 size={16} />
                       </button>
-                      <button className="admin-action-btn delete" onClick={() => setShowDeleteConfirm(u.id)} title="Delete">
-                        🗑️
+                      <button className="admin-action-btn delete hover:bg-red-50 transition-colors" onClick={() => setShowDeleteConfirm(u.id)} title="Delete">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -253,9 +261,14 @@ const AdminUsers: React.FC = () => {
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-            <div className="modal-header">
-              <h3 className="modal-title">Create New User</h3>
-              <button className="modal-close" onClick={() => setShowCreateModal(false)}>×</button>
+            <div className="modal-header border-b border-gray-100">
+              <h3 className="modal-title flex items-center gap-2">
+                <Plus size={20} className="text-blue-500" />
+                Create New User
+              </h3>
+              <button className="modal-close hover:bg-gray-100 rounded-full p-1 transition-colors" onClick={() => setShowCreateModal(false)}>
+                <X size={20} />
+              </button>
             </div>
             <form onSubmit={handleCreate}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -305,9 +318,14 @@ const AdminUsers: React.FC = () => {
       {showEditModal && editingUser && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-            <div className="modal-header">
-              <h3 className="modal-title">Edit User</h3>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+            <div className="modal-header border-b border-gray-100">
+              <h3 className="modal-title flex items-center gap-2">
+                <Edit2 size={20} className="text-blue-500" />
+                Edit User
+              </h3>
+              <button className="modal-close hover:bg-gray-100 rounded-full p-1 transition-colors" onClick={() => setShowEditModal(false)}>
+                <X size={20} />
+              </button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: 'var(--radius-sm)' }}>
               <div className="admin-table-avatar" style={{
@@ -380,11 +398,11 @@ const AdminUsers: React.FC = () => {
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{
-                width: 52, height: 52, borderRadius: '50%', background: '#fef2f2',
+                width: 64, height: 64, borderRadius: '50%', background: '#fef2f2',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '1rem', fontSize: '1.5rem',
+                marginBottom: '1.25rem', color: '#ef4444',
               }}>
-                🗑️
+                <Trash2 size={32} />
               </div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>Delete User?</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>

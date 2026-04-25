@@ -1,5 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  Search, 
+  Plus, 
+  Clock, 
+  BookOpen, 
+  Users, 
+  CheckCircle2, 
+  Radio, 
+  MapPin, 
+  Clipboard,
+  MoreHorizontal,
+  X,
+  ArrowLeft,
+  ArrowRight,
+  TrendingUp,
+  CircleDashed,
+  ExternalLink,
+  Calendar,
+  UserCheck
+} from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
@@ -28,18 +48,16 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #FF8A65 100%)',
 ];
 
-const CATEGORY_LABELS = [
-  'ENGINEERING', 'SOCIAL SCIENCES', 'MANDATORY', 'COMPUTER SCIENCE',
-  'BUSINESS', 'ARTS', 'EDUCATION', 'GENERAL',
-];
-
 const CATEGORY_COLORS = [
   '#4285F4', '#F4A742', '#7B68EE', '#EA4335',
   '#34A853', '#00BCD4', '#9C27B0', '#FF5722',
 ];
 
 const getGradient = (index: number) => COURSE_GRADIENTS[index % COURSE_GRADIENTS.length];
-const getCategoryLabel = (index: number) => CATEGORY_LABELS[index % CATEGORY_LABELS.length];
+const getCategoryLabel = (index: number) => [
+  'ENGINEERING', 'SOCIAL SCIENCES', 'MANDATORY', 'COMPUTER SCIENCE',
+  'BUSINESS', 'ARTS', 'EDUCATION', 'GENERAL',
+][index % 8];
 const getCategoryColor = (index: number) => CATEGORY_COLORS[index % CATEGORY_COLORS.length];
 
 function timeAgo(dateStr: string): string {
@@ -106,9 +124,7 @@ const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ end
 
   return (
     <div className="td-session-timer">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>
+      <Clock size={14} strokeWidth={2.5} />
       {timeLeft}
     </div>
   );
@@ -283,10 +299,8 @@ const TeacherDashboard: React.FC = () => {
         <>
           {/* ── Top Bar ──────────────────────────────────────── */}
           <div className="td-topbar">
-            <div className="td-search-wrapper">
-              <svg className="td-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-              </svg>
+            <div className="td-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+              <Search className="td-search-icon" size={16} />
               <input
                 className="td-search-input"
                 placeholder="Search courses, students, sessions..."
@@ -295,12 +309,12 @@ const TeacherDashboard: React.FC = () => {
               />
             </div>
             <div className="td-topbar-actions">
-              <button className="btn btn-primary td-topbar-btn" onClick={() => setShowAttendance(true)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowAttendance(true)}>
+                <Plus size={14} strokeWidth={2.5} />
                 New Session
               </button>
-              <button className="btn btn-primary td-topbar-btn" onClick={() => setShowCreateCourse(true)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowCreateCourse(true)}>
+                <Plus size={14} strokeWidth={2.5} />
                 Create Course
               </button>
             </div>
@@ -329,50 +343,42 @@ const TeacherDashboard: React.FC = () => {
 
           {/* ── Stats Grid ────────────────────────────────────── */}
           <div className="td-stats-grid">
-            <div className="td-stat-card">
+            <div className="td-stat-card hover:translate-y-[-2px] transition-all duration-300 shadow-sm hover:shadow-md">
               <div className="td-stat-icon td-stat-icon-blue">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
+                <BookOpen size={20} />
               </div>
               <div className="td-stat-label">Active Courses</div>
               <div className="td-stat-value">{totalCourses}</div>
               <div className="td-stat-trend td-stat-trend-up">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                <TrendingUp size={12} strokeWidth={2.5} />
                 12% from last month
               </div>
             </div>
-            <div className="td-stat-card">
+            <div className="td-stat-card hover:translate-y-[-2px] transition-all duration-300 shadow-sm hover:shadow-md">
               <div className="td-stat-icon td-stat-icon-green">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
+                <Users size={20} />
               </div>
               <div className="td-stat-label">Total Students</div>
               <div className="td-stat-value">{totalStudents}</div>
               <div className="td-stat-trend td-stat-trend-neutral">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/></svg>
+                <CircleDashed size={12} strokeWidth={2.5} />
                 Stable enrollment
               </div>
             </div>
-            <div className="td-stat-card">
+            <div className="td-stat-card hover:translate-y-[-2px] transition-all duration-300 shadow-sm hover:shadow-md">
               <div className="td-stat-icon td-stat-icon-purple">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                </svg>
+                <CheckCircle2 size={20} />
               </div>
               <div className="td-stat-label">Sessions Created</div>
               <div className="td-stat-value">{totalSessions}</div>
               <div className="td-stat-trend td-stat-trend-up">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                <TrendingUp size={12} strokeWidth={2.5} />
                 Increased activity
               </div>
             </div>
-            <div className="td-stat-card">
+            <div className="td-stat-card hover:translate-y-[-2px] transition-all duration-300 shadow-sm hover:shadow-md border-2 border-blue-50">
               <div className="td-stat-icon td-stat-icon-orange">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5.636 18.364a9 9 0 0 1 0-12.728"/><path d="M18.364 5.636a9 9 0 0 1 0 12.728"/><path d="M8.464 15.536a5 5 0 0 1 0-7.072"/><path d="M15.536 8.464a5 5 0 0 1 0 7.072"/><circle cx="12" cy="12" r="1"/>
-                </svg>
+                <Radio size={20} />
               </div>
               <div className="td-stat-label">Active Sessions</div>
               <div className="td-stat-value">{activeSessionsCount}</div>
@@ -389,25 +395,28 @@ const TeacherDashboard: React.FC = () => {
             <div className="td-sessions-panel td-sessions-active">
               <div className="td-sessions-header">
                 <h3>Active Attendance Sessions</h3>
-                <button className="td-link-btn" onClick={() => navigate('/teacher/attendance')}>View All</button>
+                <button className="td-link-btn group hover:text-blue-600 transition-colors" onClick={() => navigate('/teacher/attendance')}>
+                  View All <ArrowRight size={14} className="inline group-hover:translate-x-0.5 transition-transform" />
+                </button>
               </div>
               {data.activeSessions?.length > 0 ? data.activeSessions.map((s: any, i: number) => (
-                <div key={i} className="td-active-session-card">
+                <div key={i} className="td-active-session-card hover:border-blue-200 transition-all shadow-sm hover:shadow-md">
                   <div className="td-as-top">
                     <div className="td-as-info">
                       <h4>{s.courseName}</h4>
                       <p>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <MapPin size={12} className="inline" />
                         {s.session?.sessionTitle || 'Regular Session'}
                       </p>
                     </div>
                     <div className="td-as-actions">
                       <span className="td-live-badge">LIVE NOW</span>
-                      <button className="btn btn-danger btn-sm td-close-btn" onClick={() => closeSession(s.session.id)}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                      <button className="btn btn-danger btn-sm td-close-btn hover:bg-red-600 transition-colors" onClick={() => closeSession(s.session.id)}>
+                        <X size={12} strokeWidth={2.5} />
                         Close Session
                       </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => navigate('/teacher/attendance')} style={{ width: 'auto' }}>
+                      <button className="btn btn-secondary btn-sm hover:bg-gray-200 transition-colors" onClick={() => navigate('/teacher/attendance')} style={{ width: 'auto' }}>
+                        <ExternalLink size={12} className="inline" />
                         Monitor Real-time
                       </button>
                     </div>
@@ -415,7 +424,7 @@ const TeacherDashboard: React.FC = () => {
                   <div className="td-as-bottom">
                     <div className="td-as-code-section">
                       <span className="td-code-label">JOIN CODE</span>
-                      <div className="td-code-display"
+                      <div className="td-code-display active:scale-95 transition-transform"
                         onClick={() => {
                           navigator.clipboard.writeText(s.session?.attendanceCode || '');
                           showAlert('Copied', 'Join code copied to clipboard!', 'success');
@@ -441,14 +450,12 @@ const TeacherDashboard: React.FC = () => {
                         <div className="td-mini-avatar td-mini-avatar-more" style={{ marginLeft: '-8px' }}>+{s.submissions - 3}</div>
                       )}
                     </div>
-                    <span className="td-as-joined">{s.submissions || 0} students joined so far</span>
+                    <span className="td-as-joined"><UserCheck size={12} className="inline mr-1" /> {s.submissions || 0} students joined so far</span>
                   </div>
                 </div>
               )) : (
                 <div className="td-empty-sessions">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
+                  <Calendar size={32} strokeWidth={1.5} color="var(--text-muted)" />
                   <p>No active sessions</p>
                   <span>Click "+ New Session" to start attendance.</span>
                 </div>
@@ -459,19 +466,19 @@ const TeacherDashboard: React.FC = () => {
             <div className="td-sessions-panel td-sessions-recent">
               <div className="td-sessions-header">
                 <h3>Recently Closed</h3>
-                <button className="td-more-btn" title="More">⋯</button>
+                <button className="td-more-btn transition-colors hover:bg-gray-100" title="More">
+                  <MoreHorizontal size={18} />
+                </button>
               </div>
               {data.recentSessions?.length > 0 ? data.recentSessions.slice(0, 4).map((s: any, i: number) => (
                 <div
                   key={i}
-                  className="td-recent-item"
+                  className="td-recent-item group hover:bg-blue-50 transition-colors"
                   onClick={() => openReopenModal(s.session.id, s.session.sessionTitle || 'Regular Session')}
                   title="Click to reopen"
                 >
-                  <div className="td-recent-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                    </svg>
+                  <div className="td-recent-icon group-hover:scale-110 transition-transform">
+                    <Clock size={18} />
                   </div>
                   <div className="td-recent-info">
                     <h4>{s.courseName?.length > 18 ? s.courseName.substring(0, 18) + '...' : s.courseName}</h4>
@@ -484,7 +491,7 @@ const TeacherDashboard: React.FC = () => {
                 </div>
               )}
               {data.recentSessions?.length > 0 && (
-                <button className="td-full-history-btn" onClick={() => navigate('/teacher/attendance')}>
+                <button className="td-full-history-btn hover:bg-gray-100 transition-colors" onClick={() => navigate('/teacher/attendance')}>
                   Full Session History
                 </button>
               )}
@@ -496,11 +503,11 @@ const TeacherDashboard: React.FC = () => {
             <div className="td-courses-header">
               <h3>My Courses</h3>
               <div className="td-courses-nav">
-                <button className="td-nav-arrow" onClick={() => scrollCourses(-1)} aria-label="Scroll left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <button className="td-nav-arrow hover:bg-blue-100 transition-colors" onClick={() => scrollCourses(-1)} aria-label="Scroll left">
+                  <ArrowLeft size={16} strokeWidth={2.5} />
                 </button>
-                <button className="td-nav-arrow" onClick={() => scrollCourses(1)} aria-label="Scroll right">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                <button className="td-nav-arrow hover:bg-blue-100 transition-colors" onClick={() => scrollCourses(1)} aria-label="Scroll right">
+                  <ArrowRight size={16} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
@@ -508,7 +515,7 @@ const TeacherDashboard: React.FC = () => {
               {filteredCourses.map((c: any, idx: number) => (
                 <div
                   key={c.id}
-                  className="td-course-card"
+                  className="td-course-card hover:translate-y-[-4px] transition-all duration-300 shadow-sm hover:shadow-md"
                   onClick={() => navigate(`/teacher/courses/${c.id}`)}
                 >
                   <div className="td-course-cover" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}cc)` : getGradient(idx) }}>
@@ -521,11 +528,11 @@ const TeacherDashboard: React.FC = () => {
                     <p className="td-course-desc">{c.description || c.courseCode + (c.section ? ` · ${c.section}` : '')}</p>
                     <div className="td-course-meta">
                       <span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <Calendar size={12} className="inline mr-1" />
                         {c.schedule || 'No schedule'}
                       </span>
                       <span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <Users size={12} className="inline mr-1" />
                         {(data?.courses || []).find((cc: any) => cc.id === c.id)?.enrollmentCount || '–'} Students
                       </span>
                     </div>
@@ -545,30 +552,30 @@ const TeacherDashboard: React.FC = () => {
       {/* ── Start Attendance Modal ───────────────────────────── */}
       {showAttendance && (
         <div className="modal-overlay" onClick={() => setShowAttendance(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Start Attendance Session</h3>
-              <button className="modal-close" onClick={() => setShowAttendance(false)}>×</button>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowAttendance(false)}><X size={20} /></button>
             </div>
             <form onSubmit={startSession}>
               <div className="form-group">
                 <label className="form-label">Course</label>
-                <select className="form-input" value={attendForm.courseId} onChange={e => setAttendForm({ ...attendForm, courseId: e.target.value })} required>
+                <select className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={attendForm.courseId} onChange={e => setAttendForm({ ...attendForm, courseId: e.target.value })} required>
                   <option value="">Select course...</option>
                   {data?.courses?.map((c: any) => <option key={c.id} value={c.id}>{c.courseCode} {c.section ? `- ${c.section}` : ''}</option>)}
                 </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Session Title (optional)</label>
-                <input className="form-input" value={attendForm.sessionTitle} onChange={e => setAttendForm({ ...attendForm, sessionTitle: e.target.value })} placeholder="e.g. Week 5" />
+                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={attendForm.sessionTitle} onChange={e => setAttendForm({ ...attendForm, sessionTitle: e.target.value })} placeholder="e.g. Week 5" />
               </div>
               <div className="form-group">
                 <label className="form-label">Duration (minutes)</label>
-                <input className="form-input" type="number" min="1" max="120" value={attendForm.duration} onChange={e => setAttendForm({ ...attendForm, duration: e.target.value })} />
+                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" max="120" value={attendForm.duration} onChange={e => setAttendForm({ ...attendForm, duration: e.target.value })} />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowAttendance(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Start Session</button>
+                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowAttendance(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Start Session</button>
               </div>
             </form>
           </div>
@@ -578,24 +585,24 @@ const TeacherDashboard: React.FC = () => {
       {/* ── Create Course Modal ──────────────────────────────── */}
       {showCreateCourse && (
         <div className="modal-overlay" onClick={() => setShowCreateCourse(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Create New Course</h3>
-              <button className="modal-close" onClick={() => setShowCreateCourse(false)}>×</button>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowCreateCourse(false)}><X size={20} /></button>
             </div>
             <form onSubmit={createCourse}>
               <div className="form-group">
                 <label className="form-label">Course Name</label>
-                <input className="form-input" value={courseForm.courseName} onChange={e => setCourseForm({ ...courseForm, courseName: e.target.value })} required placeholder="Introduction to Programming" />
+                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.courseName} onChange={e => setCourseForm({ ...courseForm, courseName: e.target.value })} required placeholder="Introduction to Programming" />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Course Code</label>
-                  <input className="form-input" value={courseForm.courseCode} onChange={e => setCourseForm({ ...courseForm, courseCode: e.target.value })} required placeholder="CS101" />
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.courseCode} onChange={e => setCourseForm({ ...courseForm, courseCode: e.target.value })} required placeholder="CS101" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Section</label>
-                  <input className="form-input" value={courseForm.section} onChange={e => setCourseForm({ ...courseForm, section: e.target.value })} placeholder="Section A" />
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.section} onChange={e => setCourseForm({ ...courseForm, section: e.target.value })} placeholder="Section A" />
                 </div>
               </div>
               <div className="form-group">
@@ -608,21 +615,21 @@ const TeacherDashboard: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <div>
                     <label className="form-label" style={{ fontSize: '0.78rem' }}>Start Time</label>
-                    <input className="form-input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
                   </div>
                   <div>
                     <label className="form-label" style={{ fontSize: '0.78rem' }}>End Time</label>
-                    <input className="form-input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
                   </div>
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Room</label>
-                <input className="form-input" value={courseForm.room} onChange={e => setCourseForm({ ...courseForm, room: e.target.value })} placeholder="Room 301" />
+                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.room} onChange={e => setCourseForm({ ...courseForm, room: e.target.value })} placeholder="Room 301" />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateCourse(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Create Course</button>
+                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowCreateCourse(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Create Course</button>
               </div>
             </form>
           </div>
@@ -632,10 +639,10 @@ const TeacherDashboard: React.FC = () => {
       {/* ── Reopen Session Modal ─────────────────────────────── */}
       {showReopenModal && (
         <div className="modal-overlay" onClick={() => setShowReopenModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">Reopen Session</h3>
-              <button className="modal-close" onClick={() => setShowReopenModal(false)}>×</button>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowReopenModal(false)}><X size={20} /></button>
             </div>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
               Reopening: <strong>{targetReopenSession?.title}</strong>.
@@ -643,11 +650,11 @@ const TeacherDashboard: React.FC = () => {
             </p>
             <div className="form-group">
               <label className="form-label">Extended Duration (minutes)</label>
-              <input type="number" className="form-input" value={reopenDuration} onChange={e => setReopenDuration(e.target.value)} min="1" max="120" />
+              <input type="number" className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={reopenDuration} onChange={e => setReopenDuration(e.target.value)} min="1" max="120" />
             </div>
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowReopenModal(false)}>Cancel</button>
-              <button className="btn btn-primary" style={{ width: 'auto' }} onClick={confirmReopen} disabled={reopeningId !== null}>
+              <button className="btn btn-secondary transition-colors" onClick={() => setShowReopenModal(false)}>Cancel</button>
+              <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} onClick={confirmReopen} disabled={reopeningId !== null}>
                 {reopeningId !== null ? 'Reopening...' : 'Confirm Reopen'}
               </button>
             </div>

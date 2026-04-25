@@ -1,5 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { 
+  LogOut, 
+  User, 
+  Settings, 
+  Shield, 
+  X, 
+  AlertCircle,
+  Menu,
+  ChevronRight
+} from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { studentApi, teacherApi } from '../api';
 import Modal from './Modal';
@@ -380,7 +390,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       >
         {/* Close button for mobile sidebar */}
         <button
-          className="sidebar-close-btn"
+          className="sidebar-close-btn hover:rotate-90 transition-transform"
           aria-label="Close menu"
           onClick={() => setSidebarOpen(false)}
           style={{
@@ -396,7 +406,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             cursor: 'pointer',
           }}
         >
-          &times;
+          <X size={24} />
         </button>
         <div className="sidebar-brand">AttendEase</div>
         <nav className="sidebar-nav">
@@ -407,16 +417,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+                  className={`sidebar-link group ${isActive(item.path) ? 'active' : ''}`}
                 >
-                  <span>{item.label}</span>
+                  <span className="group-hover:translate-x-0.5 transition-transform">{item.label}</span>
                 </Link>
               ))}
             </React.Fragment>
           ))}
         </nav>
         <div className="sidebar-footer">
-          <div className="sidebar-profile" onClick={openProfile} title="Edit Profile">
+          <div className="sidebar-profile shadow-sm hover:shadow-md transition-all border border-transparent hover:border-blue-100" onClick={openProfile} title="Edit Profile">
             <div className="sidebar-avatar">
               {hasAvatar ? (
                 <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
@@ -431,9 +441,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           </div>
           <button
             onClick={() => setShowLogout(true)}
-            className="btn btn-sm"
+            className="btn btn-sm hover:bg-gray-200 transition-colors"
             style={{ width: '100%', background: '#f3f4f6', color: 'var(--text-secondary)', border: '1px solid var(--border-glass)' }}
           >
+            <LogOut size={14} className="mr-2" />
             Logout
           </button>
         </div>
@@ -445,14 +456,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       {/* Logout Confirmation Modal */}
       {showLogout && (
         <div className="modal-overlay" onClick={() => setShowLogout(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{
                 width: 48, height: 48, borderRadius: '50%', background: '#fef2f2',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: '1rem', fontSize: '1.25rem', color: '#ef4444',
               }}>
-                !
+                <AlertCircle size={24} />
               </div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>Confirm Logout</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
@@ -461,14 +472,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             </div>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary transition-colors"
                 style={{ flex: 1 }}
                 onClick={() => setShowLogout(false)}
               >
                 Cancel
               </button>
               <button
-                className="btn btn-danger"
+                className="btn btn-danger transition-colors shadow-sm hover:shadow-md"
                 style={{ flex: 1 }}
                 onClick={handleLogout}
               >
@@ -482,13 +493,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       {/* Profile Edit Modal */}
       {showProfile && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', width: 'min(92vw, 460px)', margin: '0 auto', maxHeight: '90vh', overflowY: 'auto', padding: 'clamp(1rem, 2vw, 2rem)' }}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', width: 'min(92vw, 460px)', margin: '0 auto', maxHeight: '90vh', overflowY: 'auto', padding: 'clamp(1rem, 2vw, 2rem)' }}>
             <div className="modal-header">
               <h3 className="modal-title">Edit Profile</h3>
-              <button className="modal-close" onClick={() => setShowProfile(false)}>×</button>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowProfile(false)}><X size={20} /></button>
             </div>
 
-            <div className="profile-avatar-lg">
+            <div className="profile-avatar-lg shadow-sm">
               {hasAvatar ? (
                 <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
               ) : (
@@ -511,21 +522,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 />
                 <button
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm transition-colors"
                   style={{ width: 'auto' }}
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={uploadingAvatar}
                 >
+                  <User size={14} className="mr-1" />
                   {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
                 </button>
                 {hasAvatar && (
                   <button
                     type="button"
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-danger btn-sm transition-colors"
                     style={{ width: 'auto' }}
                     onClick={handleDeleteAvatar}
                     disabled={uploadingAvatar}
                   >
+                    <X size={14} className="mr-1" />
                     Delete Photo
                   </button>
                 )}
@@ -534,15 +547,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
             <div className="profile-tabs">
               <button className={`profile-tab ${profileTab === 'info' ? 'active' : ''}`} onClick={() => { setProfileTab('info'); setProfileMsg(null); }}>
+                <Settings size={14} className="mr-1 inline-block" />
                 Personal Info
               </button>
               <button className={`profile-tab ${profileTab === 'security' ? 'active' : ''}`} onClick={() => { setProfileTab('security'); setProfileMsg(null); }}>
+                <Shield size={14} className="mr-1 inline-block" />
                 Security
               </button>
             </div>
 
             {profileMsg && (
               <div className={`alert alert-${profileMsg.type === 'success' ? 'success' : 'error'}`}>
+                <AlertCircle size={14} className="mr-1" />
                 {profileMsg.text}
               </div>
             )}
@@ -552,11 +568,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                   <div className="form-group">
                     <label className="form-label">First Name</label>
-                    <input className="form-input" value={profileForm.firstName} onChange={e => setProfileForm({ ...profileForm, firstName: e.target.value })} required />
+                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={profileForm.firstName} onChange={e => setProfileForm({ ...profileForm, firstName: e.target.value })} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Last Name</label>
-                    <input className="form-input" value={profileForm.lastName} onChange={e => setProfileForm({ ...profileForm, lastName: e.target.value })} required />
+                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={profileForm.lastName} onChange={e => setProfileForm({ ...profileForm, lastName: e.target.value })} required />
                   </div>
                 </div>
                 <div className="form-group">
@@ -565,11 +581,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 </div>
                 <div className="form-group">
                   <label className="form-label">Department</label>
-                  <input className="form-input" value={profileForm.department} onChange={e => setProfileForm({ ...profileForm, department: e.target.value })} placeholder="e.g. Computer Science" />
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={profileForm.department} onChange={e => setProfileForm({ ...profileForm, department: e.target.value })} placeholder="e.g. Computer Science" />
                 </div>
                 <div className="modal-actions">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowProfile(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                  <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowProfile(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} disabled={saving}>
                     {saving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
@@ -580,22 +596,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
               <form onSubmit={handlePasswordChange}>
                 <div className="form-group">
                   <label className="form-label">Current Password</label>
-                  <input className="form-input" type="password" value={passwordForm.currentPassword}
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="password" value={passwordForm.currentPassword}
                     onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">New Password</label>
-                  <input className="form-input" type="password" value={passwordForm.newPassword}
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="password" value={passwordForm.newPassword}
                     onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Confirm New Password</label>
-                  <input className="form-input" type="password" value={passwordForm.confirmPassword}
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="password" value={passwordForm.confirmPassword}
                     onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required />
                 </div>
                 <div className="modal-actions">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowProfile(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                  <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowProfile(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} disabled={saving}>
                     {saving ? 'Changing...' : 'Change Password'}
                   </button>
                 </div>

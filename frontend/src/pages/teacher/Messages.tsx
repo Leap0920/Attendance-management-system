@@ -1,9 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  MessageSquare, 
+  X, 
+  Send, 
+  Users, 
+  MoreHorizontal, 
+  Plus, 
+  Search,
+  ArrowLeft,
+  ChevronRight,
+  Info,
+  Trash2,
+  Calendar,
+  Clock,
+  User
+} from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
 import { teacherApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
-import { showApiError } from '../../utils/feedback';
+import { showApiError, showAlert } from '../../utils/feedback';
 
 const POLL_INTERVAL = 4000;
 
@@ -35,19 +51,11 @@ const TeacherMessages: React.FC = () => {
     const raw = (role || '').toLowerCase();
     return raw.includes('teacher') || raw.includes('professor');
   };
+
   const isOwnMessage = (msg: any) => {
     const senderId = Number(msg?.sender?.id ?? msg?.senderId ?? 0);
     const currentId = Number(user?.id ?? 0);
     return currentId > 0 && senderId === currentId;
-  };
-
-  const dedupeById = (arr: any[]) => {
-    const seen = new Set<number>();
-    return arr.filter((m) => {
-      if (!m?.id || seen.has(m.id)) return false;
-      seen.add(m.id);
-      return true;
-    });
   };
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -71,7 +79,7 @@ const TeacherMessages: React.FC = () => {
         setSelectedCourse(courseList[0].id);
       }
     } catch {
-      // ignore here; page still renders fallback UI
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -83,7 +91,7 @@ const TeacherMessages: React.FC = () => {
 
   const loadGroupMessages = useCallback((courseId: number) => {
     teacherApi.getGroupMessages(courseId).then((res) => {
-      const newMsgs = dedupeById(Array.isArray(res.data?.data) ? res.data.data : []);
+      const newMsgs = Array.isArray(res.data?.data) ? res.data.data : [];
       setMessages((prev) => {
         if (prev.length !== newMsgs.length) setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 50);
         return newMsgs;
@@ -93,7 +101,7 @@ const TeacherMessages: React.FC = () => {
 
   const loadDmMessages = useCallback((userId: number) => {
     teacherApi.getDmMessages(userId).then((res) => {
-      const newMsgs = dedupeById(Array.isArray(res.data?.data) ? res.data.data : []);
+      const newMsgs = Array.isArray(res.data?.data) ? res.data.data : [];
       setMessages((prev) => {
         if (prev.length !== newMsgs.length) setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 50);
         return newMsgs;
@@ -136,10 +144,8 @@ const TeacherMessages: React.FC = () => {
     try {
       if (viewMode === 'group' && selectedCourse) {
         await teacherApi.sendGroupMessage({ courseId: selectedCourse, content });
-        loadGroupMessages(selectedCourse);
       } else if (viewMode === 'dm' && selectedUser) {
         await teacherApi.sendMessage({ receiverId: selectedUser, content });
-        loadDmMessages(selectedUser);
       }
       setNewMsg('');
       refreshConversations();
@@ -190,172 +196,175 @@ const TeacherMessages: React.FC = () => {
     teacherApi.markDmRead(userId).catch(() => {});
   };
 
+  const getAvatarUrl = (avatar?: unknown) => {
+    if (typeof avatar !== 'string') return undefined;
+    const value = avatar.trim();
+    if (!value) return undefined;
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
+  };
+
   return (
     <DashboardLayout role="teacher">
       <div className="page-header">
         <div>
           <h1 className="page-title">Messages</h1>
-          <p className="page-subtitle">Messenger-style chat for classes and direct messages</p>
+          <p className="page-subtitle">Collaborate with your classes and colleagues</p>
         </div>
-        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowNewDM(true)}>
-          New Message
+        <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} onClick={() => setShowNewDM(true)}>
+          <Plus size={18} className="mr-1" /> New Message
         </button>
       </div>
 
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
-        <div className="messages-layout" style={{ height: 'calc(100vh - 220px)', display: 'flex', flexDirection: 'column' }}>
-          {/* Sidebar - hidden on mobile when chat is selected */}
-          <div className="messages-sidebar" style={{ display: showChatList ? 'flex' : 'none', width: '100%' }}>
+        <div className="messages-container shadow-sm border border-gray-100" style={{ height: 'calc(100vh - 220px)' }}>
+          {/* Sidebar */}
+          <div className={`messages-sidebar ${!showChatList ? 'hidden-mobile' : ''}`}>
             <div className="messages-sidebar-header">
-              <h3>Chats</h3>
-              <input className="messages-search" placeholder="Search people or groups..." />
+              <h3 className="m-0">Chats</h3>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+                <input className="messages-search pl-10 focus:ring-2 focus:ring-blue-100 transition-all" placeholder="Search..." />
+              </div>
             </div>
 
-            <div className="messages-sidebar-section">
+            <div className="messages-list">
               <div className="messages-sidebar-label">Course Groups</div>
               {courses.map((c: any) => (
                 <div
                   key={c.id}
-                  className={`message-channel ${viewMode === 'group' && selectedCourse === c.id ? 'active' : ''}`}
+                  className={`message-item group ${viewMode === 'group' && selectedCourse === c.id ? 'active' : ''} hover:bg-gray-50 transition-colors cursor-pointer`}
                   onClick={() => selectCourse(c.id)}
                 >
-                  <div className="channel-avatar" style={{ background: c.coverColor || 'var(--accent-blue)', borderRadius: '12px' }}>{c.courseCode?.[0]}</div>
-                  <div className="channel-info">
-                    <div className="channel-name">{c.courseCode} {c.section ? `- ${c.section}` : ''}</div>
-                    <div className="channel-meta">{c.courseName}</div>
+                  <div className="message-item-icon" style={{ background: c.coverColor || 'var(--accent-blue)', color: '#fff' }}>
+                    <Users size={20} />
+                  </div>
+                  <div className="message-item-info">
+                    <div className="message-item-name">{c.courseCode} {c.section ? `- ${c.section}` : ''}</div>
+                    <div className="message-item-preview">{c.courseName}</div>
                   </div>
                 </div>
               ))}
-            </div>
 
-            <div className="messages-sidebar-section">
-              <div className="messages-sidebar-label">Direct Messages</div>
+              <div className="messages-sidebar-label mt-4">Direct Messages</div>
               {conversations.map((conv: any) => (
                 <div
                   key={conv.userId}
-                  className={`message-channel ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''}`}
+                  className={`message-item group ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''} hover:bg-gray-50 transition-colors cursor-pointer`}
                   onClick={() => selectDmUser(conv.userId, `${conv.firstName} ${conv.lastName}`)}
                 >
-                  <Avatar firstName={conv.firstName} lastName={conv.lastName} size={40} />
-                  <div className="channel-info">
-                    <div className="channel-name">{conv.firstName} {conv.lastName}</div>
-                    <div className="channel-meta">{isTeacherRole(conv.role) ? 'Teacher' : 'Student'}</div>
+                  <Avatar firstName={conv.firstName} lastName={conv.lastName} avatarUrl={getAvatarUrl(conv.avatar)} size={40} />
+                  <div className="message-item-info">
+                    <div className="message-item-top">
+                        <span className="message-item-name">{conv.firstName} {conv.lastName}</span>
+                        {conv.unreadCount > 0 && <span className="unread-dot pulse" />}
+                    </div>
+                    <div className="message-item-preview">{isTeacherRole(conv.role) ? 'Teacher' : 'Student'}</div>
                   </div>
-                  {conv.unreadCount > 0 && <span className="channel-badge">{conv.unreadCount}</span>}
                 </div>
               ))}
             </div>
           </div>
 
           {/* Chat Area */}
-          <div className="messages-main" style={{ display: !showChatList ? 'flex' : 'none', width: '100%', flexDirection: 'column' }}>
-            {/* Back button for mobile */}
-            <div style={{ display: showChatList ? 'none' : 'flex', padding: '8px 12px', borderBottom: '1px solid var(--border-glass)' }}>
-              <button onClick={() => setShowChatList(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', padding: '8px 0' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Back
-              </button>
-            </div>
-            
+          <div className={`messages-chat ${showChatList ? 'hidden-mobile' : ''}`}>
             {(selectedCourse || selectedUser) ? (
               <>
-                <div className="chat-header">
-                  <Avatar
-                    firstName={viewMode === 'group' ? courses.find(c => c.id === selectedCourse)?.courseCode : selectedUserName?.split(' ')[0]}
-                    lastName={viewMode === 'group' ? undefined : selectedUserName?.split(' ').slice(1).join(' ')}
-                    size={36}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: 0 }}>{viewMode === 'group' ? courses.find(c => c.id === selectedCourse)?.courseName : selectedUserName}</h3>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {viewMode === 'group' ? 'Course Community' : 'Direct Message'}
+                <div className="messages-chat-header shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <button className="mobile-only hover:bg-gray-100 p-1 rounded transition-colors" onClick={() => setShowChatList(true)}>
+                      <ArrowLeft size={18} />
+                    </button>
+                    {viewMode === 'group' ? (
+                      <div className="message-item-icon" style={{ background: courses.find(c => c.id === selectedCourse)?.coverColor || 'var(--accent-blue)', color: '#fff', width: 32, height: 32 }}>
+                        <Users size={18} />
+                      </div>
+                    ) : (
+                      <Avatar 
+                        firstName={selectedUserName?.split(' ')[0]} 
+                        lastName={selectedUserName?.split(' ').slice(1).join(' ')} 
+                        size={32} 
+                      />
+                    )}
+                    <div>
+                      <h4 className="m-0">{viewMode === 'group' ? courses.find(c => c.id === selectedCourse)?.courseName : selectedUserName}</h4>
+                      <span className="text-xs text-muted">{viewMode === 'group' ? 'Course Community' : 'Direct Message'}</span>
                     </div>
+                  </div>
+                  <div className="flex gap-2">
+                      <button className="icon-btn hover:bg-gray-100 transition-colors"><Info size={18} /></button>
+                      <button className="icon-btn hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
                   </div>
                 </div>
 
-                <div className="chat-messages" ref={chatRef}>
-                  {messages.map((m: any) => {
+                <div className="messages-view scroll-smooth" ref={chatRef}>
+                  {messages.map((m: any, i: number) => {
                     const isMine = isOwnMessage(m);
-                    const inGroup = viewMode === 'group';
-                    const senderName = isMine
-                      ? 'You'
-                      : `${m.sender?.firstName || m.firstName || ''} ${m.sender?.lastName || m.lastName || ''}`.trim() || `User ${m.sender?.id || m.senderId || ''}`.trim();
-                    const avatarUrl = typeof (m.sender?.avatarUrl || m.avatarUrl) === 'string' ? (m.sender?.avatarUrl || m.avatarUrl) : '';
-                    const roleLabel = isTeacherRole(m.sender?.role || m.role) ? 'Teacher' : 'Student';
-
+                    const showAvatar = !isMine && (i === 0 || messages[i-1].senderId !== m.senderId);
+                    
                     return (
-                      <div key={m.id} className={`chat-message-row ${isMine ? 'mine' : 'theirs'}`}>
+                      <div key={m.id} className={`message-row ${isMine ? 'me' : 'them'} animate-in fade-in slide-in-from-bottom-1 duration-300`}>
                         {!isMine && (
-                          <Avatar
-                            firstName={m.sender?.firstName || m.firstName}
-                            lastName={m.sender?.lastName || m.lastName}
-                            avatarUrl={avatarUrl || undefined}
-                            size={32}
-                            variant={isTeacherRole(m.sender?.role || m.role) ? 'blue' : 'green'}
-                            style={{ marginTop: inGroup ? '2px' : 0 }}
-                          />
+                          <div className="message-avatar-container" style={{ width: 32 }}>
+                            {showAvatar && <Avatar firstName={m.sender?.firstName || m.firstName} lastName={m.sender?.lastName || m.lastName} avatarUrl={getAvatarUrl(m.sender?.avatar || m.avatar)} size={28} />}
+                          </div>
                         )}
-                        <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`} style={{ borderBottomRightRadius: isMine ? '4px' : '18px', borderBottomLeftRadius: !isMine ? '4px' : '18px' }}>
-                          {inGroup && (
-                            <div style={{ fontWeight: 700, fontSize: '0.7rem', color: isMine ? 'rgba(255,255,255,0.92)' : (isTeacherRole(m.sender?.role) ? 'var(--accent-red)' : 'var(--accent-blue)'), marginBottom: '3px', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                              {senderName}
-                              {!isMine && <span style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: 999, background: '#e2e8f0', color: '#334155' }}>{roleLabel}</span>}
+                        <div className="message-bubble-group">
+                          {!isMine && viewMode === 'group' && showAvatar && (
+                            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-secondary)', marginLeft: '0.5rem', marginBottom: '0.2rem' }}>
+                                {m.sender?.firstName} {m.sender?.lastName}
                             </div>
                           )}
-                          <div className="bubble-content">{m.content}</div>
-                          <div style={{ fontSize: '0.62rem', opacity: 0.65, textAlign: 'right', marginTop: '4px' }}>
-                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <div className={`message-bubble shadow-sm ${isMine ? 'bg-blue-600 text-white' : 'bg-white border border-gray-100'}`}>
+                            {m.content}
                           </div>
+                          <span className="message-time">
+                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
-                        {isMine && inGroup && (
-                          <Avatar
-                            firstName={user?.firstName}
-                            lastName={user?.lastName}
-                            avatarUrl={avatarUrl || undefined}
-                            size={32}
-                            style={{ marginTop: '2px' }}
-                          />
-                        )}
                       </div>
                     );
                   })}
                 </div>
 
-                <form className="chat-input" onSubmit={sendMessage}>
-                  <input
-                    className="form-input"
-                    placeholder="Type a message..."
-                    value={newMsg}
-                    onChange={e => setNewMsg(e.target.value)}
+                <form className="messages-input-area border-t border-gray-100" onSubmit={sendMessage}>
+                  <input 
+                      className="message-input focus:ring-2 focus:ring-blue-100 transition-all" 
+                      placeholder="Type a message..." 
+                      value={newMsg} 
+                      onChange={e => setNewMsg(e.target.value)}
                   />
-                  <button className="btn btn-primary" type="submit" disabled={sending || !newMsg.trim()} style={{ width: 'auto' }}>
-                    {sending ? 'Sending...' : 'Send'}
+                  <button type="submit" className="message-send-btn shadow-sm hover:shadow-md transition-all active:scale-95" disabled={!newMsg.trim() || sending}>
+                    <Send size={18} className={sending ? 'animate-pulse' : ''} />
                   </button>
                 </form>
               </>
             ) : (
-              <div className="empty-state" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: '5rem', opacity: 0.8, marginBottom: '1.5rem' }}>💬</div>
-                <h3 style={{ fontWeight: 800, color: 'var(--text-primary)' }}>Select a chat</h3>
-                <p style={{ color: 'var(--text-secondary)', maxWidth: '280px', margin: '0 auto' }}>Choose a course group or a direct message to start chatting with others.</p>
+              <div className="messages-empty">
+                  <div className="mb-6 text-blue-100">
+                      <MessageSquare size={64} />
+                  </div>
+                  <h3>Select a conversation</h3>
+                  <p className="text-muted">Choose a course group or a direct message to start chatting</p>
               </div>
             )}
           </div>
         </div>
       )}
 
+      {/* New Message Modal */}
       {showNewDM && (
         <div className="modal-overlay" onClick={() => setShowNewDM(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className="modal-header">
               <h3 className="modal-title">New Message</h3>
-              <button className="modal-close" onClick={() => setShowNewDM(false)}>×</button>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowNewDM(false)}><X size={20} /></button>
             </div>
             <form onSubmit={sendNewDM}>
               <div className="form-group">
                 <label className="form-label">To</label>
                 <select
-                  className="form-input"
+                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all"
                   value={dmForm.receiverId}
                   onChange={e => setDmForm({ ...dmForm, receiverId: e.target.value })}
                   required
@@ -371,7 +380,7 @@ const TeacherMessages: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">Message</label>
                 <textarea
-                  className="form-input"
+                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all"
                   rows={4}
                   value={dmForm.content}
                   onChange={e => setDmForm({ ...dmForm, content: e.target.value })}
@@ -380,8 +389,10 @@ const TeacherMessages: React.FC = () => {
                 />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowNewDM(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Send</button>
+                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowNewDM(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>
+                  <Send size={16} className="mr-2" /> Send Message
+                </button>
               </div>
             </form>
           </div>

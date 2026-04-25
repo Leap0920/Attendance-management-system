@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
+import { Search, X, ChevronRight } from 'lucide-react';
 
 const AdminCourses: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
@@ -73,12 +74,12 @@ const AdminCourses: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="admin-search-box">
-          <span className="admin-search-icon">🔍</span>
+        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <span className="admin-search-icon"><Search size={18} /></span>
           <input type="text" placeholder="Search courses, codes, or teachers..."
             value={search} onChange={e => setSearch(e.target.value)}
             className="admin-search-input" />
-          {search && <button className="admin-search-clear" onClick={() => setSearch('')}>✕</button>}
+          {search && <button className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => setSearch('')}><X size={16} /></button>}
         </div>
       </div>
 
@@ -113,8 +114,11 @@ const AdminCourses: React.FC = () => {
                   <React.Fragment key={c.id}>
                     <tr className="clickable-row" onClick={() => setExpandedId(isExpanded ? null : c.id)}
                         style={{ cursor: 'pointer' }}>
-                      <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', textAlign: 'center' }}>
-                        ▶
+                      <td style={{ textAlign: 'center' }}>
+                        <ChevronRight 
+                          size={16} 
+                          className={`transition-transform duration-200 text-gray-400 ${isExpanded ? 'rotate-90' : ''}`} 
+                        />
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

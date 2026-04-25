@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BookOpen, Zap, BarChart3, X, Plus } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi } from '../../api';
 import { showAlert } from '../../utils/feedback';
@@ -70,8 +71,12 @@ const StudentDashboard: React.FC = () => {
           <h1 className="page-title">Student Dashboard</h1>
           <p className="page-subtitle">Your courses and attendance overview</p>
         </div>
-        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowJoin(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <button 
+          className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" 
+          style={{ width: 'auto' }} 
+          onClick={() => setShowJoin(true)}
+        >
+          <Plus size={18} strokeWidth={2.5} />
           Join Course
         </button>
       </div>
@@ -80,17 +85,23 @@ const StudentDashboard: React.FC = () => {
         <>
           <div className="stats-grid">
             <div className="stat-card blue">
-              <div className="stat-icon blue">📚</div>
+              <div className="stat-icon blue">
+                <BookOpen size={20} />
+              </div>
               <div className="stat-value">{data.totalCourses}</div>
               <div className="stat-label">Enrolled Courses</div>
             </div>
             <div className="stat-card green">
-              <div className="stat-icon green">⚡</div>
+              <div className="stat-icon green">
+                <Zap size={20} />
+              </div>
               <div className="stat-value">{data.activeSessions?.length || 0}</div>
               <div className="stat-label">Active Sessions</div>
             </div>
             <div className="stat-card purple">
-              <div className="stat-icon purple">📊</div>
+              <div className="stat-icon purple">
+                <BarChart3 size={20} />
+              </div>
               <div className="stat-value">
                 {data.courses?.length > 0 
                   ? Math.round(data.courses.reduce((acc: number, c: any) => acc + c.attendanceRate, 0) / data.courses.length) 
@@ -104,7 +115,7 @@ const StudentDashboard: React.FC = () => {
           {data.activeSessions?.filter((s: any) => !s.alreadySubmitted).length > 0 && (
             <>
               <div className="glass-card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--accent-blue)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem' }}>
                   <div className="live-dot" />
                   <h3 style={{ margin: 0 }}>Active Attendance Session</h3>
                 </div>
@@ -151,7 +162,8 @@ const StudentDashboard: React.FC = () => {
                     style={{ flex: 1, fontFamily: 'monospace', fontSize: '1.75rem', fontWeight: '800', letterSpacing: '0.5rem', textAlign: 'center', height: '60px', borderRadius: '12px' }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
                   />
-                  <button className="btn btn-primary" style={{ width: 'auto', paddingInline: '2.5rem', borderRadius: '12px', fontSize: '1rem' }} onClick={submitAttendance}
+                  <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" 
+                    style={{ width: 'auto', paddingInline: '2.5rem', borderRadius: '12px', fontSize: '1rem' }} onClick={submitAttendance}
                     disabled={!selectedSession || !attendCode || submitting}>{submitting ? 'Submitting…' : 'Submit Code'}</button>
                 </div>
               </div>
@@ -162,8 +174,8 @@ const StudentDashboard: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <h3 style={{ margin: 0 }}>My Courses</h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-sm btn-secondary" onClick={() => navigate('/student/courses')}>Open All</button>
-              <button className="btn btn-sm btn-secondary" onClick={() => load()}>Refresh</button>
+              <button className="btn btn-sm btn-secondary transition-all hover:bg-gray-200" onClick={() => navigate('/student/courses')}>Open All</button>
+              <button className="btn btn-sm btn-secondary transition-all hover:bg-gray-200" onClick={() => load()}>Refresh</button>
             </div>
           </div>
           
@@ -171,7 +183,7 @@ const StudentDashboard: React.FC = () => {
             {data.courses?.map((cd: any) => (
               <div
                 key={cd.course.id}
-                className="course-card"
+                className="course-card hover:translate-y-[-4px] transition-all duration-300"
                 style={{ cursor: 'pointer' }}
                 onClick={() => navigate(`/student/courses/${cd.course.id}`)}
               >
@@ -203,10 +215,12 @@ const StudentDashboard: React.FC = () => {
             ))}
             {data.courses?.length === 0 && (
                 <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '4rem 2rem', background: '#fff', borderRadius: '16px', border: '1px dashed var(--border-glass)' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+                    <div style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+                      <BookOpen size={48} />
+                    </div>
                     <h3>No courses enrolled</h3>
                     <p>Enter a join code from your teacher to get started.</p>
-                    <button className="btn btn-primary" style={{ width: 'auto', marginTop: '1rem' }} onClick={() => setShowJoin(true)}>Join Course</button>
+                    <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto', marginTop: '1.25rem' }} onClick={() => setShowJoin(true)}>Join Course</button>
                 </div>
             )}
           </div>
@@ -216,10 +230,12 @@ const StudentDashboard: React.FC = () => {
       {/* Join Course Modal */}
       {showJoin && (
         <div className="modal-overlay" onClick={() => setShowJoin(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className="modal-header">
               <h3 className="modal-title">Join New Course</h3>
-              <button className="modal-close" onClick={() => setShowJoin(false)}>&times;</button>
+              <button className="modal-close hover:rotate-90 transition-transform duration-200" onClick={() => setShowJoin(false)}>
+                <X size={20} />
+              </button>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
               Enter the 6-digit course code provided by your teacher to enroll in their class.
@@ -228,7 +244,7 @@ const StudentDashboard: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">Course Code</label>
                 <input 
-                  className="form-input" 
+                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all" 
                   autoFocus 
                   placeholder="EX: ABC123"
                   value={joinCode} 
@@ -239,8 +255,8 @@ const StudentDashboard: React.FC = () => {
                 />
               </div>
               <div className="modal-actions" style={{ marginTop: '2rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowJoin(false)} style={{ flex: 1 }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={joining || joinCode.length < 5}>
+                <button type="button" className="btn btn-secondary transition-all" onClick={() => setShowJoin(false)} style={{ flex: 1 }}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ flex: 1 }} disabled={joining || joinCode.length < 5}>
                   {joining ? 'Joining...' : 'Enroll Now'}
                 </button>
               </div>

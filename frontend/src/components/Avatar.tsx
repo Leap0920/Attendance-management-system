@@ -10,6 +10,7 @@ interface AvatarProps {
   /** 'blue' = gradient blue/indigo (default), 'green' = solid green */
   variant?: 'blue' | 'green';
   style?: React.CSSProperties;
+  className?: string;
 }
 
 /**
@@ -25,6 +26,7 @@ const Avatar: React.FC<AvatarProps> = ({
   size = 32,
   variant = 'blue',
   style,
+  className = '',
 }) => {
   const [imageFailed, setImageFailed] = React.useState(false);
   const resolvedAvatarUrl =
@@ -58,7 +60,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
   if (resolvedAvatarUrl && !imageFailed) {
     return (
-      <div style={baseStyle}>
+      <div style={baseStyle} className={className}>
         <img
           src={resolvedAvatarUrl}
           alt="avatar"
@@ -69,7 +71,7 @@ const Avatar: React.FC<AvatarProps> = ({
     );
   }
 
-  return <div style={baseStyle}>{getInitials(firstName, lastName)}</div>;
+  return <div style={baseStyle} className={className}>{getInitials(firstName, lastName)}</div>;
 };
 
 export default Avatar;
