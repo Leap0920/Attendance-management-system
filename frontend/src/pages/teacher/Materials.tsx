@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, MessageSquare, ChevronRight, Edit2 } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, Edit2 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -92,6 +92,7 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
 const TeacherMaterials: React.FC = () => {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [courses, setCourses] = useState<any[]>([]);
     const [materials, setMaterials] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -102,6 +103,19 @@ const TeacherMaterials: React.FC = () => {
     const [form, setForm] = useState({ type: 'file', content: '', externalLink: '', dueDate: '' });
     const [file, setFile] = useState<File | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Detail
     const [detail, setDetail] = useState<any | null>(null);
@@ -481,19 +495,69 @@ const TeacherMaterials: React.FC = () => {
             {/* ── Top Navigation Bar ── */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1rem 0.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2rem',
-                position: 'sticky', top: 0, zIndex: 10, background: '#fff'
+                padding: '1.25rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
+                position: 'sticky', top: 0, zIndex: 10, background: '#fff',
+                borderRadius: '20px', marginTop: '1rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                    <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.02em' }}>Materials Library</h1>
-                    <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.88rem', fontWeight: 600 }}>
-                        <span style={{ color: '#3b82f6', borderBottom: '2px solid #3b82f6', paddingBottom: 4, cursor: 'pointer' }}>Browse</span>
-                        <span style={{ color: '#94a3b8', cursor: 'pointer' }} onClick={() => {
-                            if (courses.length > 1) {
-                                const idx = courses.findIndex(c => c.id === selectedCourse);
-                                setSelectedCourse(courses[(idx + 1) % courses.length].id);
-                            }
-                        }}>Switch Course</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>
+                    <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/teacher/dashboard')}>Materials Library</h1>
+                    <nav style={{ display: 'flex', gap: '3rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center' }}>
+                        <span style={{ color: '#3b82f6', borderBottom: '3px solid #3b82f6', paddingBottom: 6, cursor: 'pointer' }}>Browse</span>
+                        
+                        {/* Course Switcher Dropdown */}
+                        <div style={{ position: 'relative' }} ref={menuRef}>
+                            <div 
+                                style={{ 
+                                    color: isMenuOpen ? '#3b82f6' : '#94a3b8', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '6px',
+                                    background: isMenuOpen ? '#eff6ff' : 'transparent',
+                                    padding: '4px 8px',
+                                    borderRadius: '8px',
+                                    transition: 'all 0.2s'
+                                }} 
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                onMouseEnter={e => { if(!isMenuOpen) e.currentTarget.style.color = '#3b82f6'; }}
+                                onMouseLeave={e => { if(!isMenuOpen) e.currentTarget.style.color = '#94a3b8'; }}
+                            >
+                                <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {activeCourseData?.courseCode || 'Switch Classroom'}
+                                </span>
+                                <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                            </div>
+                            
+                            {isMenuOpen && (
+                                <div style={{
+                                    position: 'absolute', top: '100%', left: 0, marginTop: '10px',
+                                    background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16,
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px',
+                                    zIndex: 100
+                                }}>
+                                    <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        {courses.map(c => (
+                                            <div 
+                                                key={c.id} 
+                                                onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }}
+                                                style={{
+                                                    padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
+                                                    background: selectedCourse === c.id ? '#eff6ff' : 'transparent',
+                                                    color: selectedCourse === c.id ? '#3b82f6' : '#334155',
+                                                    display: 'flex', flexDirection: 'column', gap: '2px'
+                                                }}
+                                                onMouseEnter={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = '#f8fafc'; }}
+                                                onMouseLeave={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                                            >
+                                                <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
+                                                <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </nav>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -520,8 +584,8 @@ const TeacherMaterials: React.FC = () => {
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem' }}>Academic Repository</h2>
-                                <p style={{ fontSize: '1.05rem', color: '#64748b' }}>Curated materials for <strong style={{ color: '#334155' }}>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
+                                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem', letterSpacing: '-0.03em' }}>Academic Repository</h2>
+                                <p style={{ fontSize: '1.05rem', color: '#64748b' }}>Curated materials for <strong style={{ color: '#3b82f6', fontWeight: 800 }}>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
                             </div>
                             <button onClick={() => setShowModal(true)} style={{
                                 display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.5rem',

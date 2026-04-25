@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Users, MessageSquare, X, Upload, ChevronRight, BookOpen, Clock, ArrowUpRight } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, MessageSquare, X, Upload, ChevronRight, BookOpen, ArrowUpRight } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -94,7 +94,20 @@ const StudentMaterials: React.FC = () => {
     const [selectedCourse, setSelectedCourse] = useState<number | null>(Number(searchParams.get('courseId')) || null);
     const [typeFilter, setTypeFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const commentInputRef = useRef<HTMLInputElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     /* detail state */
     const [detail, setDetail] = useState<any | null>(null);
@@ -463,35 +476,87 @@ const StudentMaterials: React.FC = () => {
             {/* ── Top Navigation Bar ── */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1rem 0.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2rem',
-                position: 'sticky', top: 0, zIndex: 10, background: '#fff'
+                padding: '1.25rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
+                position: 'sticky', top: 0, zIndex: 10, background: '#fff',
+                borderRadius: '20px', marginTop: '1rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                    <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.02em' }}>Materials Library</h1>
-                    <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.88rem', fontWeight: 600 }}>
-                        <span style={{ color: '#3b82f6', borderBottom: '2px solid #3b82f6', paddingBottom: 4, cursor: 'pointer' }}>Browse</span>
-                        <span style={{ color: '#94a3b8', cursor: 'pointer' }} onClick={() => {
-                            if (courses.length > 1) {
-                                const idx = courses.findIndex(c => c.id === selectedCourse);
-                                setSelectedCourse(courses[(idx + 1) % courses.length].id);
-                            }
-                        }}>Switch Course</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>
+                    <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/student/dashboard')}>Materials Library</h1>
+                    <nav style={{ display: 'flex', gap: '3rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center' }}>
+                        <span style={{ color: '#3b82f6', borderBottom: '3px solid #3b82f6', paddingBottom: 6, cursor: 'pointer' }}>Browse</span>
+                        
+                        {/* Course Switcher Dropdown */}
+                        <div style={{ position: 'relative' }} ref={menuRef}>
+                            <div 
+                                style={{ 
+                                    color: isMenuOpen ? '#3b82f6' : '#94a3b8', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '6px',
+                                    background: isMenuOpen ? '#eff6ff' : 'transparent',
+                                    padding: '4px 8px',
+                                    borderRadius: '8px',
+                                    transition: 'all 0.2s'
+                                }} 
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                onMouseEnter={e => { if(!isMenuOpen) e.currentTarget.style.color = '#3b82f6'; }}
+                                onMouseLeave={e => { if(!isMenuOpen) e.currentTarget.style.color = '#94a3b8'; }}
+                            >
+                                <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {activeCourseData?.courseCode || 'Switch Classroom'}
+                                </span>
+                                <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                            </div>
+                            
+                            {isMenuOpen && (
+                                <div style={{
+                                    position: 'absolute', top: '100%', left: 0, marginTop: '10px',
+                                    background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16,
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px',
+                                    zIndex: 100
+                                }}>
+                                    <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
+                                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        {courses.map(c => (
+                                            <div 
+                                                key={c.id} 
+                                                onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }}
+                                                style={{
+                                                    padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
+                                                    background: selectedCourse === c.id ? '#eff6ff' : 'transparent',
+                                                    color: selectedCourse === c.id ? '#3b82f6' : '#334155',
+                                                    display: 'flex', flexDirection: 'column', gap: '2px'
+                                                }}
+                                                onMouseEnter={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = '#f8fafc'; }}
+                                                onMouseLeave={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                                            >
+                                                <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
+                                                <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </nav>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                     <div style={{ position: 'relative' }}>
-                        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                         <input
-                            style={{ background: '#f1f5f9', border: 'none', borderRadius: 999, padding: '0.5rem 1rem 0.5rem 2.2rem', fontSize: '0.85rem', width: 240, outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                            style={{ background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 999, padding: '0.65rem 1.25rem 0.65rem 2.8rem', fontSize: '0.9rem', width: 300, outline: 'none', fontFamily: 'inherit', fontWeight: 500, transition: 'all 0.2s' }}
                             placeholder="Search resources..."
                             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                            onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; e.currentTarget.style.boxShadow = '0 0 0 4px rgba(59,130,246,0.06)'; }}
+                            onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.boxShadow = 'none'; }}
                         />
                     </div>
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', position: 'relative' }}>
-                        <Bell size={20} />
-                        <span style={{ position: 'absolute', top: 0, right: 0, width: 7, height: 7, background: '#ef4444', borderRadius: '50%' }} />
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Bell size={22} />
+                        <span style={{ position: 'absolute', top: 2, right: 2, width: 8, height: 8, background: '#ef4444', borderRadius: '50%', border: '2px solid #fff' }} />
                     </button>
-                    <Avatar avatarUrl={user?.avatar} firstName={user?.firstName} lastName={user?.lastName} size={36} />
+                    <Avatar avatarUrl={user?.avatar} firstName={user?.firstName} lastName={user?.lastName} size={42} />
                 </div>
             </div>
 
@@ -502,8 +567,8 @@ const StudentMaterials: React.FC = () => {
                     {/* ── LEFT COLUMN ── */}
                     <div>
                         <div style={{ marginBottom: '2rem' }}>
-                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem' }}>Academic Repository</h2>
-                            <p style={{ fontSize: '1.05rem', color: '#64748b' }}>Curated materials for <strong style={{ color: '#334155' }}>{activeCourseData?.courseName || 'this course'}</strong>.</p>
+                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem', letterSpacing: '-0.03em' }}>Academic Repository</h2>
+                            <p style={{ fontSize: '1.05rem', color: '#64748b' }}>Curated materials for <strong style={{ color: '#3b82f6', fontWeight: 800 }}>{activeCourseData?.courseName || 'this course'}</strong>.</p>
                         </div>
 
                         {/* Filter pills */}
