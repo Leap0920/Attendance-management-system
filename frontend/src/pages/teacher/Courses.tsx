@@ -183,7 +183,7 @@ const TeacherCourses: React.FC = () => {
           {/* ── Course Grid / List ────────────────────────── */}
           <div className={viewMode === 'grid' ? 'tc-course-grid' : 'tc-course-list'}>
             {filtered.map((c, idx) => (
-              <div key={c.id} className={`${viewMode === 'grid' ? 'tc-card' : 'tc-list-item'} group hover:shadow-lg transition-all cursor-pointer`} onClick={() => navigate(`/teacher/courses/${c.id}`)}>
+              <div key={c.id} className={`${viewMode === 'grid' ? 'tc-card' : 'tc-list-item'} group hover:shadow-lg transition-all cursor-pointer`} onClick={() => navigate(`/teacher/materials?courseId=${c.id}`)}>
                 {viewMode === 'grid' ? (
                   <>
                     <div className="tc-card-cover overflow-hidden" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}bb)` : getGradient(idx) }}>
@@ -191,7 +191,7 @@ const TeacherCourses: React.FC = () => {
                         {getCategory(idx)}
                       </span>
                       <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/courses/${c.id}`); }}>
+                        <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/materials?courseId=${c.id}`); }}>
                           <Edit2 size={14} color="white" />
                         </button>
                         <button className="tc-action-icon hover:scale-110 transition-transform hover:bg-red-500" title="Delete/Archive" onClick={(e) => activeTab === 'active' ? handleArchive(e, c.id) : handleDelete(e, c.id)}>
@@ -247,7 +247,7 @@ const TeacherCourses: React.FC = () => {
                       <button className="btn btn-danger btn-sm transition-all shadow-sm" onClick={(e) => handleDelete(e, c.id)} style={{ width: 'auto' }}>
                         <Trash2 size={14} className="mr-1" /> Delete
                       </button>
-                      <button className="btn btn-primary btn-sm rounded-full p-2" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/courses/${c.id}`); }}>
+                      <button className="btn btn-primary btn-sm rounded-full p-2" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/materials?courseId=${c.id}`); }}>
                         <ArrowRight size={16} />
                       </button>
                     </div>

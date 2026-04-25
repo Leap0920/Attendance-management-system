@@ -159,7 +159,7 @@ const StudentCourses: React.FC = () => {
             {filtered.map((item, idx) => {
               const c = item.course;
               return (
-                <div key={c.id} className={`${viewMode === 'grid' ? 'tc-card' : 'tc-list-item'} group hover:shadow-lg transition-all cursor-pointer`} onClick={() => navigate(`/student/courses/${c.id}`)}>
+                <div key={c.id} className={`${viewMode === 'grid' ? 'tc-card' : 'tc-list-item'} group hover:shadow-lg transition-all cursor-pointer`} onClick={() => navigate(`/student/materials?courseId=${c.id}`)}>
                   {viewMode === 'grid' ? (
                     <>
                       <div className="tc-card-cover overflow-hidden" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}bb)` : getGradient(idx) }}>
@@ -216,7 +216,7 @@ const StudentCourses: React.FC = () => {
                             <LogOut size={14} className="mr-1" /> Drop
                           </button>
                         )}
-                        <button className="btn btn-primary btn-sm rounded-full p-2" onClick={(e) => { e.stopPropagation(); navigate(`/student/courses/${c.id}`); }}>
+                        <button className="btn btn-primary btn-sm rounded-full p-2" onClick={(e) => { e.stopPropagation(); navigate(`/student/materials?courseId=${c.id}`); }}>
                           <ArrowRight size={16} />
                         </button>
                       </div>

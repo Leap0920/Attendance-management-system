@@ -246,7 +246,7 @@ const StudentDashboard: React.FC = () => {
                   <div
                     key={cd.course.id}
                     className="sd-course-card"
-                    onClick={() => navigate(`/student/courses/${cd.course.id}`)}
+                    onClick={() => navigate(`/student/materials?courseId=${cd.course.id}`)}
                   >
                     <div
                       className="sd-course-card-top"

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Users, MessageSquare, X, Upload, ChevronRight, BookOpen, Clock, ArrowUpRight } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -27,29 +29,25 @@ const downloadFile = async (type: 'material' | 'submission', id: number, fileNam
     } catch { showAlert('Error', 'Could not download file', 'error'); }
 };
 
-const typeConfig: Record<string, { color: string; bg: string; label: string }> = {
-    file:         { color: 'var(--accent-blue)', bg: '#eff6ff', label: 'Material' },
-    link:         { color: 'var(--accent-purple)', bg: '#f5f3ff', label: 'Link' },
-    announcement: { color: 'var(--accent-yellow)', bg: '#fffbeb', label: 'Announcement' },
-    assignment:   { color: 'var(--accent-red)', bg: '#fef2f2', label: 'Assignment' },
+const typeConfig: Record<string, { color: string; bg: string; label: string; icon: React.ReactNode }> = {
+    file:         { color: '#ef4444', bg: '#fef2f2', label: 'PDF Document',   icon: <FileText size={20} color="#ef4444" /> },
+    link:         { color: '#10b981', bg: '#ecfdf5', label: 'External Link',  icon: <LinkIcon size={20} color="#10b981" /> },
+    announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement',   icon: <Bell size={20} color="#f59e0b" /> },
+    assignment:   { color: '#3b82f6', bg: '#eff6ff', label: 'Assignment',     icon: <FileText size={20} color="#3b82f6" /> },
+    video:        { color: '#3b82f6', bg: '#eff6ff', label: 'Video Lecture',  icon: <Play size={20} color="#3b82f6" /> },
 };
 
-const TypeIcon = ({ type, size = 20 }: { type: string; size?: number }) => {
-    const s = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-    if (type === 'file') return <svg {...s}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
-    if (type === 'link') return <svg {...s}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
-    if (type === 'assignment') return <svg {...s}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>;
-    return <svg {...s}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+const figureOutType = (m: any) => {
+    if (m.type === 'link' && m.externalLink && (m.externalLink.includes('youtube') || m.externalLink.includes('youtu.be'))) return 'video';
+    return m.type;
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   Components
-   ═══════════════════════════════════════════════════════════════ */
+/* ── Sub-components ──────────────────────────────────────── */
 const VideoPreview = ({ url }: { url: string }) => {
     const ytId = getYouTubeId(url);
     if (!ytId) return null;
     return (
-        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 12, overflow: 'hidden', marginBottom: '1rem', background: '#000', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 16, overflow: 'hidden', marginBottom: '1.25rem', background: '#000', boxShadow: '0 8px 32px rgba(0,0,0,.12)' }}>
             <iframe
                 src={`https://www.youtube.com/embed/${ytId}`}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
@@ -61,23 +59,25 @@ const VideoPreview = ({ url }: { url: string }) => {
 };
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
-    <div onClick={e => { e.stopPropagation(); onDownload(); }} style={{
-        display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
-        background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--sidebar-border)', cursor: 'pointer',
-        transition: 'var(--transition)', marginBottom: '0.5rem'
-    }} onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = 'var(--accent-blue)'; }} onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'var(--sidebar-border)'; }}>
+    <div onClick={e => { e.stopPropagation(); onDownload(); }}
+        style={{
+            display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
+            background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', cursor: 'pointer',
+            transition: 'all .15s', marginBottom: '0.5rem'
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+    >
         <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <FileText size={18} color="#3b82f6" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'} • Click to download
+            <div style={{ fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+                {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'} · Click to download
             </div>
         </div>
-        <div className="btn-icon" style={{ borderRadius: '50%', background: 'white' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </div>
+        <Download size={18} color="#94a3b8" />
     </div>
 );
 
@@ -86,25 +86,26 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
    ═══════════════════════════════════════════════════════════════ */
 const StudentMaterials: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [courses, setCourses] = useState<any[]>([]);
     const [materials, setMaterials] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
+    const [selectedCourse, setSelectedCourse] = useState<number | null>(Number(searchParams.get('courseId')) || null);
     const [typeFilter, setTypeFilter] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
     const commentInputRef = useRef<HTMLInputElement>(null);
 
-    // Detail
+    /* detail state */
     const [detail, setDetail] = useState<any | null>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
 
-    // Assignment submission
+    /* assignment submission state */
     const [mySubmission, setMySubmission] = useState<any | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitFile, setSubmitFile] = useState<File | null>(null);
     const [submitContent, setSubmitContent] = useState('');
-
-    // Private comment (only in assignment detail)
     const [privateComment, setPrivateComment] = useState('');
 
     /* ── Data ──────────────────────────────────────────────── */
@@ -113,45 +114,58 @@ const StudentMaterials: React.FC = () => {
             const data = Array.isArray(r.data?.data) ? r.data.data : [];
             const courseList = data.map((d: any) => d?.course).filter(Boolean);
             setCourses(courseList);
-            if (courseList.length > 0) setSelectedCourse(courseList[0].id);
+            const initialCourseId = Number(searchParams.get('courseId'));
+            if (initialCourseId && courseList.some((c: any) => c.id === initialCourseId)) {
+                setSelectedCourse(initialCourseId);
+            } else if (courseList.length > 0) {
+                setSelectedCourse(courseList[0].id);
+                setSearchParams({ courseId: courseList[0].id.toString() }, { replace: true });
+            }
             setLoading(false);
         }).catch(() => setLoading(false));
     }, []);
 
     useEffect(() => {
         if (selectedCourse) {
+            setSearchParams({ courseId: selectedCourse.toString() }, { replace: true });
             studentApi.getMaterials(selectedCourse)
                 .then(r => setMaterials(Array.isArray(r.data?.data) ? r.data.data : []))
                 .catch(() => setMaterials([]));
         }
     }, [selectedCourse]);
 
-    const filtered = typeFilter ? materials.filter(m => m.type === typeFilter) : materials;
+    const filtered = materials.filter(m => {
+        if (typeFilter) {
+            if (typeFilter === 'video' && figureOutType(m) !== 'video') return false;
+            if (typeFilter === 'file' && figureOutType(m) !== 'file') return false;
+            if (typeFilter === 'link' && m.type !== 'link') return false;
+            if (typeFilter === 'assignment' && m.type !== 'assignment') return false;
+        }
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            return m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q);
+        }
+        return true;
+    });
 
+    const activeCourseData = courses.find(c => c.id === selectedCourse);
+
+    /* ── Open / close detail ──────────────────────────────── */
     const openDetail = async (m: any, focusComment = false) => {
-        // Reset state immediately to prevent stale data from previous modal
         setDetail(m);
         setMySubmission(null);
         setSubmitFile(null);
         setSubmitContent('');
         setNewComment('');
         setPrivateComment('');
-        
-        try { 
-            const r = await studentApi.getComments(m.id); 
-            setComments(Array.isArray(r.data?.data) ? r.data.data : []); 
-            if (focusComment) {
-                setTimeout(() => commentInputRef.current?.focus(), 300);
-            }
+        try {
+            const r = await studentApi.getComments(m.id);
+            setComments(Array.isArray(r.data?.data) ? r.data.data : []);
+            if (focusComment) setTimeout(() => commentInputRef.current?.focus(), 300);
         } catch {}
-
         if (m.type === 'assignment') {
-            try { 
-                const r = await studentApi.getSubmission(m.id); 
-                setMySubmission(r.data.data || null); 
-            } catch { 
-                setMySubmission(null); 
-            }
+            try { const r = await studentApi.getSubmission(m.id); setMySubmission(r.data.data || null); }
+            catch { setMySubmission(null); }
         }
     };
 
@@ -201,89 +215,90 @@ const StudentMaterials: React.FC = () => {
     const renderDetail = () => {
         if (!detail) return null;
         const m = detail;
-        const tc = typeConfig[m.type] || typeConfig.file;
+        const tc = typeConfig[figureOutType(m)] || typeConfig.file;
         const isAssignment = m.type === 'assignment';
 
         return (
-            <div className="modal-overlay" style={{ padding: 0 }}>
-                <div style={{ position: 'absolute', inset: 0 }} onClick={() => setDetail(null)} />
-                <div className="modal" style={{ 
-                    width: '100%', maxWidth: isAssignment ? 1100 : 840, height: '90vh',
-                    margin: 'auto', padding: 0, display: 'flex', flexDirection: 'column'
+            <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,.4)', backdropFilter: 'blur(6px)' }} onClick={() => setDetail(null)} />
+                <div style={{
+                    position: 'relative', zIndex: 1, background: '#fff', width: '100%', maxWidth: isAssignment ? 1100 : 780,
+                    borderRadius: 24, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                    boxShadow: '0 25px 60px rgba(0,0,0,.18)'
                 }}>
                     {/* Header */}
-                    <div className="modal-header" style={{ padding: '1.25rem 2rem', borderBottom: '1px solid var(--sidebar-border)', marginBottom: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: 42, height: 42, borderRadius: '50%', background: tc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                                <TypeIcon type={m.type} />
-                            </div>
-                            <div>
-                                <h2 className="modal-title" style={{ fontSize: '1.25rem' }}>{m.title}</h2>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                                    {m.teacher?.firstName} {m.teacher?.lastName} • {new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </p>
+                    <div style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', background: tc.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                            {tc.icon}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, lineHeight: 1.3 }}>{m.title}</h2>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <span>{m.teacher?.firstName} {m.teacher?.lastName}</span>
+                                <span>·</span>
+                                <span>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                {isAssignment && m.dueDate && <>
+                                    <span>·</span>
+                                    <span style={{
+                                        padding: '2px 8px', borderRadius: 6, fontSize: '0.72rem', fontWeight: 700,
+                                        background: new Date(m.dueDate) < new Date() ? '#fef2f2' : '#f0fdf4',
+                                        color: new Date(m.dueDate) < new Date() ? '#dc2626' : '#16a34a'
+                                    }}>
+                                        Due {new Date(m.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                    </span>
+                                </>}
                             </div>
                         </div>
-                        <button className="modal-close" onClick={() => setDetail(null)}>&times;</button>
+                        <button onClick={() => setDetail(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', lineHeight: 1 }}>
+                            <X size={22} />
+                        </button>
                     </div>
 
-                    <div className={`detail-layout ${isAssignment ? 'assignment-layout' : 'material-layout'}`}>
-                        {/* Main Body */}
-                        <div className="detail-main" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#fff' }}>
-                            <div style={{ padding: '2rem', flex: 1 }}>
-                                {isAssignment && m.dueDate && (
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                                        <span className={`badge ${new Date(m.dueDate) < new Date() ? 'badge-absent' : 'badge-pending'}`} style={{ fontSize: '0.8rem', padding: '0.35rem 0.85rem' }}>
-                                            Due {new Date(m.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                )}
-                                
-                                {m.description && <div style={{ fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '2rem' }}>{m.description}</div>}
-
+                    {/* Body */}
+                    <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                        {/* Main content area */}
+                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ padding: '1.75rem', flex: 1 }}>
+                                {m.description && <div style={{ fontSize: '0.95rem', color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap', marginBottom: '1.5rem' }}>{m.description}</div>}
+                                {m.type === 'link' && m.externalLink && <VideoPreview url={m.externalLink} />}
                                 {m.type === 'link' && m.externalLink && (
-                                    <div style={{ marginBottom: '2rem' }}>
-                                        <VideoPreview url={m.externalLink} />
-                                        <a href={m.externalLink} target="_blank" rel="noopener noreferrer" className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', textDecoration: 'none' }}>
-                                            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                                            </div>
-                                            <div style={{ flex: 1, overflow: 'hidden' }}>
-                                                <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Open Link</div>
-                                                <div style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{m.externalLink}</div>
-                                            </div>
-                                        </a>
-                                    </div>
+                                    <a href={m.externalLink} target="_blank" rel="noopener noreferrer" style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
+                                        background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0',
+                                        textDecoration: 'none', color: 'inherit', marginBottom: '1.25rem', transition: 'all .15s'
+                                    }}>
+                                        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            <ArrowUpRight size={18} color="#3b82f6" />
+                                        </div>
+                                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                                            <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Open Link</div>
+                                            <div style={{ fontSize: '0.78rem', color: '#3b82f6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.externalLink}</div>
+                                        </div>
+                                    </a>
                                 )}
-
                                 {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
 
-                                {/* Comments Section */}
-                                <div style={{ borderTop: '1px solid var(--sidebar-border)', marginTop: '3rem', paddingTop: '2rem' }}>
-                                    <h4 className="section-title">Class Comments ({comments.filter(c => !c.isPrivate).length})</h4>
+                                {/* Class Comments */}
+                                <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '2.5rem', paddingTop: '1.5rem' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', marginBottom: '1rem' }}>
+                                        Class Comments ({comments.filter(c => !c.isPrivate).length})
+                                    </h4>
                                     {comments.filter(c => !c.isPrivate).length === 0 && (
-                                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No comments yet. Start the conversation!</div>
+                                        <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginBottom: '1rem' }}>No comments yet. Start the conversation!</p>
                                     )}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                                         {comments.filter(c => !c.isPrivate).map((c: any) => {
-                                            const role = (c.user?.role || '').toLowerCase();
-                                            const isTeacher = role.includes('teacher');
+                                            const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                             return (
-                                                <div key={c.id} style={{ display: 'flex', gap: '0.85rem', padding: '0.75rem', borderRadius: 12, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                                    <Avatar
-                                                        firstName={c.user?.firstName}
-                                                        lastName={c.user?.lastName}
-                                                        avatarUrl={c.user?.avatarUrl || c.user?.avatar}
-                                                        size={34}
-                                                        variant={isTeacher ? 'blue' : 'green'}
-                                                    />
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '4px', flexWrap: 'wrap' }}>
-                                                            <span style={{ fontWeight: 700, fontSize: '0.86rem' }}>{c.user?.firstName} {c.user?.lastName}</span>
-                                                            {isTeacher && <span style={{ fontSize: '0.64rem', fontWeight: 700, color: '#1d4ed8', background: '#dbeafe', borderRadius: 999, padding: '2px 8px' }}>Professor</span>}
-                                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                <div key={c.id} style={{ display: 'flex', gap: '0.7rem', padding: '0.7rem 0.85rem', borderRadius: 12, background: isTeacher ? '#eff6ff' : '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                                    <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={30} variant={isTeacher ? 'blue' : 'green'} />
+                                                    <div>
+                                                        <div style={{ fontSize: '0.78rem', display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                            <strong>{c.user?.firstName} {c.user?.lastName}</strong>
+                                                            {isTeacher && <span style={{ fontSize: '0.62rem', background: '#dbeafe', color: '#1d4ed8', borderRadius: 999, padding: '1px 6px', fontWeight: 700 }}>Professor</span>}
+                                                            <span style={{ color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                                         </div>
-                                                        <div style={{ fontSize: '0.86rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>{c.content}</div>
+                                                        <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
                                                     </div>
                                                 </div>
                                             );
@@ -293,108 +308,102 @@ const StudentMaterials: React.FC = () => {
                             </div>
 
                             {/* Comment Input */}
-                            <div style={{ padding: '1rem 2rem', borderTop: '1px solid var(--sidebar-border)', background: '#f8fafc', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <Avatar
-                                    firstName={user?.firstName}
-                                    lastName={user?.lastName}
-                                    avatarUrl={user?.avatar}
-                                    size={32}
-                                    variant="green"
-                                />
-                                <input 
+                            <div style={{ padding: '0.85rem 1.75rem', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '0.6rem', alignItems: 'center', flexShrink: 0, background: '#fafbfc' }}>
+                                <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={30} variant="green" />
+                                <input
                                     ref={commentInputRef}
-                                    className="form-input" 
-                                    style={{ borderRadius: '24px', background: '#fff' }} 
-                                    placeholder="Add a class comment..." 
-                                    value={newComment} 
+                                    style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.5rem 1rem', fontSize: '0.82rem', outline: 'none', fontFamily: 'inherit' }}
+                                    placeholder="Add a class comment…"
+                                    value={newComment}
                                     onChange={e => setNewComment(e.target.value)}
-                                    onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }}
+                                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddComment(); } }}
                                 />
-                                <button className="btn btn-primary" style={{ width: 'auto', borderRadius: '24px' }} disabled={!newComment.trim()} onClick={handleAddComment}>Post</button>
+                                <button
+                                    style={{ padding: '0.42rem 1rem', borderRadius: 20, background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: newComment.trim() ? 1 : 0.5 }}
+                                    disabled={!newComment.trim()} onClick={handleAddComment}
+                                >Post</button>
                             </div>
                         </div>
 
-                        {/* Sidebar (Assignments Only) */}
+                        {/* Assignment Sidebar */}
                         {isAssignment && (
-                            <div className="assignment-sidebar" style={{ borderLeft: '1px solid var(--sidebar-border)', background: '#f8fafc', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ padding: '2rem' }}>
-                                    <h4 className="section-title" style={{ marginBottom: '1.5rem' }}>Your work</h4>
-                                    
+                            <div style={{ width: 340, borderLeft: '1px solid #f1f5f9', background: '#fafbfc', overflowY: 'auto', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                                <div style={{ padding: '1.75rem' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1.5rem', color: '#1e293b' }}>Your Work</h4>
+
                                     {mySubmission && !submitting ? (
-                                        <div className="glass-card" style={{ background: '#fff', borderLeft: `4px solid ${mySubmission.grade ? 'var(--accent-green)' : 'var(--accent-blue)'}` }}>
+                                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.25rem', borderLeft: `4px solid ${mySubmission.grade != null ? '#16a34a' : '#3b82f6'}` }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                                <span className={`badge ${mySubmission.status === 'graded' ? 'badge-present' : 'badge-active'}`}>
+                                                <span style={{
+                                                    padding: '3px 10px', borderRadius: 6, fontSize: '0.72rem', fontWeight: 700,
+                                                    background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff',
+                                                    color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6'
+                                                }}>
                                                     {mySubmission.status === 'graded' ? 'GRADED' : 'SUBMITTED'}
                                                 </span>
-                                                {mySubmission.grade !== null && (
-                                                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>{mySubmission.grade}/100</span>
+                                                {mySubmission.grade != null && (
+                                                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b' }}>{mySubmission.grade}/100</span>
                                                 )}
                                             </div>
-                                            
-                                            {mySubmission.fileName && (
-                                                <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />
-                                            )}
-                                            {mySubmission.content && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: '#f8fafc', padding: '0.75rem', borderRadius: 8, marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>{mySubmission.content}</div>}
-                                            
+                                            {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />}
+                                            {mySubmission.content && <div style={{ fontSize: '0.85rem', color: '#64748b', background: '#f8fafc', padding: '0.75rem', borderRadius: 10, marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>{mySubmission.content}</div>}
                                             {mySubmission.feedback && (
-                                                <div style={{ marginTop: '1.5rem', padding: '1rem', borderTop: '1px solid var(--sidebar-border)' }}>
-                                                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Teacher Feedback</div>
-                                                    <div style={{ fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-primary)' }}>"{mySubmission.feedback}"</div>
+                                                <div style={{ marginTop: '1.25rem', padding: '0.85rem', borderTop: '1px solid #e2e8f0' }}>
+                                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Teacher Feedback</div>
+                                                    <div style={{ fontSize: '0.88rem', fontStyle: 'italic', color: '#334155' }}>"{mySubmission.feedback}"</div>
                                                 </div>
                                             )}
-
                                             {mySubmission.status !== 'graded' && (
-                                                <button className="btn btn-secondary" style={{ marginTop: '1rem', width: '100%', fontSize: '0.8rem' }} onClick={() => {
-                                                    setSubmitContent(mySubmission.content || '');
-                                                    setMySubmission(null); // Return to editing mode
-                                                }}>
+                                                <button onClick={() => { setSubmitContent(mySubmission.content || ''); setMySubmission(null); }}
+                                                    style={{ marginTop: '1rem', width: '100%', padding: '0.55rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'inherit', color: '#3b82f6' }}>
                                                     Edit Submission
                                                 </button>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="glass-card" style={{ background: '#fff', padding: '1.25rem' }}>
-                                            <div className="form-group">
-                                                <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>YOUR RESPONSE</label>
-                                                <textarea 
-                                                    className="form-input" 
-                                                    rows={4} 
-                                                    placeholder="Write your response here..." 
-                                                    value={submitContent} 
-                                                    onChange={e => setSubmitContent(e.target.value)} 
-                                                    style={{ marginBottom: '1rem', background: '#fff' }} 
+                                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '1.25rem' }}>
+                                            <div style={{ marginBottom: '1rem' }}>
+                                                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Your Response</label>
+                                                <textarea
+                                                    style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem', fontSize: '0.85rem', resize: 'vertical', minHeight: 90, fontFamily: 'inherit', outline: 'none' }}
+                                                    placeholder="Write your response here..."
+                                                    value={submitContent}
+                                                    onChange={e => setSubmitContent(e.target.value)}
                                                 />
                                             </div>
-
-                                            <div className="form-group">
-                                                <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>ATTACHMENTS</label>
+                                            <div style={{ marginBottom: '1rem' }}>
+                                                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Attachments</label>
                                                 {submitFile ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{submitFile.name}</div>
+                                                            <div style={{ fontSize: '0.82rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{submitFile.name}</div>
                                                             <div style={{ fontSize: '0.7rem', color: '#60a5fa' }}>Ready to upload</div>
                                                         </div>
-                                                        <button className="btn-icon" onClick={() => setSubmitFile(null)} style={{ background: '#fff', color: '#ef4444' }}>
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                                        <button onClick={() => setSubmitFile(null)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <X size={12} color="#ef4444" />
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <label className="upload-zone" style={{
-                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '1.5rem',
-                                                        border: '2px dashed var(--border-glass)', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'var(--transition)',
-                                                        background: '#f8fafc'
-                                                    }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-blue)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-glass)'}>
+                                                    <label style={{
+                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', padding: '1.25rem',
+                                                        border: '2px dashed #cbd5e1', borderRadius: 14, cursor: 'pointer', transition: 'all .15s', background: '#fafbfc'
+                                                    }}
+                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#93c5fd'; e.currentTarget.style.background = '#eff6ff'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#fafbfc'; }}
+                                                    >
                                                         <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
-                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Attach File</span>
+                                                        <Upload size={20} color="#94a3b8" />
+                                                        <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>Attach File</span>
                                                     </label>
                                                 )}
                                             </div>
-
-                                            <button 
-                                                className="btn btn-primary" 
-                                                style={{ marginTop: '0.5rem', borderRadius: 12 }} 
-                                                onClick={handleSubmit} 
+                                            <button
+                                                style={{
+                                                    width: '100%', padding: '0.65rem', borderRadius: 12, background: '#3b82f6', color: '#fff',
+                                                    fontWeight: 700, fontSize: '0.88rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                                                    opacity: submitting || (!submitFile && !submitContent.trim()) ? 0.5 : 1
+                                                }}
+                                                onClick={handleSubmit}
                                                 disabled={submitting || (!submitFile && !submitContent.trim())}
                                             >
                                                 {submitting ? 'Submitting...' : 'Turn In'}
@@ -403,38 +412,38 @@ const StudentMaterials: React.FC = () => {
                                     )}
 
                                     {/* Private Comments */}
-                                    <div style={{ borderTop: '1px solid var(--sidebar-border)', marginTop: '2.5rem', paddingTop: '2rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                            <h4 style={{ fontSize: '0.875rem', fontWeight: 700, margin: 0 }}>Private Comments</h4>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                                    <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '2rem', paddingTop: '1.5rem' }}>
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>Private Comments</h4>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
                                             {comments.filter(c => c.isPrivate).map((c: any) => {
                                                 const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                                 return (
-                                                    <div key={c.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', background: isTeacher ? '#fffbeb' : '#fff', borderRadius: 10, border: '1px solid var(--sidebar-border)' }}>
-                                                        <Avatar
-                                                            firstName={c.user?.firstName}
-                                                            lastName={c.user?.lastName}
-                                                            avatarUrl={c.user?.avatarUrl || c.user?.avatar}
-                                                            size={26}
-                                                            variant={isTeacher ? 'blue' : 'green'}
-                                                        />
+                                                    <div key={c.id} style={{ display: 'flex', gap: '0.6rem', padding: '0.6rem', background: isTeacher ? '#fffbeb' : '#fff', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={24} variant={isTeacher ? 'blue' : 'green'} />
                                                         <div>
-                                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                            <div style={{ fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                                                 {c.user?.firstName}
-                                                                {isTeacher && <span style={{ fontSize: '0.62rem', background: '#fde68a', color: '#92400e', borderRadius: 999, padding: '1px 6px' }}>Professor</span>}
+                                                                {isTeacher && <span style={{ fontSize: '0.6rem', background: '#fde68a', color: '#92400e', borderRadius: 999, padding: '1px 5px' }}>Prof</span>}
                                                             </div>
-                                                            <div style={{ fontSize: '0.85rem' }}>{c.content}</div>
+                                                            <div style={{ fontSize: '0.82rem' }}>{c.content}</div>
                                                         </div>
                                                     </div>
                                                 );
                                             })}
-                                            {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No private messages.</p>}
+                                            {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle: 'italic' }}>No private messages.</p>}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <input className="form-input" style={{ fontSize: '0.85rem', borderRadius: '20px' }} placeholder="Ask teacher..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
-                                            <button className="btn btn-primary" style={{ width: 'auto', borderRadius: '20px', paddingInline: '1rem' }} disabled={!privateComment.trim()} onClick={handlePrivateComment}>Send</button>
+                                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                            <input
+                                                style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.42rem 0.85rem', fontSize: '0.82rem', outline: 'none', fontFamily: 'inherit' }}
+                                                placeholder="Ask teacher..."
+                                                value={privateComment}
+                                                onChange={e => setPrivateComment(e.target.value)}
+                                                onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }}
+                                            />
+                                            <button
+                                                style={{ padding: '0.42rem 0.85rem', borderRadius: 20, background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.78rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: privateComment.trim() ? 1 : 0.5 }}
+                                                disabled={!privateComment.trim()} onClick={handlePrivateComment}
+                                            >Send</button>
                                         </div>
                                     </div>
                                 </div>
@@ -451,104 +460,215 @@ const StudentMaterials: React.FC = () => {
        ══════════════════════════════════════════════════════════ */
     return (
         <DashboardLayout role="student">
-            <div className="page-header">
-                <div>
-                    <h1 className="page-title">Classwork</h1>
-                    <p className="page-subtitle">View and complete assignments shared by your teachers</p>
+            {/* ── Top Navigation Bar ── */}
+            <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '1rem 0.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2rem',
+                position: 'sticky', top: 0, zIndex: 10, background: '#fff'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                    <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.02em' }}>Materials Library</h1>
+                    <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.88rem', fontWeight: 600 }}>
+                        <span style={{ color: '#3b82f6', borderBottom: '2px solid #3b82f6', paddingBottom: 4, cursor: 'pointer' }}>Browse</span>
+                        <span style={{ color: '#94a3b8', cursor: 'pointer' }} onClick={() => {
+                            if (courses.length > 1) {
+                                const idx = courses.findIndex(c => c.id === selectedCourse);
+                                setSelectedCourse(courses[(idx + 1) % courses.length].id);
+                            }
+                        }}>Switch Course</span>
+                    </nav>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem', flex: 1, maxWidth: 400 }}>
-                    <select className="form-input" style={{ width: '100%' }} value={selectedCourse || ''} onChange={e => setSelectedCourse(Number(e.target.value))}>
-                        {courses.map((c: any) => <option key={c.id} value={c.id}>{c.courseCode} — {c.courseName}</option>)}
-                    </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <div style={{ position: 'relative' }}>
+                        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                            style={{ background: '#f1f5f9', border: 'none', borderRadius: 999, padding: '0.5rem 1rem 0.5rem 2.2rem', fontSize: '0.85rem', width: 240, outline: 'none', fontFamily: 'inherit', fontWeight: 500 }}
+                            placeholder="Search resources..."
+                            value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', position: 'relative' }}>
+                        <Bell size={20} />
+                        <span style={{ position: 'absolute', top: 0, right: 0, width: 7, height: 7, background: '#ef4444', borderRadius: '50%' }} />
+                    </button>
+                    <Avatar avatarUrl={user?.avatar} firstName={user?.firstName} lastName={user?.lastName} size={36} />
                 </div>
             </div>
 
             {loading ? (
-                <div className="loading-screen">
-                    <div className="spinner"></div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Loading course materials...</p>
-                </div>
+                <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading repository...</p></div>
             ) : (
-                <div style={{ maxWidth: 840, margin: '0 auto' }}>
-                    {/* Filter Chips */}
-                    <div className="tabs-container" style={{ marginInline: 'auto' }}>
-                        {[ {v: '', l: 'All'}, {v: 'assignment', l: 'Assignments'}, {v: 'file', l: 'Materials'}, {v: 'link', l: 'Links'}, {v: 'announcement', l: 'Updates'} ].map(t => (
-                            <button key={t.v} className={`tab-btn ${typeFilter === t.v ? 'active' : ''}`} onClick={() => setTypeFilter(t.v)}>{t.l}</button>
-                        ))}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
+                    {/* ── LEFT COLUMN ── */}
+                    <div>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem' }}>Academic Repository</h2>
+                            <p style={{ fontSize: '1.05rem', color: '#64748b' }}>Curated materials for <strong style={{ color: '#334155' }}>{activeCourseData?.courseName || 'this course'}</strong>.</p>
+                        </div>
+
+                        {/* Filter pills */}
+                        <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                            {[
+                                { v: '', l: 'All Materials' },
+                                { v: 'video', l: 'Video Lectures' },
+                                { v: 'file', l: 'Reading PDFs' },
+                                { v: 'link', l: 'Interactive Links' },
+                            ].map(f => (
+                                <button key={f.v} onClick={() => setTypeFilter(f.v)} style={{
+                                    padding: '0.5rem 1.25rem', borderRadius: 999, fontSize: '0.85rem', fontWeight: 700,
+                                    border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
+                                    background: typeFilter === f.v ? '#3b82f6' : '#f1f5f9',
+                                    color: typeFilter === f.v ? '#fff' : '#64748b',
+                                    boxShadow: typeFilter === f.v ? '0 4px 12px rgba(59,130,246,.25)' : 'none',
+                                }}>{f.l}</button>
+                            ))}
+                        </div>
+
+                        {/* Material rows */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '3rem' }}>
+                            {filtered.filter(m => m.type !== 'assignment').map(m => {
+                                const rt = figureOutType(m);
+                                const tc = typeConfig[rt] || typeConfig.file;
+                                return (
+                                    <div key={m.id} onClick={() => openDetail(m)} style={{
+                                        display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
+                                        background: '#fff', borderRadius: 18, border: '1px solid #f1f5f9',
+                                        cursor: 'pointer', transition: 'all .2s',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+                                    }}
+                                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.08)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                    >
+                                        <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg, transition: 'all .2s' }}>
+                                            {tc.icon}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                <span>{tc.label}</span>
+                                                <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
+                                                <span>{m.fileSize ? (m.fileSize > 1024 * 1024 ? `${(m.fileSize / 1024 / 1024).toFixed(1)} MB` : `${Math.round(m.fileSize / 1024)} KB`) : 'Resource'}</span>
+                                                <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
+                                                <span>Updated {new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {filtered.filter(m => m.type !== 'assignment').length === 0 && (
+                                <div style={{ textAlign: 'center', padding: '3rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
+                                    <BookOpen size={32} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
+                                    <p style={{ color: '#94a3b8', fontWeight: 600 }}>No materials available in this category.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Divider ── */}
+                        <div style={{ borderTop: '1px solid #f1f5f9', marginBottom: '2rem' }} />
+
+                        {/* ── Active Assignments ── */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>View All</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                            {materials.filter(m => m.type === 'assignment').slice(0, 4).map(m => {
+                                const isUrgent = m.dueDate && new Date(m.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+                                const isPast = m.dueDate && new Date(m.dueDate) < new Date();
+                                return (
+                                    <div key={m.id} onClick={() => openDetail(m)} style={{
+                                        background: '#fff', borderRadius: 18, padding: '1.25rem', cursor: 'pointer',
+                                        borderLeft: `6px solid ${isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}`,
+                                        border: '1px solid #f1f5f9',
+                                        borderLeftWidth: 6, borderLeftStyle: 'solid',
+                                        borderLeftColor: isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6',
+                                        transition: 'all .2s', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+                                    }}
+                                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.08)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)'; }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                                            <span style={{
+                                                fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em',
+                                                padding: '3px 8px', borderRadius: 6,
+                                                background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff',
+                                                color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb'
+                                            }}>
+                                                {isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : 'OPEN'}
+                                            </span>
+                                            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8' }}>
+                                                {m.dueDate ? `Due in ${Math.max(0, Math.ceil((new Date(m.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days` : 'No due date'}
+                                            </span>
+                                        </div>
+                                        <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem', lineHeight: 1.35 }}>{m.title}</h4>
+                                        <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                            {m.description || 'View details to submit your work.'}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                            {materials.filter(m => m.type === 'assignment').length === 0 && (
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
+                                    <p style={{ color: '#94a3b8', fontWeight: 600 }}>No active assignments at the moment.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="classroom-stream">
-                        {filtered.length > 0 ? filtered.map(m => {
-                            const tc = typeConfig[m.type] || typeConfig.file;
-                            const isSimple = m.type === 'assignment' || m.type === 'file';
-
-                            return (
-                                <div key={m.id} className="stream-item" style={{ cursor: 'pointer', padding: isSimple ? '0' : '1.5rem' }} onClick={() => openDetail(m)}>
-                                    {!isSimple ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <div className="stream-header">
-                                                <Avatar
-                                                    firstName={m.teacher?.firstName}
-                                                    lastName={m.teacher?.lastName}
-                                                    avatarUrl={m.teacher?.avatarUrl || m.teacher?.avatar}
-                                                    size={40}
-                                                />
-                                                <div className="stream-info">
-                                                    <div className="stream-author">{m.teacher?.firstName} {m.teacher?.lastName}</div>
-                                                    <div className="stream-date">{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                                                </div>
-                                            </div>
-                                            <div className="stream-content">
-                                                {m.title && <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>{m.title}</h4>}
-                                                {m.description && <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>{m.description}</p>}
-                                                {m.type === 'link' && m.externalLink && <VideoPreview url={m.externalLink} />}
-                                            </div>
-                                            <div className="comment-input-area" onClick={e => { e.stopPropagation(); openDetail(m, true); }}>
-                                                <Avatar
-                                                    firstName={user?.firstName}
-                                                    lastName={user?.lastName}
-                                                    avatarUrl={user?.avatar}
-                                                    size={32}
-                                                    variant="green"
-                                                />
-                                                <div className="comment-trigger">Add class comment...</div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="stream-item-material" style={{ padding: '1rem 1.5rem' }}>
-                                            <div className="material-badge" style={{ background: tc.color }}>
-                                                <TypeIcon type={m.type} />
-                                            </div>
-                                            <div className="stream-info">
-                                                <h4 style={{ margin: 0, fontWeight: 500 }}>{m.teacher?.firstName} {m.teacher?.lastName} posted a new {tc.label.toLowerCase()}: {m.title}</h4>
-                                                <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>
-                                                    {new Date(m.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
-                                                </p>
-                                            </div>
-                                            {m.type === 'assignment' && m.dueDate && (
-                                                <div style={{ color: new Date(m.dueDate) < new Date() ? 'var(--accent-red)' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>
-                                                    Due {new Date(m.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        }) : (
-                            <div className="empty-state" style={{ padding: '4rem 2rem', background: '#fff', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-glass)', margin: '1rem' }}>
-                                <div style={{ fontSize: '4rem', opacity: 0.8, marginBottom: '1rem' }}>📂</div>
-                                <h3 style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Nothing here yet</h3>
-                                <p style={{ color: 'var(--text-secondary)' }}>Course materials and assignments for this class will show up here.</p>
+                    {/* ── RIGHT SIDEBAR ── */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        {/* Library Insights */}
+                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
+                            <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', marginBottom: '1.5rem' }}>Library Insights</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.65rem' }}>
+                                <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#64748b' }}>Total Resources</span>
+                                <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#3b82f6' }}>{materials.length}</span>
                             </div>
-                        )}
+                            <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden', marginBottom: '0.85rem', background: '#f1f5f9' }}>
+                                <div style={{ background: '#3b82f6', width: `${(materials.filter(m => figureOutType(m) === 'video').length / (materials.length || 1)) * 100}%`, transition: 'width .5s' }} />
+                                <div style={{ background: '#94a3b8', width: `${(materials.filter(m => figureOutType(m) === 'file').length / (materials.length || 1)) * 100}%`, transition: 'width .5s' }} />
+                                <div style={{ background: '#10b981', width: `${(materials.filter(m => m.type === 'link').length / (materials.length || 1)) * 100}%`, transition: 'width .5s' }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                <span>VIDEO ({materials.filter(m => figureOutType(m) === 'video').length})</span>
+                                <span>READING ({materials.filter(m => figureOutType(m) === 'file').length})</span>
+                                <span>LINKS ({materials.filter(m => m.type === 'link').length})</span>
+                            </div>
+                        </div>
+
+                        {/* Instructor Office */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
+                            borderRadius: 22, padding: '1.5rem', color: '#fff', position: 'relative', overflow: 'hidden',
+                            boxShadow: '0 8px 30px rgba(59,130,246,.25)'
+                        }}>
+                            <div style={{ position: 'absolute', right: -30, top: -30, width: 120, height: 120, background: 'rgba(255,255,255,.1)', borderRadius: '50%', filter: 'blur(20px)', pointerEvents: 'none' }} />
+                            <h3 style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,.7)', marginBottom: '1rem' }}>INSTRUCTOR OFFICE</h3>
+                            <h2 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '0.6rem' }}>{activeCourseData?.teacher ? `${activeCourseData.teacher.firstName} ${activeCourseData.teacher.lastName}` : 'Instructor'}</h2>
+                            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,.8)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                                "Design is the silent ambassador of your brand."
+                            </p>
+                            <button onClick={() => navigate('/student/messages')} style={{
+                                width: '100%', padding: '0.75rem', borderRadius: 14, border: 'none',
+                                background: 'rgba(255,255,255,.2)', backdropFilter: 'blur(8px)',
+                                color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
+                                fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                transition: 'all .15s'
+                            }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.3)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.2)'; }}
+                            >
+                                <MessageSquare size={16} /> Message Professor
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
+            {/* Detail Modal */}
             {detail && renderDetail()}
         </DashboardLayout>
     );
 };
 
 export default StudentMaterials;
-

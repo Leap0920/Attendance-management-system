@@ -516,7 +516,7 @@ const TeacherDashboard: React.FC = () => {
                 <div
                   key={c.id}
                   className="td-course-card hover:translate-y-[-4px] transition-all duration-300 shadow-sm hover:shadow-md"
-                  onClick={() => navigate(`/teacher/courses/${c.id}`)}
+                  onClick={() => navigate(`/teacher/materials?courseId=${c.id}`)}
                 >
                   <div className="td-course-cover" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}cc)` : getGradient(idx) }}>
                     <span className="td-course-category" style={{ background: getCategoryColor(idx) + '22', color: getCategoryColor(idx), border: `1px solid ${getCategoryColor(idx)}44` }}>
