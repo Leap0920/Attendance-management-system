@@ -572,7 +572,8 @@ public class StudentController {
                 Path uploadPath = Paths.get(uploadDir);
                 Files.createDirectories(uploadPath);
 
-                String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "avatar";
+                String rawName = file.getOriginalFilename();
+                String originalName = (rawName != null && !rawName.isEmpty()) ? rawName : "avatar";
                 String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
                 String fileName = System.currentTimeMillis() + "_" + safeName;
 
