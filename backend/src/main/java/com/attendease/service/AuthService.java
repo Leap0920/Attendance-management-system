@@ -25,6 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptRepository loginAttemptRepository;
+    private final SecurityEventRepository securityEventRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
@@ -60,13 +61,23 @@ public class AuthService {
 
         // Successful login
         loginSecurityService.recordAttempt(request.getEmail(), httpRequest, true);
+        
+        // SECURITY POLICY: Single Session for Admins
+        String sessionId = UUID.randomUUID().toString();
+        if ("admin".equals(user.getRole())) {
+            refreshTokenRepository.revokeAllByUserId(user.getId());
+            user.setCurrentSessionId(sessionId);
+            // Check for New IP Alert
+            checkNewAdminIP(user, httpRequest);
+        }
+
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
         // Check if MFA is enabled
         if (user.getMfaEnabled() != null && user.getMfaEnabled()) {
             // Return MFA required response with temporary token
-            String mfaToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), "mfa_pending");
+            String mfaToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), "mfa_pending", sessionId);
             return AuthResponse.builder()
                     .mfaRequired(true)
                     .mfaToken(mfaToken)
@@ -74,7 +85,7 @@ public class AuthService {
                     .build();
         }
 
-        return generateAuthResponse(user, httpRequest);
+        return generateAuthResponse(user, httpRequest, sessionId);
     }
 
     @Transactional
@@ -102,7 +113,11 @@ public class AuthService {
         user = userRepository.save(java.util.Objects.requireNonNull(user));
         auditService.log(user, "register", "user", user.getId(), httpRequest);
 
-        return generateAuthResponse(user, httpRequest);
+        String sessionId = UUID.randomUUID().toString();
+        user.setCurrentSessionId(sessionId);
+        userRepository.save(user);
+
+        return generateAuthResponse(user, httpRequest, sessionId);
     }
 
     @Transactional
@@ -120,7 +135,7 @@ public class AuthService {
         refreshToken.setRevoked(true);
         refreshTokenRepository.save(refreshToken);
 
-        return generateAuthResponse(user, null);
+        return generateAuthResponse(user, null, user.getCurrentSessionId());
     }
 
     @Transactional
@@ -128,8 +143,30 @@ public class AuthService {
         refreshTokenRepository.revokeAllByUserId(userId);
     }
 
-    private AuthResponse generateAuthResponse(User user, HttpServletRequest httpRequest) {
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRole());
+    private void checkNewAdminIP(User user, HttpServletRequest request) {
+        String currentIp = request != null ? request.getRemoteAddr() : "unknown";
+        if ("unknown".equals(currentIp)) return;
+
+        // Check if this IP has ever been used successfully by this admin before
+        boolean isKnownIp = loginAttemptRepository.findAll().stream()
+                .filter(a -> a.getEmail().equalsIgnoreCase(user.getEmail()))
+                .filter(a -> a.getSuccess())
+                .anyMatch(a -> currentIp.equals(a.getIpAddress()));
+
+        if (!isKnownIp) {
+            SecurityEvent event = new SecurityEvent();
+            event.setType(SecurityEventType.SUSPICIOUS_ACTIVITY);
+            event.setSeverity(SecurityEventSeverity.MEDIUM);
+            event.setDescription("New IP detected for Admin: " + user.getEmail() + " from " + currentIp);
+            event.setIpAddress(currentIp);
+            event.setUserEmail(user.getEmail());
+            event.setAcknowledged(false);
+            securityEventRepository.save(event);
+        }
+    }
+
+    private AuthResponse generateAuthResponse(User user, HttpServletRequest httpRequest, String sessionId) {
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), user.getRole(), sessionId);
         String refreshTokenStr = UUID.randomUUID().toString();
 
         RefreshToken refreshToken = RefreshToken.builder()

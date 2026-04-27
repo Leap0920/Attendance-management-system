@@ -20,6 +20,7 @@ C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\c
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\SecurityEventDto.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\SystemHealthDto.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\UserDto.java
+C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\EmergencyUnlock.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\entity\AnalyticsCache.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\entity\AssignmentSubmission.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\entity\AttendanceRecord.java
@@ -75,4 +76,5 @@ C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\c
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\service\AuditService.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\service\AuthService.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\service\DashboardAnalyticsService.java
+C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\service\LoginSecurityService.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\util\AesEncryptionUtil.java

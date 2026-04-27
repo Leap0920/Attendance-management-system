@@ -39,6 +39,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (userId != null) {
                 User user = userRepository.findById(userId).orElse(null);
                 if (user != null && "active".equals(user.getStatus())) {
+                    // Check Session ID for Admins (Single Session Enforcement)
+                    if ("admin".equals(user.getRole())) {
+                        String tokenSessionId = jwtTokenProvider.getSessionIdFromToken(token);
+                        if (tokenSessionId == null || !tokenSessionId.equals(user.getCurrentSessionId())) {
+                            filterChain.doFilter(request, response);
+                            return;
+                        }
+                    }
+
                     List<SimpleGrantedAuthority> authorities = List.of(
                             new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())
                     );

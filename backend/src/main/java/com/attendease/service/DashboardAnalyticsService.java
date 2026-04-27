@@ -3,6 +3,7 @@ package com.attendease.service;
 import com.attendease.dto.AnalyticsDataDto;
 import com.attendease.dto.DashboardStatsDto;
 import com.attendease.dto.SystemHealthDto;
+import com.attendease.entity.LoginAttempt;
 import com.attendease.entity.TimeGranularity;
 import com.attendease.repository.*;
 import org.springframework.stereotype.Service;

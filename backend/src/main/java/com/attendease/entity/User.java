@@ -64,6 +64,9 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Column(name = "current_session_id")
+    private String currentSessionId;
+
     public String getFullName() {
         return firstName + " " + lastName;
     }
