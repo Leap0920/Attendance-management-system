@@ -41,6 +41,7 @@ const navSections: Record<string, NavSection[]> = {
       label: 'MONITORING',
       items: [
         { label: 'Analytics', path: '/admin/analytics' },
+        { label: 'Security Alerts', path: '/admin/security-alerts' },
         { label: 'System Console', path: '/admin/security' },
         { label: 'Cloud Status', path: '/admin/health' },
       ],

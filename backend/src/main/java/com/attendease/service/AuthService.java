@@ -25,10 +25,10 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptRepository loginAttemptRepository;
-    private final SecurityEventRepository securityEventRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final LoginSecurityService loginSecurityService;
 
     private static final int MAX_ATTEMPTS = 5;
     private static final int LOCKOUT_MINUTES = 15;
@@ -45,7 +45,7 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> {
-                    recordLoginAttempt(request.getEmail(), httpRequest, false);
+                    loginSecurityService.recordAttempt(request.getEmail(), httpRequest, false);
                     return new UnauthorizedException("Invalid email or password");
                 });
 
@@ -54,12 +54,12 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            recordLoginAttempt(request.getEmail(), httpRequest, false);
+            loginSecurityService.recordAttempt(request.getEmail(), httpRequest, false);
             throw new UnauthorizedException("Invalid email or password");
         }
 
         // Successful login
-        recordLoginAttempt(request.getEmail(), httpRequest, true);
+        loginSecurityService.recordAttempt(request.getEmail(), httpRequest, true);
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
@@ -152,40 +152,5 @@ public class AuthService {
                 .build();
     }
 
-    private void recordLoginAttempt(String email, HttpServletRequest request, boolean success) {
-        String ip = request != null ? request.getRemoteAddr() : null;
-        LoginAttempt attempt = LoginAttempt.builder()
-                .email(email)
-                .ipAddress(ip)
-                .success(success)
-                .build();
-        loginAttemptRepository.save(java.util.Objects.requireNonNull(attempt));
 
-        if (!success) {
-            long recentFailures = loginAttemptRepository.countByEmailAndSuccessAndAttemptedAtAfter(
-                    email, false, LocalDateTime.now().minusMinutes(LOCKOUT_MINUTES));
-            
-            if (recentFailures == MAX_ATTEMPTS) {
-                // First time hitting the limit - record a security event
-                SecurityEvent event = new SecurityEvent();
-                event.setType(SecurityEventType.FAILED_LOGIN);
-                event.setSeverity(SecurityEventSeverity.HIGH);
-                event.setDescription("Brute-force detection: 5 failed login attempts in 15 minutes for account: " + email);
-                event.setIpAddress(ip);
-                event.setUserEmail(email);
-                event.setAcknowledged(false);
-                securityEventRepository.save(event);
-            } else if (recentFailures > MAX_ATTEMPTS) {
-                // Continued attempts after lockout - escalate to CRITICAL
-                SecurityEvent event = new SecurityEvent();
-                event.setType(SecurityEventType.FAILED_LOGIN);
-                event.setSeverity(SecurityEventSeverity.CRITICAL);
-                event.setDescription("Ongoing brute-force attempt after lockout for account: " + email);
-                event.setIpAddress(ip);
-                event.setUserEmail(email);
-                event.setAcknowledged(false);
-                securityEventRepository.save(event);
-            }
-        }
-    }
 }

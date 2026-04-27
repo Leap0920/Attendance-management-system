@@ -92,6 +92,20 @@ const SystemConsole: React.FC = () => {
           <p className="page-subtitle">Low-level system logs and real-time command status</p>
         </div>
         <div style={{ display: 'flex', gap: '0.85rem' }}>
+          <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: '#fff', color: '#ef4444' }} 
+            onClick={async () => {
+              try {
+                await adminApi.triggerTestEvent();
+                addLog('SECURITY ALERT: Brute-force simulation started...', 'error');
+                addLog('Simulated event recorded in Database.', 'info');
+                addLog('Analytics dashboard will now reflect this threat.', 'debug');
+              } catch {
+                addLog('Failed to connect to security gateway.', 'error');
+              }
+            }}>
+            <Shield size={18} />
+            Simulate Threat
+          </button>
           <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: '#fff' }} onClick={() => window.location.reload()}>
             <RefreshCw size={18} />
             Reboot Console

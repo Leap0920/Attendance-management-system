@@ -41,6 +41,7 @@ export const adminApi = {
   acknowledgeEvent: (id: number) => api.post(`/admin/security/events/${id}/acknowledge`),
   getSecuritySummary: () => api.get('/admin/security/summary'),
   getDiscoveredIPs: () => api.get('/admin/security/discovered-ips'),
+  triggerTestEvent: () => api.post('/admin/security/test-event'),
 
   // IP Access Control
   getIPAccessList: () => api.get('/admin/security/ip-access'),

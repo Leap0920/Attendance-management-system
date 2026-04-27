@@ -11,6 +11,7 @@ import java.util.List;
 @Repository
 public interface LoginAttemptRepository extends JpaRepository<LoginAttempt, Long> {
     long countByEmailAndSuccessAndAttemptedAtAfter(String email, Boolean success, LocalDateTime after);
+    void deleteByEmail(String email);
     List<LoginAttempt> findByEmailOrderByAttemptedAtDesc(String email);
     long countBySuccessAndAttemptedAtAfter(Boolean success, LocalDateTime after);
     long countBySuccessAndAttemptedAtBetween(Boolean success, LocalDateTime start, LocalDateTime end);

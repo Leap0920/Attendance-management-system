@@ -13,6 +13,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [staticRingsFallback, setStaticRingsFallback] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isLocked, setIsLocked] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -29,7 +30,11 @@ const Login: React.FC = () => {
         navigate(`/${user.role || ''}`);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      const msg = err.response?.data?.message || 'Login failed. Please try again.';
+      setError(msg);
+      if (msg.toLowerCase().includes('locked')) {
+        setIsLocked(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -150,8 +155,14 @@ const Login: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <button id="login-submit" type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Signing in…' : 'Sign in'}
+              <button 
+                id="login-submit" 
+                type="submit" 
+                className={`btn ${isLocked ? 'btn-danger' : 'btn-primary'}`} 
+                disabled={loading || isLocked}
+                style={isLocked ? { cursor: 'not-allowed', opacity: 0.8, background: '#ef4444', borderColor: '#ef4444' } : {}}
+              >
+                {loading ? 'Signing in…' : isLocked ? 'Account Locked' : 'Sign in'}
               </button>
             </form>
 

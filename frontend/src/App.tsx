@@ -9,6 +9,7 @@ import AdminAuditLog from './pages/admin/AuditLog';
 import AdminCourses from './pages/admin/Courses';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminSecurity from './pages/admin/Security';
+import AdminSecurityEvents from './pages/admin/SecurityEvents';
 import AdminHealth from './pages/admin/Health';
 import TeacherDashboard from './pages/teacher/Dashboard';
 import TeacherCourses from './pages/teacher/Courses';
@@ -59,6 +60,7 @@ function App() {
           <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={['admin']}><AdminCourses /></ProtectedRoute>} />
           <Route path="/admin/audit-log" element={<ProtectedRoute allowedRoles={['admin']}><AdminAuditLog /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><AdminAnalytics /></ProtectedRoute>} />
+          <Route path="/admin/security-alerts" element={<ProtectedRoute allowedRoles={['admin']}><AdminSecurityEvents /></ProtectedRoute>} />
           <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><AdminSecurity /></ProtectedRoute>} />
           <Route path="/admin/health" element={<ProtectedRoute allowedRoles={['admin']}><AdminHealth /></ProtectedRoute>} />
 

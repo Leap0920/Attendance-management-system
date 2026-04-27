@@ -6,6 +6,7 @@ import com.attendease.exception.BadRequestException;
 import com.attendease.exception.ResourceNotFoundException;
 import com.attendease.repository.CourseRepository;
 import com.attendease.repository.IPAccessListRepository;
+import com.attendease.repository.LoginAttemptRepository;
 import com.attendease.repository.SecurityEventRepository;
 import com.attendease.repository.UserRepository;
 import com.attendease.service.AuditService;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +41,7 @@ public class AdminController {
     private final DashboardAnalyticsService analyticsService;
     private final SecurityEventRepository securityEventRepository;
     private final IPAccessListRepository ipAccessListRepository;
+    private final LoginAttemptRepository loginAttemptRepository;
 
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboard() {
@@ -318,16 +321,24 @@ public class AdminController {
     }
 
     @PostMapping("/security/events/{id}/acknowledge")
+    @Transactional
     public ResponseEntity<ApiResponse<Void>> acknowledgeSecurityEvent(
             @PathVariable Long id,
             @AuthenticationPrincipal User admin) {
         SecurityEvent event = securityEventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Security event not found"));
+        
         event.setAcknowledged(true);
         event.setAcknowledgedBy(admin.getId());
         event.setAcknowledgedAt(LocalDateTime.now());
         securityEventRepository.save(event);
-        return ResponseEntity.ok(ApiResponse.success("Event acknowledged", null));
+
+        // If this was a login failure, clear the attempts to unlock the account immediately
+        if (event.getUserEmail() != null && !event.getUserEmail().isEmpty()) {
+            loginAttemptRepository.deleteByEmail(event.getUserEmail().toLowerCase().trim());
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("Event acknowledged and account unlocked", null));
     }
 
     @GetMapping("/security/summary")
@@ -438,5 +449,17 @@ public class AdminController {
     @GetMapping("/security/discovered-ips")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDiscoveredIPs() {
         return ResponseEntity.ok(ApiResponse.success(analyticsService.getRecentLoginIPs()));
+    }
+
+    @PostMapping("/security/test-event")
+    public ResponseEntity<ApiResponse<Void>> triggerTestEvent() {
+        SecurityEvent event = new SecurityEvent();
+        event.setType(SecurityEventType.FAILED_LOGIN);
+        event.setSeverity(SecurityEventSeverity.HIGH);
+        event.setDescription("DEMO: Simulated brute-force attack triggered by admin");
+        event.setIpAddress("127.0.0.1");
+        event.setAcknowledged(false);
+        securityEventRepository.save(event);
+        return ResponseEntity.ok(ApiResponse.success("Test security event triggered", null));
     }
 }
