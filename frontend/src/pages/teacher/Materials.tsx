@@ -149,6 +149,9 @@ const TeacherMaterials: React.FC = () => {
     const [gradingId, setGradingId] = useState<number | null>(null);
     const [gradeVal, setGradeVal] = useState('');
     const [feedbackVal, setFeedbackVal] = useState('');
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'other' | null>(null);
+    const [previewName, setPreviewName] = useState('');
 
     /* ── Data ──────────────────────────────────────────────── */
     const fadeInKeyframes = `
@@ -307,6 +310,21 @@ const TeacherMaterials: React.FC = () => {
             showAlert('Graded', 'Submission graded successfully!');
             setGradingId(null);
         } catch (err: any) { showApiError(err); }
+    };
+
+    const handlePreview = async (type: 'material' | 'submission', id: number, fileName: string) => {
+        try {
+            const res = type === 'material' ? await fileApi.downloadMaterial(id) : await fileApi.downloadSubmission(id);
+            const blob = new Blob([res.data], { type: fileName.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*' });
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            setPreviewName(fileName);
+            
+            const ext = fileName.split('.').pop()?.toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) setPreviewType('image');
+            else if (ext === 'pdf') setPreviewType('pdf');
+            else setPreviewType('other');
+        } catch { showAlert('Error', 'Could not load preview', 'error'); }
     };
 
 
@@ -675,7 +693,7 @@ const TeacherMaterials: React.FC = () => {
                                                                 {m.description}
                                                             </div>
                                                         )}
-                                                        {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
+                                                        {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => handlePreview('material', m.id, m.fileName)} />}
                                                         
                                                         <div style={{ marginTop: '2.5rem' }}>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -737,7 +755,7 @@ const TeacherMaterials: React.FC = () => {
                                                                         </div>
                                                                         <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                                             {s.filePath && (
-                                                                                <button onClick={(e) => { e.stopPropagation(); downloadFile('submission', s.id, s.fileName); }} style={{ 
+                                                                                <button onClick={(e) => { e.stopPropagation(); handlePreview('submission', s.id, s.fileName); }} style={{ 
                                                                                     padding: '0.7rem 1.25rem', borderRadius: 12, background: '#f8fafc', 
                                                                                     border: '1px solid #e2e8f0', fontSize: '0.88rem', fontWeight: 700, 
                                                                                     cursor: 'pointer', color: '#475569', transition: 'all .2s',
@@ -746,8 +764,8 @@ const TeacherMaterials: React.FC = () => {
                                                                                     onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
                                                                                     onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
                                                                                 >
-                                                                                    <Download size={16} />
-                                                                                    Download
+                                                                                    <FileText size={16} color="#3b82f6" />
+                                                                                    View Work
                                                                                 </button>
                                                                             )}
                                                                             <button onClick={(e) => { e.stopPropagation(); setGradingId(s.id); setGradeVal(s.grade || ''); }} style={{ 
@@ -1033,6 +1051,34 @@ const TeacherMaterials: React.FC = () => {
                             style={{ width: '100%', padding: '0.75rem', borderRadius: 14, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'inherit', opacity: fwdCourses.length === 0 ? 0.5 : 1 }}>
                             {submitting ? 'Forwarding…' : 'Forward to Selected'}
                         </button>
+                    </div>
+                </div>
+            )}
+            {/* File Preview Modal */}
+            {previewUrl && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 2100, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
+                    <div style={{ padding: '1rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <FileText size={20} color="#3b82f6" />
+                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{previewName}</h3>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Download</button>
+                            <button onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
+                        {previewType === 'image' ? (
+                            <img src={previewUrl} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} alt="Preview" />
+                        ) : previewType === 'pdf' ? (
+                            <iframe src={previewUrl} style={{ width: '100%', height: '100%', border: 'none', background: '#fff', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} title="PDF Preview" />
+                        ) : (
+                            <div style={{ textAlign: 'center', color: '#fff' }}>
+                                <FileText size={64} color="#3b82f6" style={{ marginBottom: '1rem' }} />
+                                <p>Preview not available for this file type.</p>
+                                <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '0.75rem 2rem', fontWeight: 700, cursor: 'pointer', marginTop: '1rem' }}>Download to View</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
