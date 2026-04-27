@@ -56,6 +56,24 @@ const StudentMessages: React.FC = () => {
     return currentId > 0 && senderId === currentId;
   };
 
+  const formatShortTime = (dateString: string | null) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = Math.max(0, now.getTime() - date.getTime());
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    
+    if (diffMins < 1) return 'now';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) {
+      if (date.getDate() !== now.getDate()) return 'Yesterday';
+      return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+    if (diffHours < 48) return 'Yesterday';
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  };
+
   const getAvatarUrl = (avatar?: unknown) => {
     if (typeof avatar !== 'string') return undefined;
     const value = avatar.trim();
@@ -367,9 +385,14 @@ const StudentMessages: React.FC = () => {
     ? courses.filter((c) => (`${c.courseCode || ''} ${c.courseName || ''} ${c.section || ''}`).toLowerCase().includes(query))
     : courses;
 
-  const filteredConversations = query
+  const filteredConversations = (query
     ? conversations.filter((conv) => (`${conv.firstName || ''} ${conv.lastName || ''} ${conv.role || ''}`).toLowerCase().includes(query))
-    : conversations;
+    : conversations
+  ).sort((a: any, b: any) => {
+    const tA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+    const tB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+    return tB - tA;
+  });
 
   const activeTitle = viewMode === 'group'
     ? courses.find((c) => c.id === selectedCourse)?.courseName || 'Course Chat'
@@ -424,25 +447,38 @@ const StudentMessages: React.FC = () => {
 
             <div className="messages-sidebar-section">
               <div className="messages-sidebar-label">Direct Messages</div>
-              {filteredConversations.map((conv: any) => (
-                <div
-                  key={conv.userId}
-                  className={`message-channel ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''}`}
-                  onClick={() => selectDmUser(conv.userId, `${conv.firstName} ${conv.lastName}`)}
-                >
-                  <Avatar
-                    firstName={conv.firstName}
-                    lastName={conv.lastName}
-                    avatarUrl={getAvatarUrl(conv.avatar)}
-                    size={38}
-                  />
-                  <div className="channel-info">
-                    <div className="channel-name">{conv.firstName} {conv.lastName}</div>
-                    <div className="channel-meta">{isTeacherRole(conv.role) ? 'Teacher' : 'Student'}</div>
-                  </div>
-                  {conv.unreadCount > 0 && <span className="channel-badge">{conv.unreadCount}</span>}
-                </div>
-              ))}
+                  {filteredConversations.map((conv: any) => {
+                    const isUnread = conv.unreadCount > 0;
+                    return (
+                      <div
+                        key={conv.userId}
+                        className={`message-channel ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''}`}
+                        onClick={() => selectDmUser(conv.userId, `${conv.firstName} ${conv.lastName}`)}
+                      >
+                        <Avatar
+                          firstName={conv.firstName}
+                          lastName={conv.lastName}
+                          avatarUrl={getAvatarUrl(conv.avatar)}
+                          size={40}
+                        />
+                        <div className="channel-info">
+                          <div className="channel-name">{conv.firstName} {conv.lastName}</div>
+                          <div className={`channel-meta ${isUnread ? 'unread' : ''}`}>
+                            <span className="channel-last-msg">
+                              {conv.lastMessage || (isTeacherRole(conv.role) ? 'Teacher' : 'Student')}
+                            </span>
+                            {conv.lastMessageTime && (
+                              <>
+                                <span style={{ margin: '0 2px' }}>·</span>
+                                <span className="channel-time">{formatShortTime(conv.lastMessageTime)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        {isUnread && <div className="channel-unread-dot" />}
+                      </div>
+                    );
+                  })}
               {filteredConversations.length === 0 && <div className="messages-sidebar-empty">No matching conversations.</div>}
             </div>
           </aside>
