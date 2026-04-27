@@ -41,7 +41,9 @@ public class LoginSecurityService {
             long recentFailures = loginAttemptRepository.countByEmailAndSuccessAndAttemptedAtAfter(
                     email.toLowerCase().trim(), false, LocalDateTime.now().minusMinutes(LOCKOUT_MINUTES));
             
-            if (recentFailures == MAX_ATTEMPTS) {
+            if (recentFailures == 3) {
+                createEvent(email, ip, SecurityEventSeverity.MEDIUM, "Early warning: 3 failed attempts for " + email);
+            } else if (recentFailures == MAX_ATTEMPTS) {
                 createEvent(email, ip, SecurityEventSeverity.HIGH, "Brute-force detection: 5 failed attempts for " + email);
             } else if (recentFailures > MAX_ATTEMPTS && recentFailures % 5 == 0) {
                 createEvent(email, ip, SecurityEventSeverity.CRITICAL, "Escalated brute-force: " + recentFailures + " failed attempts for " + email);

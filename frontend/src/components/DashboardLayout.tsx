@@ -244,7 +244,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   const isActive = (path: string) => {
     if (path === `/${role}`) return location.pathname === path;
-    return location.pathname.startsWith(path);
+    // Use exact match or ensure it's a sub-route (prevents /security matching /security-alerts)
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   const openProfile = () => {
