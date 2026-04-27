@@ -237,7 +237,7 @@ const TeacherMaterials: React.FC = () => {
         fd.append('type', form.type);
         fd.append('title', title);
         if (description) fd.append('description', description);
-        if (form.externalLink) fd.append('externalLink', form.externalLink);
+        if (form.externalLink) fd.append('externalLink', form.externalLink.trim());
         if (form.dueDate) fd.append('dueDate', form.dueDate);
         if (file) fd.append('file', file);
         try {
@@ -478,8 +478,23 @@ const TeacherMaterials: React.FC = () => {
                                                         </a>
                                                     )}
                                                 </div>
-                                                {/* Video embed */}
-                                                {m.type === 'link' && mLink && <VideoPreview url={mLink} />}
+                                                {/* Video/Link Section */}
+                                                {mLink && (
+                                                    <div style={{ marginBottom: '1.25rem' }}>
+                                                        <VideoPreview url={mLink} />
+                                                        <a href={mLink} target="_blank" rel="noopener noreferrer" style={{
+                                                            display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.25rem',
+                                                            background: '#f8fafc', borderRadius: 14, color: '#3b82f6', fontWeight: 700,
+                                                            textDecoration: 'none', border: '1px solid #e2e8f0', fontSize: '0.88rem',
+                                                            transition: 'all .2s'
+                                                        }}
+                                                            onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
+                                                            onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                                        >
+                                                            <LinkIcon size={18} /> {getYouTubeId(mLink) ? 'Watch on YouTube' : 'Open External Link'} <ArrowUpRight size={16} />
+                                                        </a>
+                                                    </div>
+                                                )}
                                                 {/* Description */}
                                                 {m.description && <div style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>{m.description}</div>}
                                                 {/* File download */}

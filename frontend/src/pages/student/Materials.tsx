@@ -422,11 +422,21 @@ const StudentMaterials: React.FC = () => {
                                         {isExpanded && (
                                             <div style={{ borderTop: '1px solid #e2e8f0', padding: '1.5rem', background: '#fff' }}>
                                                 {m.description && <div style={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.25rem' }}>{m.description}</div>}
-                                                {ytId && <VideoPreview url={mLink} />}
-                                                {mLink && !ytId && (
-                                                    <a href={mLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', textDecoration: 'none', color: '#3b82f6', fontWeight: 600, fontSize: '0.85rem', marginBottom: '1rem' }}>
-                                                        <ArrowUpRight size={16} /> Open External Link
-                                                    </a>
+                                                {mLink && (
+                                                    <div style={{ marginBottom: '1.25rem' }}>
+                                                        <VideoPreview url={mLink} />
+                                                        <a href={mLink} target="_blank" rel="noopener noreferrer" style={{
+                                                            display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.25rem',
+                                                            background: '#f8fafc', borderRadius: 14, color: '#3b82f6', fontWeight: 700,
+                                                            textDecoration: 'none', border: '1px solid #e2e8f0', fontSize: '0.88rem',
+                                                            transition: 'all .2s'
+                                                        }}
+                                                            onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
+                                                            onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                                        >
+                                                            <LinkIcon size={18} /> {getYouTubeId(mLink) ? 'Watch on YouTube' : 'Open External Link'} <ArrowUpRight size={16} />
+                                                        </a>
+                                                    </div>
                                                 )}
                                                 {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
 
