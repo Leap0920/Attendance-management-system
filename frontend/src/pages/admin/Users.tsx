@@ -134,55 +134,58 @@ const AdminUsers: React.FC = () => {
     <DashboardLayout role="admin">
       {/* Toast Notification */}
       {toast && (
-        <div className={`admin-toast ${toast.type} animate-in slide-in-from-top-4 duration-300`}>
-          <span>{toast.type === 'success' ? <Check size={18} /> : <X size={18} />}</span>
+        <div className={`admin-toast ${toast.type} animate-fade-in`} style={{ top: '1.5rem', right: '1.5rem', transform: 'none' }}>
+          <span style={{ background: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white', padding: '0.25rem', borderRadius: '50%' }}>
+            {toast.type === 'success' ? <Check size={14} /> : <X size={14} />}
+          </span>
           {toast.text}
         </div>
       )}
 
-      <div className="page-header">
+      <div className="page-header animate-fade-in">
         <div>
-          <h1 className="page-title">User Management</h1>
-          <p className="page-subtitle">Manage all system accounts</p>
+          <h1 className="page-title gradient-text">User Directory</h1>
+          <p className="page-subtitle">Manage system access, roles and department assignments</p>
         </div>
-        <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-2" style={{ width: 'auto' }} onClick={() => setShowCreateModal(true)}>
-          <Plus size={18} /> Add User
+        <button className="btn btn-primary shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2" style={{ width: 'auto', padding: '0.75rem 1.5rem', borderRadius: '14px' }} onClick={() => setShowCreateModal(true)}>
+          <Plus size={20} /> Create User
         </button>
       </div>
 
       {/* Role Filter Tabs */}
-      <div className="admin-filter-bar">
-        <div className="admin-filter-tabs">
+      <div className="admin-filter-bar animate-fade-in" style={{ animationDelay: '0.1s', border: 'none', background: 'transparent' }}>
+        <div className="admin-filter-tabs" style={{ background: 'white', padding: '0.35rem', borderRadius: '35px', boxShadow: 'var(--shadow-premium)' }}>
           {[
-            { key: '', label: 'All', count: roleStats.all },
+            { key: '', label: 'All Users', count: roleStats.all },
             { key: 'admin', label: 'Admins', count: roleStats.admin },
             { key: 'teacher', label: 'Teachers', count: roleStats.teacher },
             { key: 'student', label: 'Students', count: roleStats.student },
           ].map(tab => (
             <button key={tab.key}
               className={`admin-filter-tab ${filter === tab.key ? 'active' : ''}`}
-              onClick={() => setFilter(tab.key)}>
+              onClick={() => setFilter(tab.key)}
+              style={{ borderRadius: '30px', padding: '0.6rem 1.25rem', fontSize: '0.85rem' }}>
               {tab.label}
-              <span className="admin-filter-count">{tab.count}</span>
+              <span className="admin-filter-count" style={{ background: filter === tab.key ? 'rgba(255,255,255,0.2)' : '#f1f5f9', color: filter === tab.key ? 'white' : '#64748b' }}>{tab.count}</span>
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <select
             className="form-input"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            style={{ minWidth: 140, height: 40 }}
+            style={{ minWidth: 140, height: '42px', borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-premium)' }}
           >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
+            <option value="">Any Status</option>
+            <option value="active">Active Only</option>
             <option value="suspended">Suspended</option>
           </select>
-          <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ height: '42px', borderRadius: '12px', background: 'white', border: 'none', boxShadow: 'var(--shadow-premium)', minWidth: '300px' }}>
             <span className="admin-search-icon"><Search size={18} /></span>
             <input
               type="text"
-              placeholder="Search by name, email, or department..."
+              placeholder="Search directory..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="admin-search-input"
@@ -195,67 +198,78 @@ const AdminUsers: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="admin-section-card">
+      <div className="premium-card animate-fade-in" style={{ animationDelay: '0.2s', padding: '1rem 0' }}>
         <div className="data-table-wrapper" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
-              <tr>
-                <th>User</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+              <tr style={{ background: 'transparent' }}>
+                <th style={{ background: 'transparent', paddingLeft: '2rem' }}>Identity</th>
+                <th style={{ background: 'transparent' }}>Contact Info</th>
+                <th style={{ background: 'transparent' }}>Permission</th>
+                <th style={{ background: 'transparent' }}>Department</th>
+                <th style={{ background: 'transparent' }}>Activity</th>
+                <th style={{ background: 'transparent', textAlign: 'right', paddingRight: '2rem' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '5rem' }}>
                   <div className="spinner" style={{ margin: '0 auto' }}></div>
                 </td></tr>
               ) : filteredUsers.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                  {search ? `No users matching "${search}"` : 'No users found'}
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <Search size={48} strokeWidth={1} style={{ opacity: 0.3 }} />
+                    <div>{search ? `No results found for "${search}"` : 'No users found in this directory'}</div>
+                  </div>
                 </td></tr>
               ) : filteredUsers.map(u => (
-                <tr key={u.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div className="admin-table-avatar" style={{
-                        background: u.role === 'teacher' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' :
+                <tr key={u.id} className="hover:bg-slate-50 transition-all duration-200" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ paddingLeft: '2rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div className="admin-table-avatar shadow-sm" style={{
+                        width: '42px', height: '42px', borderRadius: '12px',
+                        background: u.role === 'teacher' ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' :
                           u.role === 'admin' ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' :
-                            'linear-gradient(135deg, #10b981, #059669)'
+                            'linear-gradient(135deg, #10b981, #059669)',
+                        fontSize: '0.9rem', fontWeight: 800
                       }}>
                         {u.firstName?.[0]}{u.lastName?.[0]}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{u.fullName}</div>
-                        {u.studentId && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: {u.studentId}</div>}
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{u.fullName}</div>
+                        {u.studentId && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>ID: {u.studentId}</div>}
                       </div>
                     </div>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{u.email}</td>
-                  <td><span className={`badge badge-${u.role}`}>{u.role}</span></td>
-                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{u.department || '—'}</td>
                   <td>
-                    <span className={`admin-status-pill ${u.status === 'active' ? 'active' : 'inactive'}`}
-                      onClick={() => handleToggleStatus(u)}
-                      style={{ cursor: 'pointer' }}
-                      title={`Click to ${u.status === 'active' ? 'suspend' : 'activate'}`}>
-                      <span className="admin-status-dot"></span>
-                      {u.status}
+                    <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{u.email}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Primary Contact</div>
+                  </td>
+                  <td>
+                    <span className={`badge badge-${u.role}`} style={{ borderRadius: '6px', padding: '0.3rem 0.75rem', fontWeight: 800, fontSize: '0.65rem' }}>
+                      {u.role.toUpperCase()}
                     </span>
                   </td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  <td>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>{u.department || '—'}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>School Unit</div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end' }}>
-                      <button className="admin-action-btn edit hover:bg-blue-50 transition-colors" onClick={() => openEdit(u)} title="Edit">
+                    <div className={`admin-status-pill ${u.status === 'active' ? 'active' : 'inactive'}`}
+                      onClick={() => handleToggleStatus(u)}
+                      style={{ cursor: 'pointer', padding: '0.3rem 0.8rem', borderRadius: '20px', display: 'inline-flex', alignItems: 'center' }}
+                      title={`Click to ${u.status === 'active' ? 'suspend' : 'activate'}`}>
+                      <span className="admin-status-dot" style={{ width: 8, height: 8 }}></span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{u.status}</span>
+                    </div>
+                  </td>
+                  <td style={{ paddingRight: '2rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button className="admin-action-btn edit" onClick={() => openEdit(u)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb' }}>
                         <Edit2 size={16} />
                       </button>
-                      <button className="admin-action-btn delete hover:bg-red-50 transition-colors" onClick={() => setShowDeleteConfirm(u.id)} title="Delete">
+                      <button className="admin-action-btn delete" onClick={() => setShowDeleteConfirm(u.id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef2f2', color: '#ef4444' }}>
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -265,61 +279,58 @@ const AdminUsers: React.FC = () => {
             </tbody>
           </table>
         </div>
-        <div className="admin-table-footer">
-          Showing {filteredUsers.length} of {users.length} users
+        <div className="admin-table-footer" style={{ border: 'none', color: 'var(--text-muted)', fontWeight: 600, padding: '1.5rem 2rem' }}>
+          {filteredUsers.length} total personnel found
         </div>
       </div>
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-            <div className="modal-header border-b border-gray-100">
-              <h3 className="modal-title flex items-center gap-2">
-                <Plus size={20} className="text-blue-500" />
-                Create New User
-              </h3>
-              <button className="modal-close hover:bg-gray-100 rounded-full p-1 transition-colors" onClick={() => setShowCreateModal(false)}>
-                <X size={20} />
+        <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowCreateModal(false)}>
+          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', padding: '2rem' }}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Onboard Personnel</h3>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>
+                <X size={24} />
               </button>
             </div>
-            <form onSubmit={handleCreate}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <form onSubmit={handleCreate} style={{ marginTop: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">First Name</label>
-                  <input className="form-input" value={createForm.firstName} onChange={e => setCreateForm({ ...createForm, firstName: e.target.value })} required />
+                  <label className="form-label" style={{ fontWeight: 700 }}>First Name</label>
+                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.firstName} onChange={e => setCreateForm({ ...createForm, firstName: e.target.value })} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Last Name</label>
-                  <input className="form-input" value={createForm.lastName} onChange={e => setCreateForm({ ...createForm, lastName: e.target.value })} required />
+                  <label className="form-label" style={{ fontWeight: 700 }}>Last Name</label>
+                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.lastName} onChange={e => setCreateForm({ ...createForm, lastName: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Email</label>
-                <input className="form-input" type="email" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} required />
+                <label className="form-label" style={{ fontWeight: 700 }}>Email Address</label>
+                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="email" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} required />
               </div>
               <div className="form-group">
-                <label className="form-label">Password</label>
-                <input className="form-input" type="password" value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} required placeholder="Min 6 characters" />
+                <label className="form-label" style={{ fontWeight: 700 }}>Access Password</label>
+                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="password" value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} required placeholder="Min 6 characters" />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Role</label>
-                  <select className="form-input" value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>System Role</label>
+                  <select className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
+                    <option value="admin">Administrator</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Department</label>
-                  <input className="form-input" value={createForm.department} onChange={e => setCreateForm({ ...createForm, department: e.target.value })} placeholder="Optional" />
+                  <label className="form-label" style={{ fontWeight: 700 }}>Department</label>
+                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.department} onChange={e => setCreateForm({ ...createForm, department: e.target.value })} placeholder="e.g. CS, Physics" />
                 </div>
               </div>
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
-                  {saving ? 'Creating...' : 'Create User'}
+              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn btn-secondary" style={{ width: 'auto', background: 'transparent', border: 'none' }} onClick={() => setShowCreateModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-lg" style={{ width: 'auto', padding: '0.75rem 1.5rem' }} disabled={saving}>
+                  {saving ? 'Creating Account...' : 'Provision Account'}
                 </button>
               </div>
             </form>
@@ -329,75 +340,72 @@ const AdminUsers: React.FC = () => {
 
       {/* Edit User Modal */}
       {showEditModal && editingUser && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-            <div className="modal-header border-b border-gray-100">
-              <h3 className="modal-title flex items-center gap-2">
-                <Edit2 size={20} className="text-blue-500" />
-                Edit User
-              </h3>
-              <button className="modal-close hover:bg-gray-100 rounded-full p-1 transition-colors" onClick={() => setShowEditModal(false)}>
-                <X size={20} />
+        <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowEditModal(false)}>
+          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', padding: '2rem' }}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Profile Configuration</h3>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                <X size={24} />
               </button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: 'var(--radius-sm)' }}>
-              <div className="admin-table-avatar" style={{
-                background: editingUser.role === 'teacher' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' :
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0', padding: '1.25rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+              <div className="admin-table-avatar shadow-sm" style={{
+                background: editingUser.role === 'teacher' ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' :
                   editingUser.role === 'admin' ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' :
                     'linear-gradient(135deg, #10b981, #059669)',
-                width: 44, height: 44, fontSize: '0.85rem'
+                width: 50, height: 50, fontSize: '1rem', fontWeight: 800, borderRadius: '14px'
               }}>
                 {editingUser.firstName?.[0]}{editingUser.lastName?.[0]}
               </div>
               <div>
-                <div style={{ fontWeight: 700 }}>{editingUser.fullName}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Editing profile • ID #{editingUser.id}</div>
+                <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{editingUser.fullName}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Object Reference ID #{editingUser.id}</div>
               </div>
             </div>
             <form onSubmit={handleEdit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">First Name</label>
-                  <input className="form-input" value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} required />
+                  <label className="form-label" style={{ fontWeight: 700 }}>First Name</label>
+                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Last Name</label>
-                  <input className="form-input" value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} required />
+                  <label className="form-label" style={{ fontWeight: 700 }}>Last Name</label>
+                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Email</label>
-                <input className="form-input" type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} required />
+                <label className="form-label" style={{ fontWeight: 700 }}>Email Address</label>
+                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} required />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Role</label>
-                  <select className="form-input" value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>System Role</label>
+                  <select className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
+                    <option value="admin">Administrator</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Status</label>
-                  <select className="form-input" value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Activity Status</label>
+                  <select className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
                   </select>
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Department</label>
-                <input className="form-input" value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} placeholder="Optional" />
+                <label className="form-label" style={{ fontWeight: 700 }}>Change Department</label>
+                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">New Password <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(leave blank to keep current)</span></label>
-                <input className="form-input" type="password" value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="Enter new password..." />
+                <label className="form-label" style={{ fontWeight: 700 }}>Reset Password <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(Optional)</span></label>
+                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="password" value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="New password..." />
               </div>
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Changes'}
+              <div className="modal-actions" style={{ marginTop: '2rem' }}>
+                <button type="button" className="btn btn-secondary" style={{ width: 'auto', background: 'transparent', border: 'none' }} onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-lg" style={{ width: 'auto', padding: '0.75rem 1.5rem' }} disabled={saving}>
+                  {saving ? 'Applying Changes...' : 'Synchronize Profile'}
                 </button>
               </div>
             </form>
@@ -407,24 +415,24 @@ const AdminUsers: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm !== null && (
-        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
-            <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%', background: '#fef2f2',
+        <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowDeleteConfirm(null)}>
+          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', padding: '2.5rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div className="shadow-lg" style={{
+                width: 72, height: 72, borderRadius: '24px', background: '#fef2f2',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '1.25rem', color: '#ef4444',
+                marginBottom: '1.5rem', color: '#ef4444', border: '1px solid #fee2e2'
               }}>
-                <Trash2 size={32} />
+                <Trash2 size={36} />
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>Delete User?</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                This action cannot be undone. All data associated with this user will be permanently removed.
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#0f172a' }}>Delete Account?</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                This is a destructive action. All associated academic records and system logs for this user will be <strong>permanently purged</strong>.
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowDeleteConfirm(null)}>Cancel</button>
-              <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => handleDelete(showDeleteConfirm)}>Delete User</button>
+            <div style={{ display: 'flex', gap: '0.85rem' }}>
+              <button className="btn btn-secondary" style={{ flex: 1, border: 'none' }} onClick={() => setShowDeleteConfirm(null)}>Retain Account</button>
+              <button className="btn btn-danger shadow-md" style={{ flex: 1 }} onClick={() => handleDelete(showDeleteConfirm)}>Purge Data</button>
             </div>
           </div>
         </div>

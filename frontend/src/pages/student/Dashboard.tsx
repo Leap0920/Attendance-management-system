@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, BarChart3, X, Plus, Clock, FileText, Megaphone, ClipboardList } from 'lucide-react';
+import { BookOpen, X, Plus, Clock, FileText, Megaphone, ClipboardList } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../auth/AuthContext';
 import { studentApi } from '../../api';

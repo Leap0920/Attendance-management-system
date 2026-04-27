@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, MessageSquare, X, Upload, ChevronRight, ChevronDown, BookOpen, ArrowUpRight, Users, Share, Trash2, Edit2 } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, X, Upload, ChevronRight, ChevronDown, BookOpen, ArrowUpRight, Share } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -111,7 +111,6 @@ const StudentMaterials: React.FC = () => {
     const [typeFilter, setTypeFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const commentInputRef = useRef<HTMLInputElement>(null);
     const [showAll, setShowAll] = useState(false);
     const [showAllAssignments, setShowAllAssignments] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);

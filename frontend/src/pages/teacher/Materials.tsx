@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, ChevronDown, Edit2, Users, Clock, MessageSquare } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, ChevronDown, Users, Clock, MessageSquare } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -122,6 +122,18 @@ const TeacherMaterials: React.FC = () => {
     const [showAll, setShowAll] = useState(false);
     const [showAllAssignments, setShowAllAssignments] = useState(false);
     const [enrollments, setEnrollments] = useState<any[]>([]);
+    const [comments, setComments] = useState<any[]>([]);
+    const [submissions, setSubmissions] = useState<any[]>([]);
+    const [newComment, setNewComment] = useState('');
+    const [detailTab, setDetailTab] = useState<'instructions' | 'submissions'>('instructions');
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'other' | null>(null);
+    const [previewName, setPreviewName] = useState('');
+    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [fwdId, setFwdId] = useState<number | null>(null);
+    const [fwdCourses, setFwdCourses] = useState<number[]>([]);
+    const [showForward, setShowForward] = useState(false);
+    const [gradingId, setGradingId] = useState<number | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown on click outside
@@ -133,33 +145,7 @@ const TeacherMaterials: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Inline expand (replaces modal)
-    const [expandedId, setExpandedId] = useState<number | null>(null);
-    const [comments, setComments] = useState<any[]>([]);
-    const [submissions, setSubmissions] = useState<any[]>([]);
-    const [newComment, setNewComment] = useState('');
-    const [detailTab, setDetailTab] = useState<'instructions' | 'submissions'>('instructions');
-
-    // Forward
-    const [showForward, setShowForward] = useState(false);
-    const [fwdId, setFwdId] = useState<number | null>(null);
-    const [fwdCourses, setFwdCourses] = useState<number[]>([]);
-
-    // Inline grading
-    const [gradingId, setGradingId] = useState<number | null>(null);
-    const [gradeVal, setGradeVal] = useState('');
-    const [feedbackVal, setFeedbackVal] = useState('');
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'other' | null>(null);
-    const [previewName, setPreviewName] = useState('');
-
     /* ── Data ──────────────────────────────────────────────── */
-    const fadeInKeyframes = `
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    `;
     const load = () => {
         setLoading(true);
         teacherApi.getCourses().then(r => {
@@ -185,7 +171,6 @@ const TeacherMaterials: React.FC = () => {
         setExpandedId(m.id);
         setDetailTab('instructions');
         setNewComment('');
-        setGradingId(null);
         try { const r = await teacherApi.getComments(m.id); setComments(r.data.data || []); } catch {}
         if (m.type === 'assignment') {
             try { const r = await teacherApi.getSubmissions(m.id); setSubmissions(r.data.data || []); } catch {}
@@ -204,7 +189,6 @@ const TeacherMaterials: React.FC = () => {
                 setEnrollments(r.data?.data?.enrollments || []);
             }).catch(() => setEnrollments([]));
 
-            // Auto-scroll to assignments if requested
             if (searchParams.get('section') === 'assignments') {
                 setTimeout(() => {
                     document.getElementById('assignments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -231,8 +215,6 @@ const TeacherMaterials: React.FC = () => {
 
     const nonAssignments = filtered.filter(m => m.type !== 'assignment');
     const displayMaterials = showAll ? nonAssignments : nonAssignments.slice(0, 5);
-    const assignments = materials.filter(m => m.type === 'assignment');
-    const displayAssignments = showAllAssignments ? assignments : assignments.slice(0, 4);
 
     /* ── Handlers ────────────────────────────────────────────── */
     const handleCreate = async (e: React.FormEvent) => {
@@ -271,15 +253,14 @@ const TeacherMaterials: React.FC = () => {
         } catch (err: any) { showApiError(err); } finally { setSubmitting(false); }
     };
 
-    const handleForward = async () => {
-        if (!fwdId || fwdCourses.length === 0 || submitting) return;
-        setSubmitting(true);
+    const handleAddComment = async () => {
+        if (!newComment.trim() || !expandedId) return;
         try {
-            await teacherApi.shareMaterial(fwdId, fwdCourses.join(','));
-            setShowForward(false); setFwdId(null); setFwdCourses([]);
-            if (selectedCourse) loadMaterials(selectedCourse);
-            showAlert('Success', 'Material forwarded!');
-        } catch (err: any) { showApiError(err); } finally { setSubmitting(false); }
+            await teacherApi.addComment(expandedId, { content: newComment.trim(), isPrivate: false });
+            setNewComment('');
+            const r = await teacherApi.getComments(expandedId);
+            setComments(r.data.data || []);
+        } catch (err: any) { showApiError(err); }
     };
 
     const handleDelete = (id: number) => {
@@ -293,14 +274,15 @@ const TeacherMaterials: React.FC = () => {
         });
     };
 
-    const handleAddComment = async () => {
-        if (!newComment.trim() || !expandedId) return;
+    const handleForward = async () => {
+        if (!fwdId || fwdCourses.length === 0 || submitting) return;
+        setSubmitting(true);
         try {
-            await teacherApi.addComment(expandedId, { content: newComment.trim(), isPrivate: false });
-            setNewComment('');
-            const r = await teacherApi.getComments(expandedId);
-            setComments(r.data.data || []);
-        } catch (err: any) { showApiError(err); }
+            await teacherApi.shareMaterial(fwdId, fwdCourses.join(','));
+            setShowForward(false); setFwdId(null); setFwdCourses([]);
+            if (selectedCourse) loadMaterials(selectedCourse);
+            showAlert('Success', 'Material forwarded!');
+        } catch (err: any) { showApiError(err); } finally { setSubmitting(false); }
     };
 
     const handleGrade = async (subId: number, grade: string, feedback: string) => {

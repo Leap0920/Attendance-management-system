@@ -80,39 +80,42 @@ const AdminCourses: React.FC = () => {
   return (
     <DashboardLayout role="admin">
       {toast && (
-        <div className={`admin-toast ${toast.type} animate-in slide-in-from-top-4 duration-300`}>
-          <span>{toast.type === 'success' ? <Check size={18} /> : <AlertTriangle size={18} />}</span>
+        <div className={`admin-toast ${toast.type} animate-fade-in`} style={{ top: '1.5rem', right: '1.5rem', transform: 'none' }}>
+          <span style={{ background: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white', padding: '0.25rem', borderRadius: '50%' }}>
+            {toast.type === 'success' ? <Check size={14} /> : <AlertTriangle size={14} />}
+          </span>
           {toast.text}
         </div>
       )}
 
-      <div className="page-header">
+      <div className="page-header animate-fade-in">
         <div>
-          <h1 className="page-title">Course Management</h1>
-          <p className="page-subtitle">Monitor and manage all classrooms</p>
+          <h1 className="page-title gradient-text">Curriculum Hub</h1>
+          <p className="page-subtitle">Administrative oversight of academic courses and sections</p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="admin-filter-bar">
-        <div className="admin-filter-tabs">
+      <div className="admin-filter-bar animate-fade-in" style={{ animationDelay: '0.1s', border: 'none', background: 'transparent' }}>
+        <div className="admin-filter-tabs" style={{ background: 'white', padding: '0.35rem', borderRadius: '35px', boxShadow: 'var(--shadow-premium)' }}>
           {[
-            { key: '', label: 'All', count: statusStats.all },
+            { key: '', label: 'All Classrooms', count: statusStats.all },
             { key: 'active', label: 'Active', count: statusStats.active },
             { key: 'archived', label: 'Archived', count: statusStats.archived },
-            { key: 'deleted', label: 'Deleted', count: statusStats.deleted },
+            { key: 'deleted', label: 'Removed', count: statusStats.deleted },
           ].map(tab => (
             <button key={tab.key}
               className={`admin-filter-tab ${filter === tab.key ? 'active' : ''}`}
-              onClick={() => setFilter(tab.key)}>
+              onClick={() => setFilter(tab.key)}
+              style={{ borderRadius: '30px', padding: '0.6rem 1.25rem', fontSize: '0.85rem' }}>
               {tab.label}
-              <span className="admin-filter-count">{tab.count}</span>
+              <span className="admin-filter-count" style={{ background: filter === tab.key ? 'rgba(255,255,255,0.2)' : '#f1f5f9', color: filter === tab.key ? 'white' : '#64748b' }}>{tab.count}</span>
             </button>
           ))}
         </div>
-        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ height: '42px', borderRadius: '12px', background: 'white', border: 'none', boxShadow: 'var(--shadow-premium)', minWidth: '320px' }}>
           <span className="admin-search-icon"><Search size={18} /></span>
-          <input type="text" placeholder="Search courses, codes, or teachers..."
+          <input type="text" placeholder="Search classrooms, codes, or instructors..."
             value={search} onChange={e => setSearch(e.target.value)}
             className="admin-search-input" />
           {search && <button className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => setSearch('')}><X size={16} /></button>}
@@ -120,133 +123,142 @@ const AdminCourses: React.FC = () => {
       </div>
 
       {/* Courses Table */}
-      <div className="admin-section-card">
+      <div className="premium-card animate-fade-in" style={{ animationDelay: '0.2s', padding: '1rem 0' }}>
         <div className="data-table-wrapper" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
-              <tr>
-                <th style={{width: '30px'}}></th>
-                <th>Course</th>
-                <th>Code</th>
-                <th>Teacher</th>
-                <th>Join Code</th>
-                <th>Status</th>
-                <th>Created</th>
+              <tr style={{ background: 'transparent' }}>
+                <th style={{ width: '50px', background: 'transparent' }}></th>
+                <th style={{ background: 'transparent' }}>Course Identity</th>
+                <th style={{ background: 'transparent' }}>Catalog Code</th>
+                <th style={{ background: 'transparent' }}>Lead Instructor</th>
+                <th style={{ background: 'transparent' }}>Join Token</th>
+                <th style={{ background: 'transparent' }}>Lifecyle</th>
+                <th style={{ background: 'transparent', paddingRight: '2rem' }}>Created</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem' }}>
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '5rem' }}>
                   <div className="spinner" style={{ margin: '0 auto' }}></div>
                 </td></tr>
               ) : filteredCourses.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                  {search ? `No courses matching "${search}"` : 'No courses found'}
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <Search size={48} strokeWidth={1} style={{ opacity: 0.3 }} />
+                    <div>{search ? `No courses matching "${search}"` : 'No courses found in the curriculum'}</div>
+                  </div>
                 </td></tr>
               ) : filteredCourses.map(c => {
                 const sc = getStatusColor(c.status);
                 const isExpanded = expandedId === c.id;
                 return (
                   <React.Fragment key={c.id}>
-                    <tr className="clickable-row" onClick={() => setExpandedId(isExpanded ? null : c.id)}
-                        style={{ cursor: 'pointer' }}>
+                    <tr className={`clickable-row transition-all duration-200 ${isExpanded ? 'bg-slate-50' : 'hover:bg-slate-50'}`} 
+                        onClick={() => setExpandedId(isExpanded ? null : c.id)}
+                        style={{ cursor: 'pointer', borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9' }}>
                       <td style={{ textAlign: 'center' }}>
-                        <ChevronRight 
-                          size={16} 
-                          className={`transition-transform duration-200 text-gray-400 ${isExpanded ? 'rotate-90' : ''}`} 
-                        />
+                        <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: isExpanded ? '#eff6ff' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                          <ChevronRight 
+                            size={16} 
+                            className={`transition-transform duration-300 ${isExpanded ? 'rotate-90 text-blue-600' : 'text-gray-400'}`} 
+                          />
+                        </div>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{
-                            width: 36, height: 36, borderRadius: 8,
-                            background: c.coverColor || '#3b82f6',
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div className="shadow-sm" style={{
+                            width: 40, height: 40, borderRadius: 12,
+                            background: c.coverColor || 'linear-gradient(135deg, #3b82f6, #2563eb)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: 'white', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0
+                            color: 'white', fontWeight: 800, fontSize: '0.9rem', flexShrink: 0
                           }}>
                             {c.courseName?.[0]}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{c.courseName}</div>
-                            {c.section && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Section: {c.section}</div>}
+                            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{c.courseName}</div>
+                            {c.section && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{c.section}</div>}
                           </div>
                         </div>
                       </td>
-                      <td><span style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{c.courseCode}</span></td>
+                      <td><code style={{ background: '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>{c.courseCode}</code></td>
                       <td>
                         {c.teacher ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div className="admin-table-avatar" style={{
-                              width: 28, height: 28, fontSize: '0.6rem',
-                              background: 'linear-gradient(135deg, #06b6d4, #0891b2)'
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <div className="admin-table-avatar shadow-sm" style={{
+                              width: 32, height: 32, fontSize: '0.75rem', borderRadius: '10px',
+                              background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', fontWeight: 800
                             }}>
                               {c.teacher.firstName?.[0]}{c.teacher.lastName?.[0]}
                             </div>
-                            <span style={{ fontSize: '0.85rem' }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
                               {c.teacher.firstName} {c.teacher.lastName}
                             </span>
                           </div>
-                        ) : '—'}
+                        ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Unassigned</span>}
                       </td>
                       <td>
-                        <span className="join-code">{c.joinCode}</span>
+                        <span className="join-code" style={{ letterSpacing: '1px', fontWeight: 700, fontSize: '0.85rem' }}>{c.joinCode}</span>
                       </td>
                       <td>
                         <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          padding: '0.2rem 0.6rem', borderRadius: 20,
-                          fontSize: '0.7rem', fontWeight: 600,
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '0.3rem 0.8rem', borderRadius: '20px',
+                          fontSize: '0.7rem', fontWeight: 800,
                           background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
-                          textTransform: 'capitalize'
+                          textTransform: 'uppercase'
                         }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: sc.color }}></span>
                           {c.status}
                         </span>
                       </td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                        {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, paddingRight: '2rem' }}>
+                        {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                     </tr>
                     {isExpanded && (
-                      <tr>
-                        <td colSpan={7} style={{ padding: 0 }}>
-                          <div className="admin-expanded-row">
-                            <div className="admin-expanded-grid">
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td colSpan={7} style={{ padding: '0 1rem 1rem 4rem' }}>
+                          <div className="animate-fade-in" style={{ background: '#f8fafc', borderRadius: '16px', padding: '1.5rem', border: '1px solid #f1f5f9' }}>
+                            <div className="admin-expanded-grid" style={{ gap: '1.5rem' }}>
                               <div className="admin-expanded-item">
-                                <span className="admin-expanded-label">Description</span>
-                                <span className="admin-expanded-value">{c.description || 'No description'}</span>
+                                <span className="admin-expanded-label" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Course Description</span>
+                                <span className="admin-expanded-value" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>{c.description || 'No extended description available for this classroom.'}</span>
                               </div>
-                              <div className="admin-expanded-item">
-                                <span className="admin-expanded-label">Schedule</span>
-                                <span className="admin-expanded-value">{c.schedule || 'Not set'}</span>
-                              </div>
-                              <div className="admin-expanded-item">
-                                <span className="admin-expanded-label">Room</span>
-                                <span className="admin-expanded-value">{c.room || 'Not set'}</span>
-                              </div>
-                              <div className="admin-expanded-item">
-                                <span className="admin-expanded-label">Created</span>
-                                <span className="admin-expanded-value">
-                                  {new Date(c.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-                                </span>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
+                                <div className="admin-expanded-item">
+                                  <span className="admin-expanded-label" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Academic Schedule</span>
+                                  <span className="admin-expanded-value" style={{ fontWeight: 600 }}>{c.schedule || 'Flexi-schedule'}</span>
+                                </div>
+                                <div className="admin-expanded-item">
+                                  <span className="admin-expanded-label" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Location/Room</span>
+                                  <span className="admin-expanded-value" style={{ fontWeight: 600 }}>{c.room || 'TBD'}</span>
+                                </div>
+                                <div className="admin-expanded-item">
+                                  <span className="admin-expanded-label" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Registration Date</span>
+                                  <span className="admin-expanded-value" style={{ fontWeight: 600 }}>
+                                    {new Date(c.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0', justifyContent: 'flex-end' }}>
                               {c.status === 'active' && (
                                 <button
-                                  className="btn btn-sm btn-secondary"
+                                  className="btn btn-sm btn-secondary shadow-sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     updateCourseStatus(c, 'archive');
                                   }}
                                   disabled={updatingId === c.id}
-                                  style={{ width: 'auto' }}
+                                  style={{ width: 'auto', background: 'white', border: '1px solid #e2e8f0' }}
                                 >
-                                  {updatingId === c.id ? 'Updating...' : 'Archive'}
+                                  {updatingId === c.id ? 'Processing...' : 'Archive Course'}
                                 </button>
                               )}
                               {(c.status === 'archived' || c.status === 'deleted') && (
                                 <button
-                                  className="btn btn-sm btn-primary"
+                                  className="btn btn-sm btn-primary shadow-sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     updateCourseStatus(c, 'activate');
@@ -254,12 +266,12 @@ const AdminCourses: React.FC = () => {
                                   disabled={updatingId === c.id}
                                   style={{ width: 'auto' }}
                                 >
-                                  {updatingId === c.id ? 'Updating...' : c.status === 'deleted' ? 'Restore to Active' : 'Activate'}
+                                  {updatingId === c.id ? 'Processing...' : c.status === 'deleted' ? 'Restore Classroom' : 'Re-activate'}
                                 </button>
                               )}
                               {c.status !== 'deleted' && (
                                 <button
-                                  className="btn btn-sm btn-danger"
+                                  className="btn btn-sm btn-danger shadow-sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     updateCourseStatus(c, 'delete');
@@ -267,7 +279,7 @@ const AdminCourses: React.FC = () => {
                                   disabled={updatingId === c.id}
                                   style={{ width: 'auto' }}
                                 >
-                                  {updatingId === c.id ? 'Updating...' : 'Delete'}
+                                  {updatingId === c.id ? 'Processing...' : 'Remove Course'}
                                 </button>
                               )}
                             </div>
@@ -281,8 +293,8 @@ const AdminCourses: React.FC = () => {
             </tbody>
           </table>
         </div>
-        <div className="admin-table-footer">
-          Showing {filteredCourses.length} of {courses.length} courses
+        <div className="admin-table-footer" style={{ border: 'none', color: 'var(--text-muted)', fontWeight: 600, padding: '1.5rem 2rem' }}>
+          {filteredCourses.length} academic courses indexed
         </div>
       </div>
     </DashboardLayout>

@@ -47,4 +47,11 @@ public interface SecurityEventRepository extends JpaRepository<SecurityEvent, Lo
             String userEmail, SecurityEventType type, LocalDateTime after);
     
     long countBySeverityAndCreatedAtAfter(SecurityEventSeverity severity, LocalDateTime after);
+    
+    long countByCreatedAtAfter(LocalDateTime after);
+    
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT e.countryCode, COUNT(e) FROM SecurityEvent e WHERE e.createdAt > :after GROUP BY e.countryCode ORDER BY COUNT(e) DESC")
+    List<Object[]> getCountryBreakdown(@Param("after") LocalDateTime after);
 }

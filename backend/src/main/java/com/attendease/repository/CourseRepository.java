@@ -13,6 +13,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findByJoinCode(String joinCode);
     boolean existsByJoinCode(String joinCode);
     long countByStatus(String status);
+    long countByCreatedAtBefore(java.time.LocalDateTime date);
     List<Course> findByStatus(String status);
     List<Course> findByStatusNot(String status);
 }

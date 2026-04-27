@@ -1,13 +1,12 @@
 package com.attendease.service;
 
 import com.attendease.dto.*;
-import com.attendease.entity.LoginAttempt;
-import com.attendease.entity.RefreshToken;
-import com.attendease.entity.User;
+import com.attendease.entity.*;
 import com.attendease.exception.BadRequestException;
 import com.attendease.exception.UnauthorizedException;
 import com.attendease.repository.LoginAttemptRepository;
 import com.attendease.repository.RefreshTokenRepository;
+import com.attendease.repository.SecurityEventRepository;
 import com.attendease.repository.UserRepository;
 import com.attendease.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptRepository loginAttemptRepository;
+    private final SecurityEventRepository securityEventRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
@@ -153,11 +153,39 @@ public class AuthService {
     }
 
     private void recordLoginAttempt(String email, HttpServletRequest request, boolean success) {
+        String ip = request != null ? request.getRemoteAddr() : null;
         LoginAttempt attempt = LoginAttempt.builder()
                 .email(email)
-                .ipAddress(request != null ? request.getRemoteAddr() : null)
+                .ipAddress(ip)
                 .success(success)
                 .build();
         loginAttemptRepository.save(java.util.Objects.requireNonNull(attempt));
+
+        if (!success) {
+            long recentFailures = loginAttemptRepository.countByEmailAndSuccessAndAttemptedAtAfter(
+                    email, false, LocalDateTime.now().minusMinutes(LOCKOUT_MINUTES));
+            
+            if (recentFailures == MAX_ATTEMPTS) {
+                // First time hitting the limit - record a security event
+                SecurityEvent event = new SecurityEvent();
+                event.setType(SecurityEventType.FAILED_LOGIN);
+                event.setSeverity(SecurityEventSeverity.HIGH);
+                event.setDescription("Brute-force detection: 5 failed login attempts in 15 minutes for account: " + email);
+                event.setIpAddress(ip);
+                event.setUserEmail(email);
+                event.setAcknowledged(false);
+                securityEventRepository.save(event);
+            } else if (recentFailures > MAX_ATTEMPTS) {
+                // Continued attempts after lockout - escalate to CRITICAL
+                SecurityEvent event = new SecurityEvent();
+                event.setType(SecurityEventType.FAILED_LOGIN);
+                event.setSeverity(SecurityEventSeverity.CRITICAL);
+                event.setDescription("Ongoing brute-force attempt after lockout for account: " + email);
+                event.setIpAddress(ip);
+                event.setUserEmail(email);
+                event.setAcknowledged(false);
+                securityEventRepository.save(event);
+            }
+        }
     }
 }

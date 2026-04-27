@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, ChevronDown, Users, Clock, MessageSquare, Filter, CheckCircle2, AlertCircle, History } from 'lucide-react';
+import { Search, FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History } from 'lucide-react';
 
 const downloadFile = async (type: 'material' | 'submission', id: number, fileName: string) => {
     try {
@@ -158,7 +158,6 @@ const TeacherAssignments: React.FC = () => {
 
         const isUrgent = m.dueDate && new Date(m.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000 && new Date(m.dueDate) > new Date();
         const isPast = m.dueDate && new Date(m.dueDate) < new Date();
-        // Done for teacher: All students have submitted
         const isDone = enrollments.length > 0 && (m.submissionCount || 0) >= enrollments.length;
 
         if (statusFilter === 'urgent') return isUrgent;
@@ -224,7 +223,6 @@ const TeacherAssignments: React.FC = () => {
             if (selectedAssignment) { 
                 const r = await teacherApi.getSubmissions(selectedAssignment.id); 
                 setSubmissions(r.data.data || []); 
-                // Refresh counts
                 if (selectedCourse) loadAssignments(selectedCourse);
             }
             showAlert('Graded', 'Submission graded successfully!');
@@ -299,7 +297,6 @@ const TeacherAssignments: React.FC = () => {
                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Assignments</h2>
                                 <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 1.25rem 0' }}>Review and grade work for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode}</strong>.</p>
                                 
-                                {/* Filter Chips moved below label */}
                                 <div style={{ display: 'flex', gap: '0.5rem', background: '#f1f5f9', padding: '0.4rem', borderRadius: 14, width: 'fit-content' }}>
                                     {[
                                         { id: 'all', label: 'All', icon: <History size={14} /> },

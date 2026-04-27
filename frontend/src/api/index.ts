@@ -12,6 +12,7 @@ export const authApi = {
 
 export const adminApi = {
   getDashboard: () => api.get('/admin/dashboard'),
+  getDashboardStats: () => api.get('/admin/dashboard/stats'),
   getUsers: (role?: string, status?: string) => api.get('/admin/users', { params: { role, status } }),
   createUser: (data: any) => api.post('/admin/users', data),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
@@ -22,6 +23,28 @@ export const adminApi = {
   deleteCourse: (id: number) => api.post(`/admin/courses/${id}/delete`),
   getAuditLogs: (page = 0, size = 20, search = '') =>
     api.get('/admin/audit-logs', { params: { page, size, search } }),
+
+  // Analytics
+  getUserAnalytics: (startDate?: string, endDate?: string) =>
+    api.get('/admin/analytics/users', { params: { startDate, endDate } }),
+  getLoginAnalytics: (startDate?: string, endDate?: string) =>
+    api.get('/admin/analytics/logins', { params: { startDate, endDate } }),
+  getUsersByRole: () => api.get('/admin/analytics/users-by-role'),
+  getCoursesByStatus: () => api.get('/admin/analytics/courses-by-status'),
+
+  // System Health
+  getSystemHealth: () => api.get('/admin/system/health'),
+
+  // Security
+  getSecurityEvents: (page = 0, size = 20, type?: string, severity?: string) =>
+    api.get('/admin/security/events', { params: { page, size, type, severity } }),
+  acknowledgeEvent: (id: number) => api.post(`/admin/security/events/${id}/acknowledge`),
+  getSecuritySummary: () => api.get('/admin/security/summary'),
+
+  // IP Access Control
+  getIPAccessList: () => api.get('/admin/security/ip-access'),
+  addIPAccessEntry: (data: any) => api.post('/admin/security/ip-access', data),
+  removeIPAccessEntry: (id: number) => api.delete(`/admin/security/ip-access/${id}`),
 };
 
 export const teacherApi = {

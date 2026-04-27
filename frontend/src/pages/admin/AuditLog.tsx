@@ -24,7 +24,8 @@ import {
   User,
   Image as ImageIcon,
   Lock,
-  FileText
+  FileText,
+  Activity
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
@@ -86,73 +87,81 @@ const AuditLog: React.FC = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="page-header">
+      <div className="page-header animate-fade-in">
         <div>
-          <h1 className="page-title">System Audit Log</h1>
-          <p className="page-subtitle">Track all system activities and security events</p>
+          <h1 className="page-title gradient-text">System Audit Log</h1>
+          <p className="page-subtitle">Historical ledger of administrative actions and security events</p>
         </div>
       </div>
 
-      <div className="admin-section-card shadow-sm">
-        <form onSubmit={handleSearch} className="admin-search-bar" style={{ marginBottom: '1.5rem' }}>
-          <div className="admin-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+      <div className="premium-card animate-fade-in" style={{ animationDelay: '0.1s', padding: '1.5rem' }}>
+        <form onSubmit={handleSearch} className="admin-search-bar" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+          <div className="admin-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ borderRadius: '12px', background: 'white', border: 'none' }}>
             <span className="admin-search-icon"><Search size={18} /></span>
             <input 
               className="admin-search-input" 
-              placeholder="Search by action, user, or IP address..." 
+              placeholder="Search by action, user, or network address..." 
               value={search} 
               onChange={e => setSearch(e.target.value)}
+              style={{ fontWeight: 500 }}
             />
             {search && <button type="button" className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => { setSearch(''); setPage(0); loadLogs(0, ''); }}><X size={16} /></button>}
           </div>
-          <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} disabled={loading}>Search</button>
+          <button type="submit" className="btn btn-primary shadow-lg hover:shadow-xl transition-all active:scale-95" style={{ width: 'auto', padding: '0.75rem 1.75rem', borderRadius: '12px' }} disabled={loading}>
+            <Activity size={18} /> Execute Search
+          </button>
         </form>
 
         <div className="audit-timeline">
           {loading ? (
-            <div className="loading-screen" style={{ minHeight: '300px' }}><div className="spinner"></div></div>
+            <div className="loading-screen" style={{ minHeight: '400px' }}><div className="spinner"></div></div>
           ) : logs.length === 0 ? (
-            <div className="empty-state">No audit logs found matching your criteria.</div>
+            <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>
+              <Search size={48} strokeWidth={1} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+              <div>No audit entries found matching your security parameters.</div>
+            </div>
           ) : (
-            logs.map((log) => {
+            logs.map((log, i) => {
               const info = getActionInfo(log.action);
               const isExpanded = expandedId === log.id;
               return (
-                <div key={log.id} className={`audit-entry ${isExpanded ? 'expanded' : ''} hover:bg-gray-50 transition-colors`}>
-                  <div className="audit-main" onClick={() => setExpandedId(isExpanded ? null : log.id)}>
-                    <div className="audit-icon-wrapper" style={{ background: `${info.color}15`, color: info.color }}>
+                <div key={log.id} className={`audit-entry ${isExpanded ? 'expanded' : ''} transition-all duration-200 animate-fade-in`} style={{ animationDelay: `${i * 0.05}s`, borderBottom: '1px solid #f1f5f9' }}>
+                  <div className="audit-main hover:bg-slate-50 transition-colors" style={{ padding: '1.25rem 1rem', cursor: 'pointer' }} onClick={() => setExpandedId(isExpanded ? null : log.id)}>
+                    <div className="audit-icon-wrapper shadow-sm" style={{ background: `${info.color}15`, color: info.color, width: '40px', height: '40px', borderRadius: '12px' }}>
                       {info.icon}
                     </div>
                     <div className="audit-content">
-                      <div className="audit-primary">
-                        <span className="audit-action" style={{ color: info.color }}>{info.label}</span>
-                        <span className="admin-audit-separator"></span>
-                        <span className="audit-user">{log.userEmail || 'System'}</span>
+                      <div className="audit-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span className="audit-action" style={{ color: info.color, fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
+                        <span className="admin-audit-separator" style={{ background: '#e2e8f0' }}></span>
+                        <span className="audit-user" style={{ fontWeight: 700, fontSize: '0.95rem' }}>{log.userEmail || 'System Process'}</span>
                       </div>
-                      <div className="audit-secondary">
-                        <span className="audit-time">{new Date(log.createdAt).toLocaleString()}</span>
-                        <span className="admin-audit-separator"></span>
-                        <span className="audit-ip">{log.ipAddress}</span>
+                      <div className="audit-secondary" style={{ marginTop: '0.25rem' }}>
+                        <span className="audit-time" style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleString()}</span>
+                        <span className="admin-audit-separator" style={{ background: '#e2e8f0' }}></span>
+                        <span className="audit-ip" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>📍 {log.ipAddress}</span>
                       </div>
                     </div>
-                    <div className={`audit-chevron transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                      <ChevronDown size={18} />
+                    <div className={`audit-chevron transition-transform duration-300 ${isExpanded ? 'rotate-180 text-blue-600' : 'text-gray-300'}`}>
+                      <ChevronDown size={20} />
                     </div>
                   </div>
                   {isExpanded && (
-                    <div className="audit-details transition-all duration-300">
-                      <div className="audit-details-grid">
+                    <div className="audit-details animate-fade-in" style={{ background: '#f8fafc', margin: '0 1rem 1.25rem', borderRadius: '14px', border: '1px solid #f1f5f9', padding: '1.5rem' }}>
+                      <div className="audit-details-grid" style={{ gap: '1.5rem' }}>
                         <div className="audit-detail-item">
-                          <label>Full Name</label>
-                          <div>{log.userName || 'N/A'}</div>
+                          <label style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Actor Identity</label>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{log.userName || 'Service Account'}</div>
                         </div>
                         <div className="audit-detail-item">
-                          <label>User Agent</label>
-                          <div style={{ fontSize: '0.75rem', wordBreak: 'break-all' }}>{log.userAgent}</div>
+                          <label style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Network Fingerprint (User Agent)</label>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.5 }}>{log.userAgent}</div>
                         </div>
                         <div className="audit-detail-item" style={{ gridColumn: '1 / -1' }}>
-                          <label>Event Metadata</label>
-                          <pre className="audit-metadata-box">{log.details || '{}'}</pre>
+                          <label style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Event Payload / Details</label>
+                          <pre className="audit-metadata-box" style={{ background: '#0f172a', color: '#94a3b8', padding: '1rem', borderRadius: '10px', fontSize: '0.8rem', overflowX: 'auto', border: '1px solid #1e293b' }}>
+                            {JSON.stringify(JSON.parse(log.details || '{}'), null, 2)}
+                          </pre>
                         </div>
                       </div>
                     </div>
@@ -163,23 +172,25 @@ const AuditLog: React.FC = () => {
           )}
         </div>
 
-        <div className="admin-pagination shadow-inner">
+        <div className="admin-pagination" style={{ borderTop: '1px solid #f1f5f9', marginTop: '2rem', padding: '1.5rem 0 0' }}>
           <button 
-            className="btn btn-sm btn-secondary hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50" 
+            className="btn btn-secondary shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-30" 
             disabled={page === 0 || loading} 
             onClick={() => setPage(p => p - 1)}
+            style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '10px', background: 'white' }}
           >
-            <ArrowLeft size={14} className="mr-1" /> Previous
+            <ArrowLeft size={16} /> Previous
           </button>
-          <span className="admin-pagination-info">
-            Page <strong>{page + 1}</strong> of <strong>{totalPages || 1}</strong>
-          </span>
+          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+            Log Page <span className="gradient-text">{page + 1}</span> of {totalPages || 1}
+          </div>
           <button 
-            className="btn btn-sm btn-secondary hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50" 
+            className="btn btn-secondary shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-30" 
             disabled={page >= totalPages - 1 || loading} 
             onClick={() => setPage(p => p + 1)}
+            style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '10px', background: 'white' }}
           >
-            Next <ArrowRight size={14} className="ml-1" />
+            Next <ArrowRight size={16} />
           </button>
         </div>
       </div>

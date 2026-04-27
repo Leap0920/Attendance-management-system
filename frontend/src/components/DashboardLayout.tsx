@@ -35,6 +35,14 @@ const navSections: Record<string, NavSection[]> = {
         { label: 'Audit Log', path: '/admin/audit-log' },
       ],
     },
+    {
+      label: 'MONITORING',
+      items: [
+        { label: 'Analytics', path: '/admin/analytics' },
+        { label: 'Security', path: '/admin/security' },
+        { label: 'System Health', path: '/admin/health' },
+      ],
+    },
   ],
   teacher: [
     {
@@ -410,7 +418,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         >
           <X size={24} />
         </button>
-        <div className="sidebar-brand">AttendEase</div>
+        <div className="sidebar-brand gradient-text" style={{ fontSize: '1.5rem', letterSpacing: '-0.02em', marginBottom: '2.5rem' }}>
+          AttendEase
+        </div>
         <nav className="sidebar-nav">
           {navSections[role]?.map((section) => (
             <React.Fragment key={section.label}>
@@ -420,34 +430,70 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                   key={item.path}
                   to={item.path}
                   className={`sidebar-link group ${isActive(item.path) ? 'active' : ''}`}
+                  style={{ position: 'relative', overflow: 'hidden' }}
                 >
-                  <span className="group-hover:translate-x-0.5 transition-transform">{item.label}</span>
+                  <span className="group-hover:translate-x-1 transition-transform">{item.label}</span>
+                  {isActive(item.path) && (
+                    <ChevronRight size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                  )}
                 </Link>
               ))}
             </React.Fragment>
           ))}
         </nav>
         <div className="sidebar-footer">
-          <div className="sidebar-profile shadow-sm hover:shadow-md transition-all border border-transparent hover:border-blue-100" onClick={openProfile} title="Edit Profile">
-            <div className="sidebar-avatar">
+          <div 
+            className="sidebar-profile glass-effect" 
+            onClick={openProfile} 
+            title="Account Settings"
+            style={{ 
+              padding: '0.85rem', 
+              borderRadius: 'var(--radius-md)', 
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              border: '1px solid var(--border-glass)'
+            }}
+          >
+            <div className="sidebar-avatar" style={{ 
+              width: '38px', 
+              height: '38px',
+              boxShadow: '0 0 12px rgba(37, 99, 235, 0.15)',
+              border: '2px solid #fff'
+            }}>
               {hasAvatar ? (
                 <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
               ) : (
-                <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+                <span>{user?.firstName?.[0]}{user?.lastName?.[0]}</span>
               )}
             </div>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{user?.fullName}</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user?.role}</div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.fullName}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
+                {user?.role}
+              </div>
             </div>
           </div>
-          <button
-            onClick={() => setShowLogout(true)}
-            className="btn btn-sm hover:bg-gray-200 transition-colors"
-            style={{ width: '100%', background: '#f3f4f6', color: 'var(--text-secondary)', border: '1px solid var(--border-glass)' }}
+          <button 
+            onClick={() => setShowLogout(true)} 
+            className="btn btn-secondary" 
+            style={{ 
+              width: '100%', 
+              fontSize: '0.8rem', 
+              fontWeight: 700, 
+              background: '#f8fafc',
+              border: '1px solid #f1f5f9',
+              color: 'var(--text-secondary)'
+            }}
           >
-            <LogOut size={14} className="mr-2" />
-            Logout
+            <LogOut size={14} />
+            Sign Out
           </button>
         </div>
 

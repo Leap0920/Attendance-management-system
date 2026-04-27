@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, FileText, Download, Play, X, Upload, ChevronRight, BookOpen, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History } from 'lucide-react';
+import { Search, FileText, Download, Play, X, Upload, ChevronRight, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History } from 'lucide-react';
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
@@ -33,14 +33,12 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
 const StudentAssignments: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
     const [courses, setCourses] = useState<any[]>([]);
     const [assignments, setAssignments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'urgent' | 'done' | 'overdue'>('all');
     const [submissionsMap, setSubmissionsMap] = useState<Record<number, any>>({});
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const [comments, setComments] = useState<any[]>([]);
@@ -55,13 +53,7 @@ const StudentAssignments: React.FC = () => {
     const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'other' | null>(null);
     const [previewName, setPreviewName] = useState('');
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsMenuOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+
 
     const load = async () => {
         setLoading(true);
@@ -71,7 +63,7 @@ const StudentAssignments: React.FC = () => {
             const courseList = data.map((d: any) => d?.course).filter(Boolean);
             setCourses(courseList);
             
-            const allPromises = courseList.map(c => studentApi.getMaterials(c.id));
+            const allPromises = courseList.map((c: any) => studentApi.getMaterials(c.id));
             const results = await Promise.all(allPromises);
             const allAssignments = results.flatMap((res, index) => {
                 const materials = Array.isArray(res.data?.data) ? res.data.data : [];
