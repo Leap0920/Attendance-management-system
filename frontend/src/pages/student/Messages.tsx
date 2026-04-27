@@ -514,22 +514,22 @@ const StudentMessages: React.FC = () => {
                         )}
 
                         <div className="chat-bubble-stack">
-                          {m.parent && (
-                            <div className={`messenger-reply-wrapper ${isMine ? 'mine' : 'theirs'}`} onClick={() => {
-                              const parentEl = document.getElementById(`msg-${m.parent.id}`);
-                              if (parentEl) parentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }}>
-                              <div className="messenger-reply-header">
-                                <CornerUpLeft size={12} /> {isMine ? 'You replied to' : `${senderFirst} replied to`} {m.parent.sender?.firstName || m.parent.firstName || 'User'}
-                              </div>
-                              <div className="messenger-reply-bubble">
-                                {m.parent.content}
-                              </div>
-                            </div>
-                          )}
-                          
                           <div style={{ position: 'relative' }}>
                             <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`}>
+                              {m.parent && (
+                                <div className={`messenger-reply-wrapper ${isMine ? 'mine' : 'theirs'}`} onClick={() => {
+                                  const parentEl = document.getElementById(`msg-${m.parent.id}`);
+                                  if (parentEl) parentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }}>
+                                  <div className="messenger-reply-header">
+                                    <CornerUpLeft size={12} /> {isMine ? 'You replied to' : `${senderFirst} replied to`} {m.parent.sender?.firstName || m.parent.firstName || 'User'}
+                                  </div>
+                                  <div className="messenger-reply-bubble">
+                                    {m.parent.content}
+                                  </div>
+                                </div>
+                              )}
+
                               {!isMine && viewMode === 'group' && (
                                 <div className="bubble-sender">{senderFirst} {senderLast}</div>
                               )}
