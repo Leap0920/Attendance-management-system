@@ -12,6 +12,7 @@ import TeacherCourses from './pages/teacher/Courses';
 import TeacherCourseDetail from './pages/teacher/CourseDetail';
 import TeacherAttendance from './pages/teacher/Attendance';
 import TeacherMaterials from './pages/teacher/Materials';
+import TeacherAssignments from './pages/teacher/Assignments';
 import TeacherMessages from './pages/teacher/Messages';
 import TeacherReports from './pages/teacher/Reports';
 import StudentDashboard from './pages/student/Dashboard';
@@ -19,6 +20,7 @@ import StudentCourses from './pages/student/Courses';
 import StudentCourseDetail from './pages/student/CourseDetail';
 import StudentAttendance from './pages/student/Attendance';
 import StudentMaterials from './pages/student/Materials';
+import StudentAssignments from './pages/student/Assignments';
 import StudentMessages from './pages/student/Messages';
 import './styles/index.css';
 
@@ -60,6 +62,7 @@ function App() {
           <Route path="/teacher/courses/:id" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCourseDetail /></ProtectedRoute>} />
           <Route path="/teacher/attendance" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherAttendance /></ProtectedRoute>} />
           <Route path="/teacher/materials" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherMaterials /></ProtectedRoute>} />
+          <Route path="/teacher/assignments" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherAssignments /></ProtectedRoute>} />
           <Route path="/teacher/messages" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherMessages /></ProtectedRoute>} />
           <Route path="/teacher/reports" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherReports /></ProtectedRoute>} />
 
@@ -69,6 +72,7 @@ function App() {
           <Route path="/student/courses/:id" element={<ProtectedRoute allowedRoles={['student']}><StudentCourseDetail /></ProtectedRoute>} />
           <Route path="/student/attendance" element={<ProtectedRoute allowedRoles={['student']}><StudentAttendance /></ProtectedRoute>} />
           <Route path="/student/materials" element={<ProtectedRoute allowedRoles={['student']}><StudentMaterials /></ProtectedRoute>} />
+          <Route path="/student/assignments" element={<ProtectedRoute allowedRoles={['student']}><StudentAssignments /></ProtectedRoute>} />
           <Route path="/student/messages" element={<ProtectedRoute allowedRoles={['student']}><StudentMessages /></ProtectedRoute>} />
 
           {/* Fallback */}

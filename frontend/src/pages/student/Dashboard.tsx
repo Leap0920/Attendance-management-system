@@ -203,7 +203,7 @@ const StudentDashboard: React.FC = () => {
                 <div className="sd-stat-label">Average Attendance</div>
               </div>
 
-              <div className="sd-stat-card">
+              <div className="sd-stat-card" onClick={() => navigate('/student/assignments')} style={{ cursor: 'pointer' }}>
                 <div className="sd-stat-tag amber">Pending Assignments</div>
                 <div className="sd-stat-icon-wrap amber">
                   <ClipboardList size={18} />

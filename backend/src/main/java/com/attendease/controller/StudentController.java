@@ -382,7 +382,11 @@ public class StudentController {
                         @PathVariable Long courseId, @AuthenticationPrincipal User student) {
                 enrollmentRepository.findByStudentIdAndCourseId(student.getId(), courseId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Not enrolled"));
-                List<CourseMessage> messages = courseMessageRepository.findByCourseIdOrderByCreatedAtAsc(courseId);
+                List<CourseMessage> messages = courseMessageRepository.findByCourseIdWithSender(courseId);
+                messages.removeIf(m -> {
+                        String deleted = m.getDeletedForUsers();
+                        return deleted != null && deleted.contains("," + student.getId() + ",");
+                });
                 List<Map<String, Object>> data = messages.stream().map(m -> {
                         Map<String, Object> sender = new HashMap<>();
                         sender.put("id", m.getSender().getId());

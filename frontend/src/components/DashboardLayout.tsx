@@ -47,6 +47,7 @@ const navSections: Record<string, NavSection[]> = {
         { label: 'My Courses', path: '/teacher/courses' },
         { label: 'Attendance', path: '/teacher/attendance' },
         { label: 'Materials', path: '/teacher/materials' },
+        { label: 'Assignments', path: '/teacher/assignments' },
         { label: 'Reports', path: '/teacher/reports' },
       ],
     },
@@ -66,6 +67,7 @@ const navSections: Record<string, NavSection[]> = {
         { label: 'My Courses', path: '/student/courses' },
         { label: 'Attendance', path: '/student/attendance' },
         { label: 'Materials', path: '/student/materials' },
+        { label: 'Assignments', path: '/student/assignments' },
       ],
     },
     {

@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  MessageSquare, 
-  X, 
-  Send, 
-  Users, 
-  MoreHorizontal, 
-  Plus, 
-  Search,
-  ArrowLeft,
-  ChevronRight,
-  Info,
-  Trash2,
-  Calendar,
-  Clock,
-  User
-} from 'lucide-react';
+import { MessageSquare, X, Send, Users, Plus, Search, ArrowLeft, Trash2, Smile, Reply, MoreVertical } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
 import { teacherApi } from '../../api';
@@ -22,6 +7,13 @@ import { useAuth } from '../../auth/AuthContext';
 import { showApiError, showAlert } from '../../utils/feedback';
 
 const POLL_INTERVAL = 4000;
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '🔥', '👏', '🎯'];
+const LONG_PRESS_DURATION = 500; // milliseconds
+
+type ReactionState = {
+  counts: Record<string, number>;
+  mine?: string;
+};
 
 const TeacherMessages: React.FC = () => {
   const { user } = useAuth();
@@ -35,17 +27,23 @@ const TeacherMessages: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [selectedUserName, setSelectedUserName] = useState('');
-  
-  // Mobile state: toggle between chat list and chat view
-  const [showChatList, setShowChatList] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
+  const [showChatList, setShowChatList] = useState(true);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMsg, setNewMsg] = useState('');
   const [showNewDM, setShowNewDM] = useState(false);
   const [dmForm, setDmForm] = useState({ receiverId: '', content: '' });
 
+  const [pickerOpenFor, setPickerOpenFor] = useState<string | null>(null);
+  const [reactionsByMessage, setReactionsByMessage] = useState<Record<string, ReactionState>>({});
+  const [contextMenu, setContextMenu] = useState<{ messageId: number; x: number; y: number } | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [replyingTo, setReplyingTo] = useState<{ id: number; content: string; sender: string } | null>(null);
+
   const chatRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const isTeacherRole = (role?: string) => {
     const raw = (role || '').toLowerCase();
@@ -56,6 +54,94 @@ const TeacherMessages: React.FC = () => {
     const senderId = Number(msg?.sender?.id ?? msg?.senderId ?? 0);
     const currentId = Number(user?.id ?? 0);
     return currentId > 0 && senderId === currentId;
+  };
+
+  const getAvatarUrl = (avatar?: unknown) => {
+    if (typeof avatar !== 'string') return undefined;
+    const value = avatar.trim();
+    if (!value) return undefined;
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
+  };
+
+  const getMessageReactionKey = (messageId: number) => {
+    const scope = viewMode === 'group' ? `g-${selectedCourse ?? 0}` : `d-${selectedUser ?? 0}`;
+    return `${scope}:${messageId}`;
+  };
+
+  const toggleReaction = (messageId: number, emoji: string) => {
+    const key = getMessageReactionKey(messageId);
+
+    setReactionsByMessage((prev) => {
+      const entry = prev[key] ?? { counts: {} };
+      const counts = { ...entry.counts };
+
+      if (entry.mine) {
+        const reduced = (counts[entry.mine] ?? 1) - 1;
+        if (reduced <= 0) delete counts[entry.mine];
+        else counts[entry.mine] = reduced;
+      }
+
+      const next: ReactionState = { counts };
+      if (entry.mine !== emoji) {
+        counts[emoji] = (counts[emoji] ?? 0) + 1;
+        next.mine = emoji;
+      }
+
+      return { ...prev, [key]: next };
+    });
+
+    setPickerOpenFor(null);
+    setContextMenu(null);
+  };
+
+  // Handle context menu
+  const handleContextMenu = (e: React.MouseEvent, messageId: number) => {
+    e.preventDefault();
+    setContextMenu({ messageId, x: e.clientX, y: e.clientY });
+    setPickerOpenFor(null);
+  };
+
+  // Handle long press for mobile
+  const handleTouchStart = (messageId: number) => {
+    const timer = setTimeout(() => {
+      const rect = document.getElementById(`msg-${messageId}`)?.getBoundingClientRect();
+      if (rect) {
+        setContextMenu({ messageId, x: rect.left, y: rect.top + rect.height / 2 });
+        setPickerOpenFor(null);
+      }
+    }, LONG_PRESS_DURATION);
+    setLongPressTimer(timer);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setContextMenu(null);
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [contextMenu]);
+
+  const handleReply = (messageId: number) => {
+    const message = messages.find(m => m.id === messageId);
+    if (message) {
+      const senderName = `${message.sender?.firstName || message.firstName || 'User'} ${message.sender?.lastName || message.lastName || ''}`.trim();
+      setReplyingTo({ id: messageId, content: message.content, sender: senderName });
+    }
+    setContextMenu(null);
   };
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -71,15 +157,17 @@ const TeacherMessages: React.FC = () => {
         teacherApi.getConversations(),
         teacherApi.getContacts(),
       ]);
+
       const courseList = Array.isArray(coursesRes.data?.data) ? coursesRes.data.data : [];
       setCourses(courseList);
       setConversations(Array.isArray(convsRes.data?.data) ? convsRes.data.data : []);
       setContacts(Array.isArray(contactsRes.data?.data) ? contactsRes.data.data : []);
+
       if (courseList.length > 0 && !selectedCourse && !selectedUser) {
         setSelectedCourse(courseList[0].id);
       }
     } catch {
-      // ignore
+      // no-op
     } finally {
       setLoading(false);
     }
@@ -93,7 +181,9 @@ const TeacherMessages: React.FC = () => {
     teacherApi.getGroupMessages(courseId).then((res) => {
       const newMsgs = Array.isArray(res.data?.data) ? res.data.data : [];
       setMessages((prev) => {
-        if (prev.length !== newMsgs.length) setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 50);
+        if (prev.length !== newMsgs.length) {
+          setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 40);
+        }
         return newMsgs;
       });
     }).catch(() => {});
@@ -103,24 +193,27 @@ const TeacherMessages: React.FC = () => {
     teacherApi.getDmMessages(userId).then((res) => {
       const newMsgs = Array.isArray(res.data?.data) ? res.data.data : [];
       setMessages((prev) => {
-        if (prev.length !== newMsgs.length) setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 50);
+        if (prev.length !== newMsgs.length) {
+          setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 40);
+        }
         return newMsgs;
       });
     }).catch(() => {});
   }, [scrollToBottom]);
 
-  const refreshConversations = () => {
+  const refreshConversations = useCallback(() => {
     teacherApi.getConversations().then((res) => {
       setConversations(Array.isArray(res.data?.data) ? res.data.data : []);
     }).catch(() => {});
-  };
+  }, []);
 
   useEffect(() => {
     if (pollRef.current) clearInterval(pollRef.current);
 
     const tick = () => {
-      if (viewMode === 'group' && selectedCourse) loadGroupMessages(selectedCourse);
-      else if (viewMode === 'dm' && selectedUser) {
+      if (viewMode === 'group' && selectedCourse) {
+        loadGroupMessages(selectedCourse);
+      } else if (viewMode === 'dm' && selectedUser) {
         loadDmMessages(selectedUser);
         teacherApi.markDmRead(selectedUser).catch(() => {});
       }
@@ -133,7 +226,7 @@ const TeacherMessages: React.FC = () => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [viewMode, selectedCourse, selectedUser, loadGroupMessages, loadDmMessages]);
+  }, [viewMode, selectedCourse, selectedUser, loadGroupMessages, loadDmMessages, refreshConversations]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,8 +240,13 @@ const TeacherMessages: React.FC = () => {
       } else if (viewMode === 'dm' && selectedUser) {
         await teacherApi.sendMessage({ receiverId: selectedUser, content });
       }
+
       setNewMsg('');
+      setReplyingTo(null);
       refreshConversations();
+
+      if (viewMode === 'group' && selectedCourse) loadGroupMessages(selectedCourse);
+      if (viewMode === 'dm' && selectedUser) loadDmMessages(selectedUser);
     } catch (err) {
       showApiError(err);
     } finally {
@@ -165,16 +263,41 @@ const TeacherMessages: React.FC = () => {
         receiverId: Number(dmForm.receiverId),
         content: dmForm.content,
       });
+
+      const receiverId = Number(dmForm.receiverId);
+      const contact = contacts.find((c) => c.id === receiverId);
+
       setShowNewDM(false);
       setDmForm({ receiverId: '', content: '' });
       refreshConversations();
 
-      const contact = contacts.find((c) => c.id === Number(dmForm.receiverId));
       if (contact) {
-        selectDmUser(Number(dmForm.receiverId), `${contact.firstName} ${contact.lastName}`);
+        selectDmUser(receiverId, `${contact.firstName} ${contact.lastName}`);
       }
     } catch (err) {
       showApiError(err);
+    }
+  };
+
+  const handleDeleteForEveryone = async (messageId: number) => {
+    const ok = window.confirm('Delete this message for everyone?');
+    if (!ok) return;
+
+    try {
+      if (viewMode === 'group') {
+        await teacherApi.deleteGroupMessage(messageId);
+        if (selectedCourse) loadGroupMessages(selectedCourse);
+      } else {
+        await teacherApi.deleteMessage(messageId);
+        if (selectedUser) loadDmMessages(selectedUser);
+      }
+
+      refreshConversations();
+      showAlert('Deleted', 'Message removed for everyone.', 'error');
+    } catch (err) {
+      showApiError(err);
+    } finally {
+      setContextMenu(null);
     }
   };
 
@@ -183,6 +306,7 @@ const TeacherMessages: React.FC = () => {
     setSelectedCourse(courseId);
     setSelectedUser(null);
     setMessages([]);
+    setPickerOpenFor(null);
     setShowChatList(false);
   };
 
@@ -192,181 +316,327 @@ const TeacherMessages: React.FC = () => {
     setSelectedUserName(name);
     setSelectedCourse(null);
     setMessages([]);
+    setPickerOpenFor(null);
     setShowChatList(false);
     teacherApi.markDmRead(userId).catch(() => {});
   };
 
-  const getAvatarUrl = (avatar?: unknown) => {
-    if (typeof avatar !== 'string') return undefined;
-    const value = avatar.trim();
-    if (!value) return undefined;
-    if (value.startsWith('http://') || value.startsWith('https://')) return value;
-    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
-  };
+  const query = searchQuery.trim().toLowerCase();
+  const filteredCourses = query
+    ? courses.filter((c) => (`${c.courseCode || ''} ${c.courseName || ''} ${c.section || ''}`).toLowerCase().includes(query))
+    : courses;
+
+  const filteredConversations = query
+    ? conversations.filter((conv) => (`${conv.firstName || ''} ${conv.lastName || ''} ${conv.role || ''}`).toLowerCase().includes(query))
+    : conversations;
+
+  const activeTitle = viewMode === 'group'
+    ? courses.find((c) => c.id === selectedCourse)?.courseName || 'Course Chat'
+    : selectedUserName || 'Direct Message';
+
+  const activeSubtitle = viewMode === 'group' ? 'Course Community' : 'Direct Message';
 
   return (
     <DashboardLayout role="teacher">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Messages</h1>
-          <p className="page-subtitle">Collaborate with your classes and colleagues</p>
-        </div>
-        <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} onClick={() => setShowNewDM(true)}>
-          <Plus size={18} className="mr-1" /> New Message
-        </button>
-      </div>
-
-      {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
-        <div className="messages-container shadow-sm border border-gray-100" style={{ height: 'calc(100vh - 220px)' }}>
-          {/* Sidebar */}
-          <div className={`messages-sidebar ${!showChatList ? 'hidden-mobile' : ''}`}>
+      {loading ? (
+        <div className="loading-screen"><div className="spinner" /></div>
+      ) : (
+        <div className="messages-layout-fullscreen">
+          <aside className={`messages-sidebar ${!showChatList ? 'is-hidden-mobile' : ''}`}>
             <div className="messages-sidebar-header">
-              <h3 className="m-0">Chats</h3>
-              <div className="relative mt-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
-                <input className="messages-search pl-10 focus:ring-2 focus:ring-blue-100 transition-all" placeholder="Search..." />
+              <div className="messages-sidebar-title-row">
+                <h3>Messages</h3>
+                <button className="btn-icon-primary" onClick={() => setShowNewDM(true)} title="New Message">
+                  <Plus size={18} />
+                </button>
+              </div>
+              <div className="messages-search-wrap">
+                <Search size={16} />
+                <input
+                  className="messages-search"
+                  placeholder="Search conversations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
             </div>
 
-            <div className="messages-list">
+            <div className="messages-sidebar-section">
               <div className="messages-sidebar-label">Course Groups</div>
-              {courses.map((c: any) => (
+              {filteredCourses.map((c: any) => (
                 <div
                   key={c.id}
-                  className={`message-item group ${viewMode === 'group' && selectedCourse === c.id ? 'active' : ''} hover:bg-gray-50 transition-colors cursor-pointer`}
+                  className={`message-channel ${viewMode === 'group' && selectedCourse === c.id ? 'active' : ''}`}
                   onClick={() => selectCourse(c.id)}
                 >
-                  <div className="message-item-icon" style={{ background: c.coverColor || 'var(--accent-blue)', color: '#fff' }}>
-                    <Users size={20} />
+                  <div className="channel-avatar" style={{ background: c.coverColor || 'var(--accent-blue)' }}>
+                    {(c.courseCode || 'C').slice(0, 1).toUpperCase()}
                   </div>
-                  <div className="message-item-info">
-                    <div className="message-item-name">{c.courseCode} {c.section ? `- ${c.section}` : ''}</div>
-                    <div className="message-item-preview">{c.courseName}</div>
+                  <div className="channel-info">
+                    <div className="channel-name">{c.courseCode} {c.section ? `- ${c.section}` : ''}</div>
+                    <div className="channel-meta">{c.courseName}</div>
                   </div>
                 </div>
               ))}
+              {filteredCourses.length === 0 && <div className="messages-sidebar-empty">No matching courses.</div>}
+            </div>
 
-              <div className="messages-sidebar-label mt-4">Direct Messages</div>
-              {conversations.map((conv: any) => (
+            <div className="messages-sidebar-section">
+              <div className="messages-sidebar-label">Direct Messages</div>
+              {filteredConversations.map((conv: any) => (
                 <div
                   key={conv.userId}
-                  className={`message-item group ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''} hover:bg-gray-50 transition-colors cursor-pointer`}
+                  className={`message-channel ${viewMode === 'dm' && selectedUser === conv.userId ? 'active' : ''}`}
                   onClick={() => selectDmUser(conv.userId, `${conv.firstName} ${conv.lastName}`)}
                 >
-                  <Avatar firstName={conv.firstName} lastName={conv.lastName} avatarUrl={getAvatarUrl(conv.avatar)} size={40} />
-                  <div className="message-item-info">
-                    <div className="message-item-top">
-                        <span className="message-item-name">{conv.firstName} {conv.lastName}</span>
-                        {conv.unreadCount > 0 && <span className="unread-dot pulse" />}
-                    </div>
-                    <div className="message-item-preview">{isTeacherRole(conv.role) ? 'Teacher' : 'Student'}</div>
+                  <Avatar
+                    firstName={conv.firstName}
+                    lastName={conv.lastName}
+                    avatarUrl={getAvatarUrl(conv.avatar)}
+                    size={38}
+                  />
+                  <div className="channel-info">
+                    <div className="channel-name">{conv.firstName} {conv.lastName}</div>
+                    <div className="channel-meta">{isTeacherRole(conv.role) ? 'Teacher' : 'Student'}</div>
                   </div>
+                  {conv.unreadCount > 0 && <span className="channel-badge">{conv.unreadCount}</span>}
                 </div>
               ))}
+              {filteredConversations.length === 0 && <div className="messages-sidebar-empty">No matching conversations.</div>}
             </div>
-          </div>
+          </aside>
 
-          {/* Chat Area */}
-          <div className={`messages-chat ${showChatList ? 'hidden-mobile' : ''}`}>
+          <section className={`messages-main ${showChatList ? 'is-hidden-mobile' : ''}`}>
             {(selectedCourse || selectedUser) ? (
               <>
-                <div className="messages-chat-header shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <button className="mobile-only hover:bg-gray-100 p-1 rounded transition-colors" onClick={() => setShowChatList(true)}>
-                      <ArrowLeft size={18} />
-                    </button>
+                <div className="chat-header">
+                  <button className="messages-mobile-back" onClick={() => setShowChatList(true)}>
+                    <ArrowLeft size={16} /> Back
+                  </button>
+                  <div className="chat-header-main">
                     {viewMode === 'group' ? (
-                      <div className="message-item-icon" style={{ background: courses.find(c => c.id === selectedCourse)?.coverColor || 'var(--accent-blue)', color: '#fff', width: 32, height: 32 }}>
-                        <Users size={18} />
+                      <div
+                        className="channel-avatar"
+                        style={{
+                          width: 38,
+                          height: 38,
+                          fontSize: '0.8rem',
+                          background: courses.find((c) => c.id === selectedCourse)?.coverColor || 'var(--accent-blue)'
+                        }}
+                      >
+                        <Users size={16} />
                       </div>
                     ) : (
-                      <Avatar 
-                        firstName={selectedUserName?.split(' ')[0]} 
-                        lastName={selectedUserName?.split(' ').slice(1).join(' ')} 
-                        size={32} 
+                      <Avatar
+                        firstName={selectedUserName?.split(' ')[0]}
+                        lastName={selectedUserName?.split(' ').slice(1).join(' ')}
+                        size={38}
                       />
                     )}
                     <div>
-                      <h4 className="m-0">{viewMode === 'group' ? courses.find(c => c.id === selectedCourse)?.courseName : selectedUserName}</h4>
-                      <span className="text-xs text-muted">{viewMode === 'group' ? 'Course Community' : 'Direct Message'}</span>
+                      <h3>{activeTitle}</h3>
+                      <p>{activeSubtitle}</p>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                      <button className="icon-btn hover:bg-gray-100 transition-colors"><Info size={18} /></button>
-                      <button className="icon-btn hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
                   </div>
                 </div>
 
-                <div className="messages-view scroll-smooth" ref={chatRef}>
-                  {messages.map((m: any, i: number) => {
+                <div className="chat-messages" ref={chatRef}>
+                  {messages.map((m: any) => {
                     const isMine = isOwnMessage(m);
-                    const showAvatar = !isMine && (i === 0 || messages[i-1].senderId !== m.senderId);
-                    
+                    const senderFirst = m.sender?.firstName || m.firstName || 'User';
+                    const senderLast = m.sender?.lastName || m.lastName || '';
+                    const senderRole = m.sender?.role || m.role;
+                    const avatarUrl = getAvatarUrl(m.sender?.avatar || m.sender?.avatarUrl || m.avatar || m.avatarUrl);
+
+                    const reactionKey = getMessageReactionKey(m.id);
+                    const reactionState = reactionsByMessage[reactionKey];
+                    const reactionEntries = Object.entries(reactionState?.counts ?? {});
+                    const pickerOpen = pickerOpenFor === reactionKey;
+
                     return (
-                      <div key={m.id} className={`message-row ${isMine ? 'me' : 'them'} animate-in fade-in slide-in-from-bottom-1 duration-300`}>
+                      <div 
+                        key={m.id} 
+                        id={`msg-${m.id}`}
+                        className={`chat-message-row ${isMine ? 'mine' : 'theirs'}`}
+                        onContextMenu={(e) => handleContextMenu(e, m.id)}
+                        onTouchStart={() => handleTouchStart(m.id)}
+                        onTouchEnd={handleTouchEnd}
+                      >
                         {!isMine && (
-                          <div className="message-avatar-container" style={{ width: 32 }}>
-                            {showAvatar && <Avatar firstName={m.sender?.firstName || m.firstName} lastName={m.sender?.lastName || m.lastName} avatarUrl={getAvatarUrl(m.sender?.avatar || m.avatar)} size={28} />}
-                          </div>
+                          <Avatar
+                            firstName={senderFirst}
+                            lastName={senderLast}
+                            avatarUrl={avatarUrl}
+                            size={30}
+                            variant={isTeacherRole(senderRole) ? 'blue' : 'green'}
+                          />
                         )}
-                        <div className="message-bubble-group">
-                          {!isMine && viewMode === 'group' && showAvatar && (
-                            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-secondary)', marginLeft: '0.5rem', marginBottom: '0.2rem' }}>
-                                {m.sender?.firstName} {m.sender?.lastName}
+
+                        <div className="chat-bubble-stack">
+                          <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`}>
+                            {!isMine && viewMode === 'group' && (
+                              <div className="bubble-sender">{senderFirst} {senderLast}</div>
+                            )}
+
+                            <div className="bubble-content">{m.content}</div>
+
+                            <div className="bubble-footer">
+                              <span className="bubble-time">
+                                {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {reactionEntries.length > 0 && (
+                            <div className="reaction-row">
+                              {reactionEntries.map(([emoji, count]) => (
+                                <button
+                                  key={`${reactionKey}-count-${emoji}`}
+                                  type="button"
+                                  className={`reaction-chip ${reactionState?.mine === emoji ? 'active' : ''}`}
+                                  onClick={() => toggleReaction(m.id, emoji)}
+                                >
+                                  <span>{emoji}</span>
+                                  <span>{count}</span>
+                                </button>
+                              ))}
                             </div>
                           )}
-                          <div className={`message-bubble shadow-sm ${isMine ? 'bg-blue-600 text-white' : 'bg-white border border-gray-100'}`}>
-                            {m.content}
-                          </div>
-                          <span className="message-time">
-                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
                         </div>
                       </div>
                     );
                   })}
+
+                  {messages.length === 0 && (
+                    <div className="messages-empty">
+                      <MessageSquare size={56} />
+                      <h3>Start the conversation</h3>
+                      <p>Send your first message and keep your class connected.</p>
+                    </div>
+                  )}
                 </div>
 
-                <form className="messages-input-area border-t border-gray-100" onSubmit={sendMessage}>
-                  <input 
-                      className="message-input focus:ring-2 focus:ring-blue-100 transition-all" 
-                      placeholder="Type a message..." 
-                      value={newMsg} 
-                      onChange={e => setNewMsg(e.target.value)}
-                  />
-                  <button type="submit" className="message-send-btn shadow-sm hover:shadow-md transition-all active:scale-95" disabled={!newMsg.trim() || sending}>
-                    <Send size={18} className={sending ? 'animate-pulse' : ''} />
-                  </button>
+                <form className="chat-input" onSubmit={sendMessage}>
+                  {replyingTo && (
+                    <div className="reply-preview">
+                      <div className="reply-preview-content">
+                        <Reply size={14} />
+                        <div>
+                          <div className="reply-preview-sender">{replyingTo.sender}</div>
+                          <div className="reply-preview-text">{replyingTo.content}</div>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        className="reply-preview-close"
+                        onClick={() => setReplyingTo(null)}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                  <div className="chat-input-row">
+                    <input
+                      className="form-input"
+                      placeholder="Type a message..."
+                      value={newMsg}
+                      onChange={(e) => setNewMsg(e.target.value)}
+                    />
+                    <button className="btn btn-primary message-send-btn" type="submit" disabled={!newMsg.trim() || sending}>
+                      <Send size={18} />
+                    </button>
+                  </div>
                 </form>
               </>
             ) : (
               <div className="messages-empty">
-                  <div className="mb-6 text-blue-100">
-                      <MessageSquare size={64} />
-                  </div>
-                  <h3>Select a conversation</h3>
-                  <p className="text-muted">Choose a course group or a direct message to start chatting</p>
+                <MessageSquare size={64} />
+                <h3>Select a conversation</h3>
+                <p>Choose a course group or a direct message to start chatting.</p>
               </div>
             )}
+          </section>
+        </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div 
+          ref={contextMenuRef}
+          className="msg-context-menu" 
+          style={{ 
+            left: `${contextMenu.x}px`, 
+            top: `${contextMenu.y}px` 
+          }}
+        >
+          <button 
+            className="context-menu-item"
+            onClick={() => {
+              const message = messages.find(m => m.id === contextMenu.messageId);
+              if (message) {
+                setPickerOpenFor(getMessageReactionKey(contextMenu.messageId));
+                setContextMenu(null);
+              }
+            }}
+          >
+            <Smile size={16} />
+            <span>React</span>
+          </button>
+          <button 
+            className="context-menu-item"
+            onClick={() => handleReply(contextMenu.messageId)}
+          >
+            <Reply size={16} />
+            <span>Reply</span>
+          </button>
+          {isOwnMessage(messages.find(m => m.id === contextMenu.messageId)) && (
+            <button 
+              className="context-menu-item danger"
+              onClick={() => handleDeleteForEveryone(contextMenu.messageId)}
+            >
+              <Trash2 size={16} />
+              <span>Delete</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Reaction Picker Overlay */}
+      {pickerOpenFor && (
+        <div className="reaction-picker-overlay" onClick={() => setPickerOpenFor(null)}>
+          <div className="reaction-picker-popup" onClick={(e) => e.stopPropagation()}>
+            {REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="reaction-emoji-btn-large"
+                onClick={() => {
+                  const messageId = parseInt(pickerOpenFor.split(':')[1]);
+                  toggleReaction(messageId, emoji);
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* New Message Modal */}
       {showNewDM && (
         <div className="modal-overlay" onClick={() => setShowNewDM(false)}>
-          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
             <div className="modal-header">
               <h3 className="modal-title">New Message</h3>
-              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowNewDM(false)}><X size={20} /></button>
+              <button className="modal-close" onClick={() => setShowNewDM(false)}><X size={20} /></button>
             </div>
+
             <form onSubmit={sendNewDM}>
               <div className="form-group">
                 <label className="form-label">To</label>
                 <select
-                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="form-input"
                   value={dmForm.receiverId}
-                  onChange={e => setDmForm({ ...dmForm, receiverId: e.target.value })}
+                  onChange={(e) => setDmForm({ ...dmForm, receiverId: e.target.value })}
                   required
                 >
                   <option value="">Select student/teacher...</option>
@@ -377,20 +647,24 @@ const TeacherMessages: React.FC = () => {
                   ))}
                 </select>
               </div>
+
               <div className="form-group">
                 <label className="form-label">Message</label>
                 <textarea
-                  className="form-input focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="form-input"
                   rows={4}
                   value={dmForm.content}
-                  onChange={e => setDmForm({ ...dmForm, content: e.target.value })}
-                  placeholder="Type your message..."
+                  onChange={(e) => setDmForm({ ...dmForm, content: e.target.value })}
+                  placeholder="Write your message..."
                   required
                 />
               </div>
+
               <div className="modal-actions">
-                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowNewDM(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowNewDM(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>
                   <Send size={16} className="mr-2" /> Send Message
                 </button>
               </div>
