@@ -12,13 +12,16 @@ export const authApi = {
 
 export const adminApi = {
   getDashboard: () => api.get('/admin/dashboard'),
-  getUsers: (role?: string) => api.get('/admin/users', { params: { role } }),
+  getUsers: (role?: string, status?: string) => api.get('/admin/users', { params: { role, status } }),
   createUser: (data: any) => api.post('/admin/users', data),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
   getAllCourses: (status?: string) => api.get('/admin/courses', { params: { status } }),
-  getAuditLogs: (page = 0, size = 20) =>
-    api.get('/admin/audit-logs', { params: { page, size } }),
+  archiveCourse: (id: number) => api.post(`/admin/courses/${id}/archive`),
+  activateCourse: (id: number) => api.post(`/admin/courses/${id}/activate`),
+  deleteCourse: (id: number) => api.post(`/admin/courses/${id}/delete`),
+  getAuditLogs: (page = 0, size = 20, search = '') =>
+    api.get('/admin/audit-logs', { params: { page, size, search } }),
 };
 
 export const teacherApi = {

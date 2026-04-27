@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -29,6 +30,7 @@ public class AuditService {
                 .newValues(newValues)
                 .ipAddress(getClientIp(request))
                 .userAgent(request != null ? request.getHeader("User-Agent") : null)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         auditLogRepository.save(java.util.Objects.requireNonNull(log));
@@ -43,6 +45,10 @@ public class AuditService {
         return auditLogRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
+    public Page<AuditLog> searchAll(String search, Pageable pageable) {
+        return auditLogRepository.searchAll(search, pageable);
+    }
+
     public Page<AuditLog> getByUserId(Long userId, Pageable pageable) {
         return auditLogRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
     }
@@ -53,6 +59,11 @@ public class AuditService {
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
             return xForwardedFor.split(",")[0].trim();
         }
-        return request.getRemoteAddr();
+        String ip = request.getRemoteAddr();
+        // Convert IPv6 localhost to IPv4 for better readability
+        if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+            return "127.0.0.1";
+        }
+        return ip;
     }
 }

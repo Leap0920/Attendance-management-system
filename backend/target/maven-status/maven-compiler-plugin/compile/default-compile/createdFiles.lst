@@ -25,11 +25,13 @@ com\attendease\entity\AttendanceRecord.class
 com\attendease\entity\AttendanceSession.class
 com\attendease\dto\ApiResponse.class
 com\attendease\dto\LoginRequest.class
+com\attendease\dto\AuditLogDto$AuditLogDtoBuilder.class
 com\attendease\repository\CourseMaterialRepository.class
 com\attendease\entity\Message.class
 com\attendease\entity\AssignmentSubmission$AssignmentSubmissionBuilder.class
 com\attendease\entity\AttendanceRecord$AttendanceRecordBuilder.class
 com\attendease\entity\Course.class
+com\attendease\dto\AuditLogDto.class
 com\attendease\entity\AuditLog$AuditLogBuilder.class
 com\attendease\entity\Enrollment.class
 com\attendease\entity\UserMfaSecret$UserMfaSecretBuilder.class
@@ -69,4 +71,5 @@ com\attendease\dto\UserDto.class
 com\attendease\controller\TeacherController.class
 com\attendease\dto\ApiResponse$ApiResponseBuilder.class
 com\attendease\entity\LoginAttempt$LoginAttemptBuilder.class
+com\attendease\controller\ActivityController.class
 com\attendease\controller\StudentController.class

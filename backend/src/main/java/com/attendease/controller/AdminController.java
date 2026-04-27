@@ -1,8 +1,10 @@
 package com.attendease.controller;
 
 import com.attendease.dto.ApiResponse;
+import com.attendease.dto.AuditLogDto;
 import com.attendease.dto.UserDto;
 import com.attendease.entity.AuditLog;
+import com.attendease.entity.Course;
 import com.attendease.entity.User;
 import com.attendease.exception.BadRequestException;
 import com.attendease.exception.ResourceNotFoundException;
@@ -50,12 +52,61 @@ public class AdminController {
     }
 
     @GetMapping("/courses")
-    public ResponseEntity<ApiResponse<List<com.attendease.entity.Course>>> getAllCourses(
+    public ResponseEntity<ApiResponse<List<Course>>> getAllCourses(
             @RequestParam(required = false) String status) {
         if (status != null) {
             return ResponseEntity.ok(ApiResponse.success(courseRepository.findByStatus(status)));
         }
         return ResponseEntity.ok(ApiResponse.success(courseRepository.findAll()));
+    }
+
+    @PostMapping("/courses/{id}/archive")
+    public ResponseEntity<ApiResponse<Course>> archiveCourse(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User admin,
+            HttpServletRequest request) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        if ("deleted".equals(course.getStatus())) {
+            throw new BadRequestException("Cannot archive a deleted course");
+        }
+
+        course.setStatus("archived");
+        course = courseRepository.save(course);
+        auditService.log(admin, "archive_course", "course", id, request);
+
+        return ResponseEntity.ok(ApiResponse.success("Course archived", course));
+    }
+
+    @PostMapping("/courses/{id}/activate")
+    public ResponseEntity<ApiResponse<Course>> activateCourse(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User admin,
+            HttpServletRequest request) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        course.setStatus("active");
+        course = courseRepository.save(course);
+        auditService.log(admin, "unarchive_course", "course", id, request);
+
+        return ResponseEntity.ok(ApiResponse.success("Course activated", course));
+    }
+
+    @PostMapping("/courses/{id}/delete")
+    public ResponseEntity<ApiResponse<Course>> deleteCourse(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User admin,
+            HttpServletRequest request) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        course.setStatus("deleted");
+        course = courseRepository.save(course);
+        auditService.log(admin, "delete_course", "course", id, request);
+
+        return ResponseEntity.ok(ApiResponse.success("Course deleted", course));
     }
 
     @GetMapping("/users")
@@ -67,6 +118,8 @@ public class AdminController {
             users = userRepository.findByRoleAndStatus(role, status);
         } else if (role != null) {
             users = userRepository.findByRole(role);
+        } else if (status != null) {
+            users = userRepository.findByStatus(status);
         } else {
             users = userRepository.findAll();
         }
@@ -152,10 +205,12 @@ public class AdminController {
     }
 
     @GetMapping("/audit-logs")
-    public ResponseEntity<ApiResponse<Page<AuditLog>>> getAuditLogs(
+    public ResponseEntity<ApiResponse<Page<AuditLogDto>>> getAuditLogs(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                auditService.getAll(PageRequest.of(page, size))));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search) {
+        Page<AuditLog> logs = auditService.searchAll(search, PageRequest.of(page, size));
+        Page<AuditLogDto> dtos = logs.map(AuditLogDto::fromEntity);
+        return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 }

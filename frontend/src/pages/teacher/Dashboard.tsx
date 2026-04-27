@@ -9,7 +9,6 @@ import {
   CheckCircle2, 
   Radio, 
   MapPin, 
-  Clipboard,
   MoreHorizontal,
   X,
   ArrowLeft,
@@ -387,16 +386,7 @@ const TeacherDashboard: React.FC = () => {
                 Currently Live
               </div>
             </div>
-            <div className="td-stat-card hover:translate-y-[-2px] transition-all duration-300 shadow-sm hover:shadow-md" onClick={() => navigate('/teacher/assignments')} style={{ cursor: 'pointer' }}>
-              <div className="td-stat-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
-                <Clipboard size={20} />
-              </div>
-              <div className="td-stat-label">Assignments</div>
-              <div className="td-stat-value">Manage</div>
-              <div className="td-stat-trend" style={{ color: '#d97706' }}>
-                Grade submissions
-              </div>
-            </div>
+
           </div>
 
           {/* ── Active Sessions + Recently Closed ─────────────── */}

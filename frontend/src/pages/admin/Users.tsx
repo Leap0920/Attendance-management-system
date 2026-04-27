@@ -20,6 +20,7 @@ const AdminUsers: React.FC = () => {
   const [createForm, setCreateForm] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'student', department: '' });
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', role: 'student', department: '', status: 'active', password: '' });
   const [filter, setFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -27,13 +28,13 @@ const AdminUsers: React.FC = () => {
 
   const loadUsers = () => {
     setLoading(true);
-    adminApi.getUsers(filter || undefined).then(res => {
+    adminApi.getUsers(filter || undefined, statusFilter || undefined).then(res => {
       setUsers(res.data.data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadUsers(); }, [filter]);
+  useEffect(() => { loadUsers(); }, [filter, statusFilter]);
 
   useEffect(() => {
     if (toast) {
@@ -166,18 +167,30 @@ const AdminUsers: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-          <span className="admin-search-icon"><Search size={18} /></span>
-          <input
-            type="text"
-            placeholder="Search by name, email, or department..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="admin-search-input"
-          />
-          {search && (
-            <button className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => setSearch('')}><X size={16} /></button>
-          )}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <select
+            className="form-input"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            style={{ minWidth: 140, height: 40 }}
+          >
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+            <span className="admin-search-icon"><Search size={18} /></span>
+            <input
+              type="text"
+              placeholder="Search by name, email, or department..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="admin-search-input"
+            />
+            {search && (
+              <button className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => setSearch('')}><X size={16} /></button>
+            )}
+          </div>
         </div>
       </div>
 

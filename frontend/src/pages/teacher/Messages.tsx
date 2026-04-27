@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageSquare, X, Send, Users, Plus, Search, ArrowLeft, Trash2, Smile, Reply, MoreVertical } from 'lucide-react';
+import { MessageSquare, X, Send, Users, Plus, Search, ArrowLeft, Trash2, Smile, Reply, MoreVertical, CornerUpLeft } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
 import { teacherApi } from '../../api';
@@ -183,10 +183,17 @@ const TeacherMessages: React.FC = () => {
       // Sort messages by createdAt ascending (oldest first, newest last)
       newMsgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       setMessages((prev) => {
-        if (prev.length !== newMsgs.length) {
+        const linked = newMsgs.map((m: any) => {
+          if (m.parentId && !m.parent) {
+            const parent = newMsgs.find((p: any) => p.id === m.parentId) || prev.find((p: any) => p.id === m.parentId);
+            if (parent) return { ...m, parent };
+          }
+          return m;
+        });
+        if (prev.length !== linked.length) {
           setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 40);
         }
-        return newMsgs;
+        return linked;
       });
     }).catch(() => {});
   }, [scrollToBottom]);
@@ -197,10 +204,17 @@ const TeacherMessages: React.FC = () => {
       // Sort messages by createdAt ascending (oldest first, newest last)
       newMsgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       setMessages((prev) => {
-        if (prev.length !== newMsgs.length) {
+        const linked = newMsgs.map((m: any) => {
+          if (m.parentId && !m.parent) {
+            const parent = newMsgs.find((p: any) => p.id === m.parentId) || prev.find((p: any) => p.id === m.parentId);
+            if (parent) return { ...m, parent };
+          }
+          return m;
+        });
+        if (prev.length !== linked.length) {
           setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 40);
         }
-        return newMsgs;
+        return linked;
       });
     }).catch(() => {});
   }, [scrollToBottom]);
@@ -239,10 +253,15 @@ const TeacherMessages: React.FC = () => {
 
     setSending(true);
     try {
+      const payload: any = { content };
+      if (replyingTo) payload.parentId = replyingTo.id;
+
       if (viewMode === 'group' && selectedCourse) {
-        await teacherApi.sendGroupMessage({ courseId: selectedCourse, content });
+        payload.courseId = selectedCourse;
+        await teacherApi.sendGroupMessage(payload);
       } else if (viewMode === 'dm' && selectedUser) {
-        await teacherApi.sendMessage({ receiverId: selectedUser, content });
+        payload.receiverId = selectedUser;
+        await teacherApi.sendMessage(payload);
       }
 
       setNewMsg('');
@@ -483,6 +502,19 @@ const TeacherMessages: React.FC = () => {
                         )}
 
                         <div className="chat-bubble-stack">
+                          {m.parent && (
+                            <div className={`messenger-reply-wrapper ${isMine ? 'mine' : 'theirs'}`} onClick={() => {
+                              const parentEl = document.getElementById(`msg-${m.parent.id}`);
+                              if (parentEl) parentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }}>
+                              <div className="messenger-reply-header">
+                                <CornerUpLeft size={12} /> {isMine ? 'You replied to' : `${senderFirst} replied to`} {m.parent.sender?.firstName || m.parent.firstName || 'User'}
+                              </div>
+                              <div className="messenger-reply-bubble">
+                                {m.parent.content}
+                              </div>
+                            </div>
+                          )}
                           <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`}>
                             {!isMine && viewMode === 'group' && (
                               <div className="bubble-sender">{senderFirst} {senderLast}</div>

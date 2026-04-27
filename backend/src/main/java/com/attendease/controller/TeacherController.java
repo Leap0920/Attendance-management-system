@@ -612,6 +612,7 @@ public class TeacherController {
                 .sender(teacher).receiver(receiver)
                 .subject(body.containsKey("subject") ? body.get("subject").toString() : null)
                 .content(body.get("content").toString())
+                .parentId(body.containsKey("parentId") ? Long.valueOf(body.get("parentId").toString()) : null)
                 .build();
         msg = messageRepository.save(java.util.Objects.requireNonNull(msg));
         auditService.log(teacher, "send_dm", "message", msg.getId(), request);
@@ -630,6 +631,7 @@ public class TeacherController {
         CourseMessage msg = CourseMessage.builder()
                 .course(course).sender(teacher)
                 .content(body.get("content").toString())
+                .parentId(body.containsKey("parentId") ? Long.valueOf(body.get("parentId").toString()) : null)
                 .build();
         msg = courseMessageRepository.save(java.util.Objects.requireNonNull(msg));
         return ResponseEntity.ok(ApiResponse.success("Group message sent", msg));
@@ -685,6 +687,7 @@ public class TeacherController {
             item.put("id", m.getId());
             item.put("content", m.getContent());
             item.put("createdAt", m.getCreatedAt());
+            item.put("parentId", m.getParentId());
             item.put("sender", sender);
             return item;
         }).toList();

@@ -373,6 +373,7 @@ public class StudentController {
                                 .sender(student).receiver(receiver)
                                 .subject(body.containsKey("subject") ? body.get("subject").toString() : null)
                                 .content(body.get("content").toString())
+                                .parentId(body.containsKey("parentId") ? Long.valueOf(body.get("parentId").toString()) : null)
                                 .build();
                 return ResponseEntity.ok(ApiResponse.success("Message sent", messageRepository.save(msg)));
         }
@@ -399,6 +400,7 @@ public class StudentController {
                         item.put("id", m.getId());
                         item.put("content", m.getContent());
                         item.put("createdAt", m.getCreatedAt());
+                        item.put("parentId", m.getParentId());
                         item.put("sender", sender);
                         return item;
                 }).toList();
@@ -540,6 +542,7 @@ public class StudentController {
                 CourseMessage msg = CourseMessage.builder()
                                 .course(course).sender(student)
                                 .content(body.get("content").toString())
+                                .parentId(body.containsKey("parentId") ? Long.valueOf(body.get("parentId").toString()) : null)
                                 .build();
                 return ResponseEntity.ok(ApiResponse.success("Message sent", courseMessageRepository.save(msg)));
         }

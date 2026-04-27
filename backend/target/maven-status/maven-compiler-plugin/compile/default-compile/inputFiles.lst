@@ -3,12 +3,14 @@ C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\c
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\config\JacksonConfig.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\config\JpaConfig.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\config\SecurityConfig.java
+C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\controller\ActivityController.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\controller\AdminController.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\controller\AuthController.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\controller\FileController.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\controller\StudentController.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\controller\TeacherController.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\ApiResponse.java
+C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\AuditLogDto.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\AuthResponse.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\LoginRequest.java
 C:\Users\sigmu\source\repos\Attendance-management-system\backend\src\main\java\com\attendease\dto\RegisterRequest.java

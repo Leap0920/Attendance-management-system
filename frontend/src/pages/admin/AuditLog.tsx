@@ -63,21 +63,21 @@ const AuditLog: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const loadLogs = () => {
+  const loadLogs = (targetPage = page, searchTerm = search) => {
     setLoading(true);
-    adminApi.getAuditLogs(page, 20, search).then(res => {
+    adminApi.getAuditLogs(targetPage, 20, searchTerm.trim()).then(res => {
       setLogs(res.data.data.content);
       setTotalPages(res.data.data.totalPages);
       setLoading(false);
     }).catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadLogs(); }, [page]);
+  useEffect(() => { loadLogs(page, search); }, [page]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(0);
-    loadLogs();
+    loadLogs(0, search);
   };
 
   const getActionInfo = (action: string) => {
@@ -103,9 +103,9 @@ const AuditLog: React.FC = () => {
               value={search} 
               onChange={e => setSearch(e.target.value)}
             />
-            {search && <button type="button" className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => setSearch('')}><X size={16} /></button>}
+            {search && <button type="button" className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => { setSearch(''); setPage(0); loadLogs(0, ''); }}><X size={16} /></button>}
           </div>
-          <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Search</button>
+          <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} disabled={loading}>Search</button>
         </form>
 
         <div className="audit-timeline">

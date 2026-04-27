@@ -46,4 +46,7 @@ public class Message {
     @Builder.Default
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "parent_id")
+    private Long parentId;
 }

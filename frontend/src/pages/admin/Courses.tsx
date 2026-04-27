@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
-import { Search, X, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronRight, Check, AlertTriangle } from 'lucide-react';
 
 const AdminCourses: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
@@ -9,6 +9,8 @@ const AdminCourses: React.FC = () => {
   const [filter, setFilter] = useState('');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadCourses = () => {
     setLoading(true);
@@ -39,6 +41,33 @@ const AdminCourses: React.FC = () => {
     deleted: courses.filter(c => c.status === 'deleted').length,
   }), [courses]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const updateCourseStatus = async (course: any, action: 'archive' | 'activate' | 'delete') => {
+    try {
+      setUpdatingId(course.id);
+      if (action === 'archive') {
+        await adminApi.archiveCourse(course.id);
+        setToast({ type: 'success', text: `"${course.courseName}" archived.` });
+      } else if (action === 'activate') {
+        await adminApi.activateCourse(course.id);
+        setToast({ type: 'success', text: `"${course.courseName}" activated.` });
+      } else {
+        await adminApi.deleteCourse(course.id);
+        setToast({ type: 'success', text: `"${course.courseName}" marked as deleted.` });
+      }
+      loadCourses();
+    } catch (err: any) {
+      setToast({ type: 'error', text: err.response?.data?.message || 'Action failed' });
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' };
@@ -50,6 +79,13 @@ const AdminCourses: React.FC = () => {
 
   return (
     <DashboardLayout role="admin">
+      {toast && (
+        <div className={`admin-toast ${toast.type} animate-in slide-in-from-top-4 duration-300`}>
+          <span>{toast.type === 'success' ? <Check size={18} /> : <AlertTriangle size={18} />}</span>
+          {toast.text}
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <h1 className="page-title">Course Management</h1>
@@ -193,6 +229,47 @@ const AdminCourses: React.FC = () => {
                                   {new Date(c.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
                                 </span>
                               </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                              {c.status === 'active' && (
+                                <button
+                                  className="btn btn-sm btn-secondary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateCourseStatus(c, 'archive');
+                                  }}
+                                  disabled={updatingId === c.id}
+                                  style={{ width: 'auto' }}
+                                >
+                                  {updatingId === c.id ? 'Updating...' : 'Archive'}
+                                </button>
+                              )}
+                              {(c.status === 'archived' || c.status === 'deleted') && (
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateCourseStatus(c, 'activate');
+                                  }}
+                                  disabled={updatingId === c.id}
+                                  style={{ width: 'auto' }}
+                                >
+                                  {updatingId === c.id ? 'Updating...' : c.status === 'deleted' ? 'Restore to Active' : 'Activate'}
+                                </button>
+                              )}
+                              {c.status !== 'deleted' && (
+                                <button
+                                  className="btn btn-sm btn-danger"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateCourseStatus(c, 'delete');
+                                  }}
+                                  disabled={updatingId === c.id}
+                                  style={{ width: 'auto' }}
+                                >
+                                  {updatingId === c.id ? 'Updating...' : 'Delete'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </td>
