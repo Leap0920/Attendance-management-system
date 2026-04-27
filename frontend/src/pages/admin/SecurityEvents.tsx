@@ -24,15 +24,23 @@ const SecurityEvents: React.FC = () => {
 
   useEffect(() => {
     fetchEvents();
+    
+    // Auto-Sync Engine (Every 10 seconds)
+    const interval = setInterval(() => {
+      fetchEvents(true); // Silent refresh
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (isSilent = false) => {
     try {
+      if (!isSilent) setLoading(true);
       const res = await adminApi.getSecurityEvents(0, 50);
       setEvents(res.data.data.content);
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     } catch {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
@@ -68,7 +76,10 @@ const SecurityEvents: React.FC = () => {
       <div className="page-header animate-fade-in">
         <div>
           <h1 className="page-title gradient-text" style={{ fontSize: '1.75rem' }}>Security Alerts</h1>
-          <p className="page-subtitle">Historical log of all high-severity system threats</p>
+          <p className="page-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="sync-indicator"></span> 
+            Live tracking of all high-severity system threats
+          </p>
         </div>
       </div>
 

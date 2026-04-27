@@ -64,16 +64,27 @@ const AuditLog: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const loadLogs = (targetPage = page, searchTerm = search) => {
-    setLoading(true);
+  useEffect(() => { 
+    loadLogs(page, search); 
+    
+    // Auto-Sync Engine (Every 10 seconds)
+    const interval = setInterval(() => {
+      loadLogs(page, search, true); // Added 'isSilent' flag
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [page, search]);
+
+  const loadLogs = (targetPage = page, searchTerm = search, isSilent = false) => {
+    if (!isSilent) setLoading(true);
     adminApi.getAuditLogs(targetPage, 20, searchTerm.trim()).then(res => {
       setLogs(res.data.data.content);
       setTotalPages(res.data.data.totalPages);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+      if (!isSilent) setLoading(false);
+    }).catch(() => {
+      if (!isSilent) setLoading(false);
+    });
   };
-
-  useEffect(() => { loadLogs(page, search); }, [page]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +101,10 @@ const AuditLog: React.FC = () => {
       <div className="page-header animate-fade-in">
         <div>
           <h1 className="page-title gradient-text">System Audit Log</h1>
-          <p className="page-subtitle">Historical ledger of administrative actions and security events</p>
+          <p className="page-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="sync-indicator"></span> 
+            Live tracking administrative actions and security events
+          </p>
         </div>
       </div>
 
@@ -125,7 +139,15 @@ const AuditLog: React.FC = () => {
               const info = getActionInfo(log.action);
               const isExpanded = expandedId === log.id;
               return (
-                <div key={log.id} className={`audit-entry ${isExpanded ? 'expanded' : ''} transition-all duration-200 animate-fade-in`} style={{ animationDelay: `${i * 0.05}s`, borderBottom: '1px solid #f1f5f9' }}>
+                <div 
+                  key={log.id} 
+                  className={`audit-entry ${isExpanded ? 'expanded' : ''} animate-slide-up`} 
+                  style={{ 
+                    animationDelay: `${i * 0.05}s`, 
+                    borderBottom: '1px solid #f1f5f9',
+                    opacity: 0 // Will be set to 1 by animation
+                  }}
+                >
                   <div className="audit-main hover:bg-slate-50 transition-colors" style={{ padding: '1.25rem 1rem', cursor: 'pointer' }} onClick={() => setExpandedId(isExpanded ? null : log.id)}>
                     <div className="audit-icon-wrapper shadow-sm" style={{ background: `${info.color}15`, color: info.color, width: '40px', height: '40px', borderRadius: '12px' }}>
                       {info.icon}
