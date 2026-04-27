@@ -302,7 +302,7 @@ const TeacherMaterials: React.FC = () => {
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '1rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
-                position: 'sticky', top: '0.75rem', zIndex: 10, background: '#fff',
+                position: 'sticky', top: '0.5rem', zIndex: 10, background: '#fff', marginTop: '-1.9rem',
                 borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>

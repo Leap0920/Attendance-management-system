@@ -271,9 +271,9 @@ const StudentMaterials: React.FC = () => {
             {/* ── Top Navigation Bar ── */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1.25rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
-                position: 'sticky', top: 0, zIndex: 10, background: '#fff',
-                borderRadius: '20px', marginTop: '1rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                padding: '1rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
+                position: 'sticky', top: '0.5rem', zIndex: 10, background: '#fff', marginTop: '-1.9rem',
+                borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>
                     <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/student/dashboard')}>Materials Library</h1>
