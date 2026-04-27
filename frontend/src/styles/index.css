@@ -1213,6 +1213,7 @@ textarea.form-input { resize: vertical; }
 }
 
 .chat-bubble-stack {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1356,15 +1357,18 @@ textarea.form-input { resize: vertical; }
 }
 
 .reaction-row {
+  position: absolute;
+  bottom: -12px;
+  right: 8px;
+  z-index: 10;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 .reaction-chip {
-  border: 1px solid #dbeafe;
-  background: #eff6ff;
+  border: 2px solid #ffffff;
+  background: #f1f5f9;
   color: #1e3a8a;
   font-size: 0.68rem;
   font-weight: 700;
@@ -1374,6 +1378,7 @@ textarea.form-input { resize: vertical; }
   align-items: center;
   gap: 4px;
   cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .reaction-chip.active {
@@ -4746,6 +4751,7 @@ textarea.form-input { resize: vertical; }
 
 .message-actions.mine {
   background: rgba(37, 99, 235, 0.12);
+  flex-direction: row-reverse;
 }
 
 .message-actions.theirs {

@@ -527,18 +527,37 @@ const StudentMessages: React.FC = () => {
                               </div>
                             </div>
                           )}
-                          <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`}>
-                            {!isMine && viewMode === 'group' && (
-                              <div className="bubble-sender">{senderFirst} {senderLast}</div>
-                            )}
+                          
+                          <div style={{ position: 'relative' }}>
+                            <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`}>
+                              {!isMine && viewMode === 'group' && (
+                                <div className="bubble-sender">{senderFirst} {senderLast}</div>
+                              )}
 
-                            <div className="bubble-content">{m.content}</div>
+                              <div className="bubble-content">{m.content}</div>
 
-                            <div className="bubble-footer">
-                              <span className="bubble-time">
-                                {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
+                              <div className="bubble-footer">
+                                <span className="bubble-time">
+                                  {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
                             </div>
+
+                            {reactionEntries.length > 0 && (
+                              <div className="reaction-row">
+                                {reactionEntries.map(([emoji, count]) => (
+                                  <button
+                                    key={`${reactionKey}-count-${emoji}`}
+                                    type="button"
+                                    className={`reaction-chip ${reactionState?.mine === emoji ? 'active' : ''}`}
+                                    onClick={() => toggleReaction(m.id, emoji)}
+                                  >
+                                    <span>{emoji}</span>
+                                    <span>{count}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           {/* Action buttons - always AFTER bubble, positioned by CSS */}
@@ -568,22 +587,6 @@ const StudentMessages: React.FC = () => {
                               <MoreVertical size={16} />
                             </button>
                           </div>
-
-                          {reactionEntries.length > 0 && (
-                            <div className="reaction-row">
-                              {reactionEntries.map(([emoji, count]) => (
-                                <button
-                                  key={`${reactionKey}-count-${emoji}`}
-                                  type="button"
-                                  className={`reaction-chip ${reactionState?.mine === emoji ? 'active' : ''}`}
-                                  onClick={() => toggleReaction(m.id, emoji)}
-                                >
-                                  <span>{emoji}</span>
-                                  <span>{count}</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
