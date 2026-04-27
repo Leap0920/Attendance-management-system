@@ -31,7 +31,7 @@ const downloadFile = async (type: 'material' | 'submission', id: number, fileNam
 };
 
 const typeConfig: Record<string, { color: string; bg: string; label: string; icon: React.ReactNode }> = {
-    file:         { color: '#ef4444', bg: '#fef2f2', label: 'PDF Document',   icon: <FileText size={20} color="#ef4444" /> },
+    file:         { color: '#ef4444', bg: '#fef2f2', label: 'Resource',      icon: <FileText size={20} color="#ef4444" /> },
     link:         { color: '#10b981', bg: '#ecfdf5', label: 'External Link',  icon: <LinkIcon size={20} color="#10b981" /> },
     announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement',   icon: <Bell size={20} color="#f59e0b" /> },
     assignment:   { color: '#3b82f6', bg: '#eff6ff', label: 'Assignment',     icon: <FileText size={20} color="#3b82f6" /> },
@@ -43,7 +43,18 @@ const getMLink = (m: any) => m.externalLink || m.external_link || '';
 const figureOutType = (m: any) => {
     const link = m.externalLink || m.external_link || '';
     if (m.type === 'link' && link && (link.toLowerCase().includes('youtube') || link.toLowerCase().includes('youtu.be'))) return 'video';
+    if (m.type === 'file' && !m.fileName) return 'announcement';
     return m.type;
+};
+
+const getDynamicLabel = (m: any) => {
+    const rt = figureOutType(m);
+    if (rt === 'file' && m.fileName) {
+        const ext = m.fileName.split('.').pop()?.toUpperCase();
+        return ext ? `${ext} Document` : 'Document';
+    }
+    if (m.type === 'file' && !m.fileName) return 'Course Note';
+    return typeConfig[rt]?.label || 'Resource';
 };
 
 /* ── Sub-components ──────────────────────────────────────── */
@@ -94,6 +105,7 @@ const StudentMaterials: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [courses, setCourses] = useState<any[]>([]);
     const [materials, setMaterials] = useState<any[]>([]);
+    const [enrollments, setEnrollments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedCourse, setSelectedCourse] = useState<number | null>(Number(searchParams.get('courseId')) || null);
     const [typeFilter, setTypeFilter] = useState('');
@@ -102,7 +114,6 @@ const StudentMaterials: React.FC = () => {
     const commentInputRef = useRef<HTMLInputElement>(null);
     const [showAll, setShowAll] = useState(false);
     const [showAllAssignments, setShowAllAssignments] = useState(false);
-    const [classmateCount, setClassmateCount] = useState(0);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const getYouTubeId = (url: string): string | null => {
@@ -160,10 +171,10 @@ const StudentMaterials: React.FC = () => {
             studentApi.getMaterials(selectedCourse)
                 .then(r => setMaterials(Array.isArray(r.data?.data) ? r.data.data : []))
                 .catch(() => setMaterials([]));
-            // Get classmate count from course detail
+            // Get course detail (including enrollments)
             studentApi.getCourse(selectedCourse).then(r => {
-                const enrolled = r.data?.data?.enrollments?.length || r.data?.data?.studentCount || 0;
-                setClassmateCount(enrolled);
+                const data = r.data?.data;
+                setEnrollments(data?.enrollments || []);
             }).catch(() => {});
         }
     }, [selectedCourse]);
@@ -398,7 +409,7 @@ const StudentMaterials: React.FC = () => {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                                                    <span style={{ color: tc.color }}>{tc.label}</span>
+                                                    <span style={{ color: tc.color }}>{getDynamicLabel(m)}</span>
                                                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
                                                     <span>Resource</span>
                                                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
@@ -625,6 +636,32 @@ const StudentMaterials: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Enrolled Students */}
+                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0 }}>Enrolled Students</h3>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: 6 }}>{enrollments.length} Total</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                                {enrollments.length === 0 ? (
+                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', margin: '1rem 0' }}>No students enrolled yet.</p>
+                                ) : (
+                                    enrollments.map((en: any) => (
+                                        <div key={en.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <Avatar firstName={en.student?.firstName} lastName={en.student?.lastName} avatarUrl={en.student?.avatarUrl} size={32} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {en.student?.firstName} {en.student?.lastName}
+                                                </div>
+                                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{en.student?.studentId || 'No ID'}</div>
+                                            </div>
+                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} title="Active" />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
                         {/* Instructor Office */}
                         <div style={{
                             background: 'linear-gradient(135deg, #0f172a, #1e293b)',
@@ -658,21 +695,6 @@ const StudentMaterials: React.FC = () => {
                             </button>
                         </div>
 
-                        {/* Class Info */}
-                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9', marginTop: '1.25rem' }}>
-                            <h3 style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Users size={18} color="#3b82f6" /> Course Roster
-                            </h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #f1f5f9' }}>
-                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                                    <Users size={20} color="#3b82f6" />
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>{classmateCount}</div>
-                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Enrolled Students</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             )}

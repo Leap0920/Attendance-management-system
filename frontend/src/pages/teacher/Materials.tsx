@@ -36,7 +36,7 @@ const downloadFile = async (type: 'material' | 'submission', id: number, fileNam
 };
 
 const typeConfig: Record<string, { color: string; bg: string; label: string; icon: React.ReactNode }> = {
-    file:         { color: '#ef4444', bg: '#fef2f2', label: 'PDF Document',   icon: <FileText size={20} color="#ef4444" /> },
+    file:         { color: '#ef4444', bg: '#fef2f2', label: 'Resource',      icon: <FileText size={20} color="#ef4444" /> },
     link:         { color: '#10b981', bg: '#ecfdf5', label: 'External Link',  icon: <LinkIcon size={20} color="#10b981" /> },
     announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement',   icon: <Bell size={20} color="#f59e0b" /> },
     assignment:   { color: '#3b82f6', bg: '#eff6ff', label: 'Assignment',     icon: <FileText size={20} color="#3b82f6" /> },
@@ -46,8 +46,20 @@ const typeConfig: Record<string, { color: string; bg: string; label: string; ico
 const figureOutType = (m: any) => {
     const link = m.externalLink || m.external_link || '';
     if (m.type === 'link' && link && (link.toLowerCase().includes('youtube') || link.toLowerCase().includes('youtu.be'))) return 'video';
+    if (m.type === 'file' && !m.fileName) return 'announcement';
     return m.type;
 };
+
+const getDynamicLabel = (m: any) => {
+    const rt = figureOutType(m);
+    if (rt === 'file' && m.fileName) {
+        const ext = m.fileName.split('.').pop()?.toUpperCase();
+        return ext ? `${ext} Document` : 'Document';
+    }
+    if (m.type === 'file' && !m.fileName) return 'Course Note';
+    return typeConfig[rt]?.label || 'Resource';
+};
+
 const getMLink = (m: any): string => m.externalLink || m.external_link || '';
 
 /* ── Sub-components ──────────────────────────────────────── */
@@ -289,9 +301,9 @@ const TeacherMaterials: React.FC = () => {
             {/* ── Top Navigation Bar ── */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1.25rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
-                position: 'sticky', top: 0, zIndex: 10, background: '#fff',
-                borderRadius: '20px', marginTop: '1rem', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                padding: '1rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
+                position: 'sticky', top: '0.75rem', zIndex: 10, background: '#fff',
+                borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>
                     <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/teacher/dashboard')}>Materials Library</h1>
@@ -437,7 +449,7 @@ const TeacherMaterials: React.FC = () => {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                                                    <span style={{ color: tc.color }}>{tc.label}</span>
+                                                    <span style={{ color: tc.color }}>{getDynamicLabel(m)}</span>
                                                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
                                                     <span>Resource</span>
                                                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
