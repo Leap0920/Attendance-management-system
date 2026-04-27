@@ -18,6 +18,7 @@ public class AuditService {
 
     private final AuditLogRepository auditLogRepository;
 
+    @org.springframework.transaction.annotation.Transactional
     public void log(User user, String action, String entityType, Long entityId,
                     Map<String, Object> oldValues, Map<String, Object> newValues,
                     HttpServletRequest request) {
@@ -34,6 +35,7 @@ public class AuditService {
                 .build();
 
         auditLogRepository.save(java.util.Objects.requireNonNull(log));
+        System.out.println("[AUDIT LOG] Action: " + action + " | User: " + (user != null ? user.getEmail() : "System") + " | IP: " + log.getIpAddress());
     }
 
     public void log(User user, String action, String entityType, Long entityId,

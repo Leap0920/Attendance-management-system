@@ -137,7 +137,16 @@ const AuditLog: React.FC = () => {
                         <span className="audit-user" style={{ fontWeight: 700, fontSize: '0.95rem' }}>{log.userEmail || 'System Process'}</span>
                       </div>
                       <div className="audit-secondary" style={{ marginTop: '0.25rem' }}>
-                        <span className="audit-time" style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleString()}</span>
+                        <span className="audit-time" style={{ fontWeight: 600, color: 'var(--text-muted)' }}>
+                          {log.createdAt ? new Date(log.createdAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          }) : 'Date Unknown'}
+                        </span>
                         <span className="admin-audit-separator" style={{ background: '#e2e8f0' }}></span>
                         <span className="audit-ip" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>📍 {log.ipAddress}</span>
                       </div>

@@ -2,6 +2,10 @@ spring:
   application:
     name: attendease-backend
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   datasource:
     url: jdbc:postgresql://localhost:5432/attendease_db
     username: postgres

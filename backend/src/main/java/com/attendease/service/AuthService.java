@@ -74,6 +74,9 @@ public class AuthService {
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
+        // Record successful login in Audit Log for all users
+        auditService.log(user, "login", "user", user.getId(), httpRequest);
+
         // Check if MFA is enabled
         if (user.getMfaEnabled() != null && user.getMfaEnabled()) {
             // Return MFA required response with temporary token
