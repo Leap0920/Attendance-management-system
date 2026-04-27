@@ -8,7 +8,9 @@ import {
   X, 
   AlertCircle,
   Menu,
-  ChevronRight
+  ChevronRight,
+  Terminal,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { studentApi, teacherApi } from '../api';
@@ -39,8 +41,8 @@ const navSections: Record<string, NavSection[]> = {
       label: 'MONITORING',
       items: [
         { label: 'Analytics', path: '/admin/analytics' },
-        { label: 'Security', path: '/admin/security' },
-        { label: 'System Health', path: '/admin/health' },
+        { label: 'System Console', path: '/admin/security' },
+        { label: 'Cloud Status', path: '/admin/health' },
       ],
     },
   ],

@@ -146,7 +146,7 @@ public class DashboardAnalyticsService {
         LocalDateTime current = startDate;
         while (current.isBefore(endDate)) {
             LocalDateTime next = getNextInterval(current, granularity);
-            long count = userRepository.countByCreatedAtBetween(startDate, current);
+            long count = userRepository.countByCreatedAtBefore(current);
             
             AnalyticsDataDto point = new AnalyticsDataDto();
             point.setMetricName("user_growth");
@@ -185,17 +185,17 @@ public class DashboardAnalyticsService {
 
     public Map<String, Long> getUsersByRole() {
         Map<String, Long> roleDistribution = new HashMap<>();
-        roleDistribution.put("STUDENT", userRepository.countByRole("STUDENT"));
-        roleDistribution.put("TEACHER", userRepository.countByRole("TEACHER"));
-        roleDistribution.put("ADMIN", userRepository.countByRole("ADMIN"));
+        roleDistribution.put("STUDENT", userRepository.countByRole("student"));
+        roleDistribution.put("TEACHER", userRepository.countByRole("teacher"));
+        roleDistribution.put("ADMIN", userRepository.countByRole("admin"));
         return roleDistribution;
     }
 
     public Map<String, Long> getCoursesByStatus() {
         Map<String, Long> statusDistribution = new HashMap<>();
-        statusDistribution.put("ACTIVE", courseRepository.countByStatus("ACTIVE"));
-        statusDistribution.put("DRAFT", courseRepository.countByStatus("DRAFT"));
-        statusDistribution.put("ARCHIVED", courseRepository.countByStatus("ARCHIVED"));
+        statusDistribution.put("ACTIVE", courseRepository.countByStatus("active"));
+        statusDistribution.put("DRAFT", courseRepository.countByStatus("draft"));
+        statusDistribution.put("ARCHIVED", courseRepository.countByStatus("archived"));
         return statusDistribution;
     }
 
@@ -315,5 +315,31 @@ public class DashboardAnalyticsService {
             case WEEKLY -> current.plusWeeks(1);
             case MONTHLY -> current.plusMonths(1);
         };
+    }
+
+    public List<Map<String, Object>> getRecentLoginIPs() {
+        LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
+        // This is a simplified approach. In a real app, we might use a custom query for performance.
+        List<LoginAttempt> recentAttempts = loginAttemptRepository.findAll();
+        
+        return recentAttempts.stream()
+            .filter(a -> a.getAttemptedAt().isAfter(weekAgo))
+            .filter(a -> a.getIpAddress() != null)
+            .collect(Collectors.groupingBy(LoginAttempt::getIpAddress))
+            .entrySet().stream()
+            .map(entry -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("ipAddress", entry.getKey());
+                map.put("lastSeen", entry.getValue().stream()
+                    .map(LoginAttempt::getAttemptedAt)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null));
+                map.put("totalAttempts", (long) entry.getValue().size());
+                map.put("failures", entry.getValue().stream().filter(a -> !a.getSuccess()).count());
+                return map;
+            })
+            .sorted((a, b) -> ((LocalDateTime) b.get("lastSeen")).compareTo((LocalDateTime) a.get("lastSeen")))
+            .limit(20)
+            .collect(Collectors.toList());
     }
 }

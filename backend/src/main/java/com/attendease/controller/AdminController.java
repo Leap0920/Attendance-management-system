@@ -337,6 +337,7 @@ public class AdminController {
 
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalEvents24h", securityEventRepository.countByCreatedAtAfter(yesterday));
+        summary.put("failedLogins24h", loginAttemptRepository.countBySuccessAndAttemptedAtAfter(false, yesterday));
         summary.put("criticalEvents24h", securityEventRepository.countBySeverityAndCreatedAtAfter(
                 SecurityEventSeverity.CRITICAL, yesterday));
         summary.put("highEvents24h", securityEventRepository.countBySeverityAndCreatedAtAfter(
@@ -432,5 +433,10 @@ public class AdminController {
         ipAccessListRepository.delete(entry);
         auditService.log(admin, "remove_ip_rule", "ip_access", id, request);
         return ResponseEntity.ok(ApiResponse.success("IP entry removed", null));
+    }
+
+    @GetMapping("/security/discovered-ips")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDiscoveredIPs() {
+        return ResponseEntity.ok(ApiResponse.success(analyticsService.getRecentLoginIPs()));
     }
 }

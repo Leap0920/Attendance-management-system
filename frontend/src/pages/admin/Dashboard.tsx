@@ -15,7 +15,10 @@ import {
   TrendingUp,
   Activity,
   Shield,
-  LayoutGrid
+  LayoutGrid,
+  Zap,
+  Lock,
+  Terminal
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
@@ -33,18 +36,20 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   const statCards = stats ? [
-    { label: 'Total Users', value: stats.totalUsers, icon: <Users size={22} />, color: '#2563eb', bg: '#eff6ff', trend: stats.activeUsers ? `+${stats.activeUsers} Active` : '' },
+    { label: 'Total Users', value: stats.totalUsers, icon: <Users size={22} />, color: '#2563eb', bg: '#eff6ff', trend: 'Registered' },
+    { label: 'Active Users', value: stats.activeUsers || 0, icon: <Activity size={22} />, color: '#10b981', bg: '#f0fdf4', trend: 'Logged in today' },
     { label: 'Teachers', value: stats.totalTeachers, icon: <GraduationCap size={22} />, color: '#0891b2', bg: '#ecfeff', trend: 'Staff members' },
-    { label: 'Students', value: stats.totalStudents, icon: <BookOpen size={22} />, color: '#059669', bg: '#f0fdf4', trend: 'Learners' },
-    { label: 'Active Courses', value: stats.activeCourses, icon: <ClipboardList size={22} />, color: '#7c3aed', bg: '#f5f3ff', trend: `${stats.totalCourses || 0} Total` },
+    { label: 'Students', value: stats.totalStudents, icon: <BookOpen size={22} />, color: '#6366f1', bg: '#eef2ff', trend: 'Learners' },
+    { label: 'Total Courses', value: stats.totalCourses || 0, icon: <LayoutGrid size={22} />, color: '#8b5cf6', bg: '#f5f3ff', trend: 'Curriculum' },
+    { label: 'Active Courses', value: stats.activeCourses, icon: <ClipboardList size={22} />, color: '#7c3aed', bg: '#f5f3ff', trend: 'Ongoing sessions' },
     { label: 'Archived', value: stats.archivedCourses, icon: <Archive size={22} />, color: '#d97706', bg: '#fffbeb', trend: 'Old data' },
-    { label: 'Monitoring', value: 'Live', icon: <Activity size={22} />, color: '#dc2626', bg: '#fef2f2', trend: 'System Status' },
+    { label: 'Monitoring', value: 'Live', icon: <Zap size={22} />, color: '#ef4444', bg: '#fef2f2', trend: 'System Status' },
   ] : [];
 
   const quickActions = [
     { label: 'User Management', desc: 'Control access and roles', icon: <User size={24} />, path: '/admin/users', color: '#2563eb' },
     { label: 'Course Catalog', desc: 'Monitor all classrooms', icon: <Book size={24} />, path: '/admin/courses', color: '#7c3aed' },
-    { label: 'Security Center', desc: 'Threats and IP rules', icon: <Shield size={24} />, path: '/admin/security', color: '#dc2626' },
+    { label: 'System Console', desc: 'Real-time command status', icon: <Terminal size={24} />, path: '/admin/security', color: '#0f172a' },
   ];
 
   return (
@@ -131,46 +136,57 @@ const AdminDashboard: React.FC = () => {
             <div className="premium-card" style={{ padding: '1.75rem' }}>
               <div className="admin-section-header">
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Service Health</h3>
-                <div className="admin-health-badge" style={{ background: '#f0fdf4', color: '#059669', padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></span>
+                <div className="admin-health-badge">
+                  <span className="admin-health-dot"></span>
                   All Systems Optimal
                 </div>
               </div>
-              <div className="admin-health-grid" style={{ gap: '1.5rem', marginTop: '1rem' }}>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
                 <div className="admin-health-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <div className="admin-health-label" style={{ fontWeight: 600 }}>User Engagement</div>
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{stats.totalUsers > 0 ? Math.round(((stats.activeUsers || 0) / stats.totalUsers) * 100) : 0}%</span>
+                  <div className="admin-health-label">
+                    <span>User Engagement</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>
+                      {stats.totalUsers > 0 ? Math.round(((stats.activeUsers || 0) / stats.totalUsers) * 100) : 0}%
+                    </span>
                   </div>
-                  <div className="admin-health-bar-container" style={{ height: '8px', borderRadius: '4px', background: '#f1f5f9' }}>
+                  <div className="admin-health-bar-container">
                     <div className="admin-health-bar" style={{
-                      height: '100%', borderRadius: '4px',
                       width: `${stats.totalUsers > 0 ? Math.min(((stats.activeUsers || 0) / stats.totalUsers) * 100, 100) : 0}%`,
                       background: 'var(--gradient-primary)'
                     }}></div>
                   </div>
                 </div>
+
                 <div className="admin-health-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <div className="admin-health-label" style={{ fontWeight: 600 }}>Classroom Activity</div>
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{stats.totalCourses > 0 ? Math.round((stats.activeCourses / stats.totalCourses) * 100) : 0}%</span>
+                  <div className="admin-health-label">
+                    <span>Classroom Activity</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>
+                      {stats.totalCourses > 0 ? Math.round((stats.activeCourses / stats.totalCourses) * 100) : 0}%
+                    </span>
                   </div>
-                  <div className="admin-health-bar-container" style={{ height: '8px', borderRadius: '4px', background: '#f1f5f9' }}>
+                  <div className="admin-health-bar-container">
                     <div className="admin-health-bar" style={{
-                      height: '100%', borderRadius: '4px',
                       width: `${stats.totalCourses > 0 ? Math.min((stats.activeCourses / stats.totalCourses) * 100, 100) : 0}%`,
                       background: 'var(--gradient-success)'
                     }}></div>
                   </div>
                 </div>
+
                 <div className="admin-health-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <div className="admin-health-label" style={{ fontWeight: 600 }}>API Response Time</div>
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Normal</span>
+                  <div className="admin-health-label">
+                    <span>API Response Time</span>
+                    <span style={{ color: '#10b981', fontWeight: 800 }}>Normal</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px', height: '24px', alignItems: 'flex-end' }}>
-                    {[40, 60, 30, 80, 50, 70, 90, 60, 40, 70].map((h, i) => (
-                      <div key={i} style={{ flex: 1, height: `${h}%`, background: '#e2e8f0', borderRadius: '2px' }}></div>
+                  <div style={{ display: 'flex', gap: '4px', height: '24px', alignItems: 'flex-end', marginTop: '4px' }}>
+                    {[40, 60, 30, 80, 50, 70, 90, 60, 40, 70, 50, 80].map((h, i) => (
+                      <div key={i} className="animate-pulse" style={{ 
+                        flex: 1, 
+                        height: `${h}%`, 
+                        background: i > 8 ? '#10b981' : '#e2e8f0', 
+                        borderRadius: '2px',
+                        animationDelay: `${i * 0.1}s`
+                      }}></div>
                     ))}
                   </div>
                 </div>

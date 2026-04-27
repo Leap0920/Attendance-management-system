@@ -40,6 +40,7 @@ export const adminApi = {
     api.get('/admin/security/events', { params: { page, size, type, severity } }),
   acknowledgeEvent: (id: number) => api.post(`/admin/security/events/${id}/acknowledge`),
   getSecuritySummary: () => api.get('/admin/security/summary'),
+  getDiscoveredIPs: () => api.get('/admin/security/discovered-ips'),
 
   // IP Access Control
   getIPAccessList: () => api.get('/admin/security/ip-access'),

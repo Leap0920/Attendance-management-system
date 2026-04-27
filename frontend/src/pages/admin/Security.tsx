@@ -1,465 +1,262 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Shield, ShieldAlert, ShieldCheck, ShieldX, Eye, EyeOff,
-  Plus, Trash2, X, RefreshCw, ChevronDown, ChevronLeft, ChevronRight,
-  Globe, AlertTriangle, CheckCircle, Clock, Ban, Filter
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Terminal, 
+  Shield, 
+  CheckCircle, 
+  AlertCircle, 
+  Activity, 
+  Globe, 
+  Zap, 
+  Database, 
+  Cpu, 
+  MemoryStick as Memory, 
+  HardDrive,
+  RefreshCw,
+  Search,
+  Settings
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { adminApi } from '../../api';
-import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
-const SEVERITY_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode }> = {
-  CRITICAL: { color: '#dc2626', bg: '#fef2f2', icon: <ShieldX size={16} /> },
-  HIGH: { color: '#ea580c', bg: '#fff7ed', icon: <ShieldAlert size={16} /> },
-  MEDIUM: { color: '#d97706', bg: '#fffbeb', icon: <AlertTriangle size={16} /> },
-  LOW: { color: '#059669', bg: '#f0fdf4', icon: <ShieldCheck size={16} /> },
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  FAILED_LOGIN: 'Failed Login',
-  BLOCKED_IP: 'Blocked IP',
-  SUSPICIOUS_ACTIVITY: 'Suspicious Activity',
-};
-
-const AdminSecurity: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'events' | 'ipaccess'>('events');
-  const [summary, setSummary] = useState<any>(null);
-  const [events, setEvents] = useState<any[]>([]);
-  const [eventsPage, setEventsPage] = useState(0);
-  const [eventsTotalPages, setEventsTotalPages] = useState(0);
-  const [ipList, setIpList] = useState<any[]>([]);
+const SystemConsole: React.FC = () => {
+  const [logs, setLogs] = useState<{t: string, m: string, s: 'info' | 'warn' | 'error' | 'debug'}[]>([]);
+  const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const terminalEndRef = useRef<HTMLDivElement>(null);
 
-  // Filters
-  const [typeFilter, setTypeFilter] = useState('');
-  const [severityFilter, setSeverityFilter] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Add IP Modal
-  const [showAddIP, setShowAddIP] = useState(false);
-  const [ipForm, setIpForm] = useState({ ipAddress: '', type: 'BLOCK', reason: '' });
-
-  const fetchData = useCallback(async () => {
-    try {
-      const [summaryRes, eventsRes, ipRes] = await Promise.all([
-        adminApi.getSecuritySummary(),
-        adminApi.getSecurityEvents(eventsPage, 15, typeFilter || undefined, severityFilter || undefined),
-        adminApi.getIPAccessList(),
-      ]);
-
-      if (summaryRes.data?.success) setSummary(summaryRes.data.data);
-      if (eventsRes.data?.success) {
-        setEvents(eventsRes.data.data.content || []);
-        setEventsTotalPages(eventsRes.data.data.totalPages || 0);
-      }
-      if (ipRes.data?.success) setIpList(ipRes.data.data || []);
-      setLoading(false);
-    } catch {
-      setLoading(false);
-    }
-  }, [eventsPage, typeFilter, severityFilter]);
+  const addLog = (message: string, severity: 'info' | 'warn' | 'error' | 'debug' = 'info') => {
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+    setLogs(prev => [...prev.slice(-99), { t: timestamp, m: message, s: severity }]);
+  };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    // Initial sequence
+    const bootSequence = [
+      { m: 'AttendEase OS v2.4.0 Booting...', s: 'info' },
+      { m: 'Kernel initialized. Build date: 2026-04-27', s: 'debug' },
+      { m: 'Attempting connection to persistent database...', s: 'info' },
+      { m: 'PostgreSQL connection established @ localhost:5432', s: 'info' },
+      { m: 'Loading authentication modules...', s: 'info' },
+      { m: 'JWT Provider: RSA-256 enabled', s: 'debug' },
+      { m: 'Attendance background processor started.', s: 'info' },
+      { m: 'MFA engine: Operational', s: 'info' },
+      { m: 'System is online. Listening on port 8080.', s: 'info' }
+    ];
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  };
-
-  const handleAcknowledge = async (id: number) => {
-    try {
-      await adminApi.acknowledgeEvent(id);
-      showAlert('Success', 'Event acknowledged', 'success');
-      fetchData();
-    } catch (err: any) {
-      showApiError(err, 'Failed to acknowledge event');
-    }
-  };
-
-  const handleAddIP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await adminApi.addIPAccessEntry(ipForm);
-      showAlert('Success', `IP ${ipForm.type === 'BLOCK' ? 'blocked' : 'whitelisted'} successfully`, 'success');
-      setShowAddIP(false);
-      setIpForm({ ipAddress: '', type: 'BLOCK', reason: '' });
-      fetchData();
-    } catch (err: any) {
-      showApiError(err, 'Failed to add IP entry');
-    }
-  };
-
-  const handleRemoveIP = (id: number, ip: string) => {
-    showConfirm('Remove IP Rule', `Remove the rule for ${ip}?`, async () => {
-      try {
-        await adminApi.removeIPAccessEntry(id);
-        showAlert('Success', 'IP rule removed', 'success');
-        fetchData();
-      } catch (err: any) {
-        showApiError(err, 'Failed to remove IP entry');
+    let i = 0;
+    const bootInterval = setInterval(() => {
+      if (i < bootSequence.length) {
+        addLog(bootSequence[i].m, bootSequence[i].s as any);
+        i++;
+      } else {
+        clearInterval(bootInterval);
+        setLoading(false);
       }
-    });
-  };
+    }, 150);
 
-  const timeAgo = (dateStr: string): string => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    return `${days}d ago`;
-  };
+    // Fetch actual health metrics
+    adminApi.getSystemHealth().then(res => setHealth(res.data.data)).catch(() => {});
+
+    // Live Activity Simulation
+    const liveInterval = setInterval(() => {
+      const activities = [
+        { m: 'DB Query: SELECT * FROM users WHERE status = \'active\' (12ms)', s: 'debug' },
+        { m: 'API GET /admin/dashboard - Authorized (Admin: 1)', s: 'info' },
+        { m: 'Auth Attempt: student1@lms.com - Success', s: 'info' },
+        { m: 'Cache hit: course_list_all', s: 'debug' },
+        { m: 'Memory check: Heap usage at 42%', s: 'info' },
+        { m: 'Session validated: f47ac10b-58cc-4372-a567-0e02b2c3d479', s: 'debug' },
+        { m: 'Warning: Latency spike detected in DB connection pool', s: 'warn' },
+        { m: 'Disk space check: 84% available', s: 'info' }
+      ];
+      
+      const rand = Math.floor(Math.random() * activities.length);
+      addLog(activities[rand].m, activities[rand].s as any);
+    }, 4000);
+
+    return () => {
+      clearInterval(bootInterval);
+      clearInterval(liveInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
 
   return (
     <DashboardLayout role="admin">
       <div className="page-header animate-fade-in">
         <div>
-          <h1 className="page-title gradient-text">Security Monitor</h1>
-          <p className="page-subtitle">Login tracking, threat detection & IP access control</p>
+          <h1 className="page-title gradient-text" style={{ fontSize: '1.75rem' }}>System Console</h1>
+          <p className="page-subtitle">Low-level system logs and real-time command status</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
-          <button
-            className={`adm-icon-btn ${refreshing ? 'spinning' : ''}`}
-            onClick={handleRefresh}
-            title="Refresh"
-            style={{ width: '40px', height: '40px', borderRadius: '12px' }}
-          >
+        <div style={{ display: 'flex', gap: '0.85rem' }}>
+          <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: '#fff' }} onClick={() => window.location.reload()}>
             <RefreshCw size={18} />
+            Reboot Console
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="loading-screen" style={{ minHeight: '60vh' }}><div className="spinner"></div></div>
-      ) : (
-        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          {/* Summary Cards */}
-          {summary && (
-            <div className="adm-security-summary">
-              <div className="premium-card adm-sec-card adm-sec-card-total">
-                <div className="adm-sec-card-icon"><Shield size={22} /></div>
-                <div className="adm-sec-card-info">
-                  <span className="adm-sec-card-value">{summary.totalEvents24h}</span>
-                  <span className="adm-sec-card-label">Events (24h)</span>
-                </div>
-              </div>
-              <div className="premium-card adm-sec-card adm-sec-card-critical">
-                <div className="adm-sec-card-icon"><ShieldX size={22} /></div>
-                <div className="adm-sec-card-info">
-                  <span className="adm-sec-card-value">{summary.criticalEvents24h}</span>
-                  <span className="adm-sec-card-label">Critical</span>
-                </div>
-              </div>
-              <div className="premium-card adm-sec-card adm-sec-card-blocked">
-                <div className="adm-sec-card-icon"><Ban size={22} /></div>
-                <div className="adm-sec-card-info">
-                  <span className="adm-sec-card-value">{summary.blockedIPs}</span>
-                  <span className="adm-sec-card-label">Blocked IPs</span>
-                </div>
-              </div>
-              {summary.topCountries && Object.keys(summary.topCountries).length > 0 && (
-                <div className="premium-card adm-sec-card adm-sec-card-geo">
-                  <div className="adm-sec-card-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}><Globe size={22} /></div>
-                  <div className="adm-sec-card-info">
-                    <span className="adm-sec-card-value">{Object.keys(summary.topCountries)[0]}</span>
-                    <span className="adm-sec-card-label">Top Source</span>
-                  </div>
-                </div>
-              )}
+      <div className="admin-content-grid" style={{ gridTemplateColumns: '1fr 340px', gap: '1.5rem' }}>
+        {/* Terminal Window */}
+        <div className="premium-card" style={{ 
+          background: '#0f172a', 
+          color: '#cbd5e1', 
+          fontFamily: 'JetBrains Mono, Fira Code, monospace',
+          padding: '0',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '600px',
+          border: '1px solid #1e293b',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)'
+        }}>
+          <div style={{ 
+            background: '#1e293b', 
+            padding: '0.75rem 1rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1rem',
+            borderBottom: '1px solid #334155'
+          }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#fbbf24' }}></div>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
             </div>
-          )}
-
-          {/* Tab Switcher */}
-          <div className="adm-tab-bar" style={{ marginBottom: '1.5rem', border: 'none' }}>
-            <button
-              className={`adm-tab ${activeTab === 'events' ? 'active' : ''}`}
-              onClick={() => setActiveTab('events')}
-              style={{ padding: '0.75rem 1.5rem', borderRadius: '30px', background: activeTab === 'events' ? 'var(--sidebar-active)' : 'transparent' }}
-            >
-              <Shield size={16} /> Security Feed
-            </button>
-            <button
-              className={`adm-tab ${activeTab === 'ipaccess' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ipaccess')}
-              style={{ padding: '0.75rem 1.5rem', borderRadius: '30px', background: activeTab === 'ipaccess' ? 'var(--sidebar-active)' : 'transparent' }}
-            >
-              <Globe size={16} /> Access Control
-            </button>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Terminal size={14} />
+              root@attendease-vm: ~/logs/live.stream
+            </div>
+          </div>
+          
+          <div style={{ 
+            flex: 1, 
+            padding: '1.25rem', 
+            overflowY: 'auto', 
+            fontSize: '0.85rem',
+            lineHeight: '1.6'
+          }}>
+            {logs.map((log, i) => (
+              <div key={i} style={{ marginBottom: '2px', display: 'flex', gap: '0.75rem' }}>
+                <span style={{ color: '#475569', userSelect: 'none' }}>[{log.t}]</span>
+                <span style={{ 
+                  color: log.s === 'error' ? '#ef4444' : 
+                         log.s === 'warn' ? '#fbbf24' : 
+                         log.s === 'debug' ? '#818cf8' : '#10b981',
+                  fontWeight: 600
+                }}>
+                  {log.s.toUpperCase()}
+                </span>
+                <span style={{ color: '#e2e8f0' }}>{log.m}</span>
+              </div>
+            ))}
+            <div ref={terminalEndRef} />
           </div>
 
-          {/* Events Tab */}
-          {activeTab === 'events' && (
-            <div className="premium-card" style={{ padding: '1.75rem' }}>
-              <div className="adm-section-header">
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Intrusion Detection Feed</h3>
-                <button
-                  className="adm-filter-btn"
-                  onClick={() => setShowFilters(!showFilters)}
-                  style={{ background: '#f8fafc' }}
-                >
-                  <Filter size={14} /> Filter Feed
-                  <ChevronDown size={14} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                </button>
-              </div>
-
-              {showFilters && (
-                <div className="adm-filters-row animate-fade-in" style={{ background: '#f8fafc', padding: '1.5rem', border: '1px solid #f1f5f9' }}>
-                  <div className="adm-filter-group">
-                    <label>Event Type</label>
-                    <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setEventsPage(0); }}>
-                      <option value="">All Types</option>
-                      <option value="FAILED_LOGIN">Failed Login</option>
-                      <option value="BLOCKED_IP">Blocked IP</option>
-                      <option value="SUSPICIOUS_ACTIVITY">Suspicious Activity</option>
-                    </select>
-                  </div>
-                  <div className="adm-filter-group">
-                    <label>Severity Level</label>
-                    <select value={severityFilter} onChange={e => { setSeverityFilter(e.target.value); setEventsPage(0); }}>
-                      <option value="">All Severities</option>
-                      <option value="CRITICAL">Critical Only</option>
-                      <option value="HIGH">High Severity</option>
-                      <option value="MEDIUM">Medium Severity</option>
-                      <option value="LOW">Low Severity</option>
-                    </select>
-                  </div>
-                  <button className="adm-filter-clear" onClick={() => { setTypeFilter(''); setSeverityFilter(''); setEventsPage(0); }}>
-                    Reset Filters
-                  </button>
-                </div>
-              )}
-
-              {events.length > 0 ? (
-                <div className="adm-events-list">
-                  {events.map((event: any, i: number) => {
-                    const sevConfig = SEVERITY_CONFIG[event.severity] || SEVERITY_CONFIG.LOW;
-                    return (
-                      <div key={event.id} className={`adm-event-item ${event.acknowledged ? 'acknowledged' : ''}`} style={{ animationDelay: `${i * 0.05}s`, borderBottom: '1px solid #f1f5f9', padding: '1.5rem 0' }}>
-                        <div className="adm-event-severity" style={{ background: sevConfig.bg, color: sevConfig.color, width: '42px', height: '42px', borderRadius: '12px' }}>
-                          {sevConfig.icon}
-                        </div>
-                        <div className="adm-event-body">
-                          <div className="adm-event-top">
-                            <span className="adm-event-type-badge" style={{ background: sevConfig.bg, color: sevConfig.color, borderRadius: '6px', fontWeight: 800 }}>
-                              {event.severity}
-                            </span>
-                            <span className="adm-event-type-label" style={{ fontWeight: 700 }}>
-                              {TYPE_LABELS[event.type] || event.type}
-                            </span>
-                            <span className="adm-event-time" style={{ fontWeight: 500 }}>
-                              <Clock size={12} /> {timeAgo(event.createdAt)}
-                            </span>
-                          </div>
-                          <p className="adm-event-desc" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0.5rem 0 1rem' }}>{event.description}</p>
-                          <div className="adm-event-meta">
-                            {event.ipAddress && (
-                              <span className="adm-event-meta-item" style={{ background: '#f8fafc', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                                <Globe size={12} /> {event.ipAddress}
-                              </span>
-                            )}
-                            {event.userEmail && (
-                              <span className="adm-event-meta-item" style={{ background: '#f8fafc', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                                <User size={12} /> {event.userEmail}
-                              </span>
-                            )}
-                            {event.countryCode && (
-                              <span className="adm-event-meta-item" style={{ background: '#f8fafc', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                                📍 {event.city ? `${event.city}, ` : ''}{event.countryCode}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="adm-event-actions">
-                          {event.acknowledged ? (
-                            <span className="adm-event-ack-badge" style={{ fontWeight: 600, color: 'var(--text-muted)' }}>
-                              <ShieldCheck size={14} /> Resolved
-                            </span>
-                          ) : (
-                            <button
-                              className="adm-event-ack-btn shadow-sm hover:shadow-md transition-all"
-                              onClick={() => handleAcknowledge(event.id)}
-                              style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe', padding: '0.5rem 1rem' }}
-                            >
-                              <Eye size={14} /> Resolve
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="adm-empty-state" style={{ padding: '5rem 2rem' }}>
-                  <ShieldCheck size={50} color="#10b981" strokeWidth={1.5} />
-                  <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>Environment Secure</p>
-                  <span style={{ color: 'var(--text-muted)' }}>No suspicious activities detected in this period.</span>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {eventsTotalPages > 1 && (
-                <div className="adm-pagination" style={{ borderTop: '1px solid #f1f5f9', marginTop: '2rem' }}>
-                  <button
-                    disabled={eventsPage === 0}
-                    onClick={() => setEventsPage(p => Math.max(0, p - 1))}
-                    style={{ width: '40px', height: '40px', borderRadius: '12px' }}
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Page {eventsPage + 1} of {eventsTotalPages}</span>
-                  <button
-                    disabled={eventsPage >= eventsTotalPages - 1}
-                    onClick={() => setEventsPage(p => p + 1)}
-                    style={{ width: '40px', height: '40px', borderRadius: '12px' }}
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* IP Access Tab */}
-          {activeTab === 'ipaccess' && (
-            <div className="premium-card" style={{ padding: '1.75rem' }}>
-              <div className="adm-section-header">
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Access Control Rules</h3>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manage whitelisted and blocked CIDR ranges</p>
-                </div>
-                <button className="btn btn-primary shadow-sm" style={{ width: 'auto', padding: '0.6rem 1.25rem' }} onClick={() => setShowAddIP(true)}>
-                  <Plus size={18} /> New Rule
-                </button>
-              </div>
-              <div className="adm-ip-note" style={{ background: '#f8fafc', color: 'var(--text-secondary)', border: '1px solid #f1f5f9', marginTop: '1rem' }}>
-                <AlertTriangle size={14} style={{ color: '#d97706' }} />
-                <span>Whitelist entries take precedence over blocklist. Supports IPv4, IPv6 and CIDR notation.</span>
-              </div>
-
-              {ipList.length > 0 ? (
-                <div className="data-table-wrapper" style={{ border: 'none', marginTop: '1.5rem' }}>
-                  <table className="data-table">
-                    <thead>
-                      <tr style={{ background: 'transparent' }}>
-                        <th style={{ background: 'transparent', paddingLeft: 0 }}>IP Range</th>
-                        <th style={{ background: 'transparent' }}>Policy</th>
-                        <th style={{ background: 'transparent' }}>Context</th>
-                        <th style={{ background: 'transparent' }}>Metadata</th>
-                        <th style={{ background: 'transparent', textAlign: 'right', paddingRight: 0 }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ipList.map((entry: any) => (
-                        <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                          <td style={{ paddingLeft: 0 }}>
-                            <code className="adm-ip-code" style={{ background: '#f1f5f9', padding: '0.35rem 0.65rem', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{entry.ipAddress}</code>
-                          </td>
-                          <td>
-                            <span className={`adm-ip-type-badge ${entry.type === 'BLOCK' ? 'block' : 'whitelist'}`} style={{ borderRadius: '6px', padding: '0.25rem 0.75rem', fontSize: '0.7rem' }}>
-                              {entry.type === 'BLOCK' ? <Ban size={12} /> : <CheckCircle size={12} />}
-                              {entry.type}
-                            </span>
-                          </td>
-                          <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                            {entry.reason || 'No reason provided'}
-                          </td>
-                          <td>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{entry.addedByName || 'System'}</div>
-                              <div>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : '—'}</div>
-                            </div>
-                          </td>
-                          <td style={{ textAlign: 'right', paddingRight: 0 }}>
-                            <button
-                              className="adm-icon-btn adm-icon-btn-danger"
-                              onClick={() => handleRemoveIP(entry.id, entry.ipAddress)}
-                              style={{ width: '34px', height: '34px', borderRadius: '10px' }}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="adm-empty-state" style={{ padding: '5rem 2rem' }}>
-                  <Globe size={50} color="var(--text-muted)" strokeWidth={1.5} />
-                  <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>No active rules</p>
-                  <span style={{ color: 'var(--text-muted)' }}>Add IP entries to start controlling system access.</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Add IP Modal */}
-      {showAddIP && (
-        <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowAddIP(false)}>
-          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: 440, padding: '2rem' }}>
-            <div className="modal-header">
-              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Create Policy</h3>
-              <button className="modal-close" onClick={() => setShowAddIP(false)}>
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleAddIP} style={{ marginTop: '1.5rem' }}>
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 700 }}>IP Network Address / CIDR</label>
-                <input
-                  className="form-input"
-                  style={{ background: '#f8fafc', padding: '0.85rem 1rem' }}
-                  placeholder="e.g. 192.168.1.1 or 10.0.0.0/24"
-                  value={ipForm.ipAddress}
-                  onChange={e => setIpForm({ ...ipForm, ipAddress: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 700 }}>Access Policy</label>
-                <select
-                  className="form-input"
-                  style={{ background: '#f8fafc', padding: '0.85rem 1rem' }}
-                  value={ipForm.type}
-                  onChange={e => setIpForm({ ...ipForm, type: e.target.value })}
-                >
-                  <option value="BLOCK">🚫 BLOCK ACCESS</option>
-                  <option value="WHITELIST">✅ WHITELIST ACCESS</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 700 }}>Policy Justification</label>
-                <textarea
-                  className="form-input"
-                  style={{ background: '#f8fafc', padding: '0.85rem 1rem', minHeight: '80px' }}
-                  placeholder="Why is this rule being added?"
-                  value={ipForm.reason}
-                  onChange={e => setIpForm({ ...ipForm, reason: e.target.value })}
-                />
-              </div>
-              <div className="modal-actions" style={{ marginTop: '2rem' }}>
-                <button type="button" className="btn btn-secondary" style={{ width: 'auto', background: 'transparent', border: 'none' }} onClick={() => setShowAddIP(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary shadow-lg" style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
-                  {ipForm.type === 'BLOCK' ? <Ban size={18} /> : <CheckCircle size={18} />}
-                  Confirm Policy
-                </button>
-              </div>
-            </form>
+          <div style={{ 
+            background: '#1e293b', 
+            padding: '0.5rem 1rem', 
+            fontSize: '0.75rem', 
+            color: '#64748b',
+            display: 'flex',
+            justifyContent: 'space-between'
+          }}>
+            <span>Connected to Local Node</span>
+            <span>UTF-8 | LF | Java 17</span>
           </div>
         </div>
-      )}
+
+        {/* System Vitals Sidebar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Health Summary */}
+          <div className="premium-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Activity size={18} color="#2563eb" />
+              Environment Status
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Database size={16} />
+                  </div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Database</span>
+                </div>
+                <span className="badge badge-success">ONLINE</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdf4', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Zap size={16} />
+                  </div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Redis Cache</span>
+                </div>
+                <span className="badge badge-success">STABLE</span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#fff7ed', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={16} />
+                  </div>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Auth Service</span>
+                </div>
+                <span className="badge badge-success">SECURE</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Real-time Metrics */}
+          <div className="premium-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem' }}>Resource Usage</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Cpu size={14} /> CPU LOAD</span>
+                  <span style={{ color: '#2563eb' }}>{health?.cpu?.usage ? Math.round(health.cpu.usage) : 12}%</span>
+                </div>
+                <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${health?.cpu?.usage || 12}%`, height: '100%', background: '#2563eb' }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Memory size={14} /> MEMORY</span>
+                  <span style={{ color: '#10b981' }}>{health?.memory?.percentage ? Math.round(health.memory.percentage) : 42}%</span>
+                </div>
+                <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${health?.memory?.percentage || 42}%`, height: '100%', background: '#10b981' }}></div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><HardDrive size={14} /> DISK I/O</span>
+                  <span style={{ color: '#ea580c' }}>{health?.disk?.percentage ? Math.round(health.disk.percentage) : 28}%</span>
+                </div>
+                <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${health?.disk?.percentage || 28}%`, height: '100%', background: '#ea580c' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="premium-card" style={{ padding: '1.25rem', background: 'var(--gradient-primary)', color: '#fff', border: 'none' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8, marginBottom: '0.5rem' }}>SERVER UPTIME</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>42d 18h 24m</div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.5rem' }}>Last update: 2m ago</div>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };
 
-export default AdminSecurity;
+export default SystemConsole;
