@@ -546,7 +546,11 @@ const StudentMaterials: React.FC = () => {
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                                                    <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4, background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>{isPast ? 'Overdue' : isUrgent ? 'Urgent' : 'Open'}</span>
+                                                    {(isPast || isUrgent) && (
+                                                        <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4, background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>
+                                                            {isPast ? 'Overdue' : isUrgent ? 'Urgent' : ''}
+                                                        </span>
+                                                    )}
                                                     <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>{m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
                                                 </div>
                                                 <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>{m.title}</h4>

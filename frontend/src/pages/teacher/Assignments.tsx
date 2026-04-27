@@ -350,7 +350,11 @@ const TeacherAssignments: React.FC = () => {
                                                 style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem', background: '#fff', cursor: 'pointer', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}` }}>
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
-                                                        <span style={{ fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>{isDone ? 'COMPLETED' : isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : 'OPEN'}</span>
+                                                        {(isDone || isPast || isUrgent) && (
+                                                            <span style={{ fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>
+                                                                {isDone ? 'COMPLETED' : isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : ''}
+                                                            </span>
+                                                        )}
                                                         <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
                                                     </div>
                                                     <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: '#0f172a' }}>{m.title}</h3>

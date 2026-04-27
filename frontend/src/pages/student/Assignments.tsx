@@ -271,7 +271,11 @@ const StudentAssignments: React.FC = () => {
                                                 style={{ padding: '1.25rem', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1.15rem', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}` }}>
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 6 }}>
-                                                        <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>{isDone ? 'Done' : isPast ? 'Overdue' : isUrgent ? 'Urgent' : 'Open'}</span>
+                                                        {(isDone || isPast || isUrgent) && (
+                                                            <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>
+                                                                {isDone ? 'Done' : isPast ? 'Overdue' : isUrgent ? 'Urgent' : ''}
+                                                            </span>
+                                                        )}
                                                         <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={14} /> {m.dueDate ? new Date(m.dueDate).toLocaleDateString() : 'No deadline'}</span>
                                                         <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b82f6', background: '#eff6ff', padding: '3px 10px', borderRadius: 8 }}>{m.course?.courseCode}</span>
                                                     </div>

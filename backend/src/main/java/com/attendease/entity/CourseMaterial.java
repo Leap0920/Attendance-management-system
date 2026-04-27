@@ -19,7 +19,7 @@ public class CourseMaterial {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Formula("(SELECT COUNT(*) FROM assignment_submissions s WHERE s.material_id = id)")
+    @Formula("(SELECT COUNT(*) FROM assignment_submissions s WHERE s.material_id = {alias}.id)")
     private Integer submissionCount;
 
     @ManyToOne(fetch = FetchType.LAZY)

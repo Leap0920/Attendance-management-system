@@ -215,6 +215,11 @@ const TeacherMaterials: React.FC = () => {
         }
         return true;
     });
+    
+    const nonAssignments = filtered.filter(m => figureOutType(m) !== 'assignment');
+    const displayMaterials = showAll ? nonAssignments : nonAssignments.slice(0, 5);
+    const assignments = filtered.filter(m => figureOutType(m) === 'assignment');
+    const displayAssignments = showAllAssignments ? assignments : assignments.slice(0, 4);
 
 
     /* ── Handlers ────────────────────────────────────────────── */

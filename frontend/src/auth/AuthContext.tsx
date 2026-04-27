@@ -17,8 +17,17 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const setUser = (user: User | null) => {
+    setUserState(user);
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  };
 
   useEffect(() => {
     checkAuth();
@@ -28,17 +37,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const stored = localStorage.getItem('user');
       if (stored) {
-        setUser(JSON.parse(stored));
+        setUserState(JSON.parse(stored));
       }
       const response = await authApi.getMe();
       if (response.data.success) {
-        setUser(response.data.data);
+        setUserState(response.data.data);
         localStorage.setItem('user', JSON.stringify(response.data.data));
       }
     } catch {
       localStorage.removeItem('user');
       localStorage.removeItem('access_token');
-      setUser(null);
+      setUserState(null);
     } finally {
       setLoading(false);
     }
@@ -56,7 +65,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('access_token', data.accessToken);
     }
     if (data.user) {
-      setUser(data.user);
+      setUserState(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
     }
     return { mfaRequired: false };
@@ -69,7 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('access_token', resData.accessToken);
     }
     if (resData.user) {
-      setUser(resData.user);
+      setUserState(resData.user);
       localStorage.setItem('user', JSON.stringify(resData.user));
     }
   };
@@ -78,14 +87,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try { await authApi.logout(); } catch {}
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
-    setUser(null);
+    setUserState(null);
   };
 
   const refreshUser = async () => {
     try {
       const response = await authApi.getMe();
       if (response.data.success) {
-        setUser(response.data.data);
+        setUserState(response.data.data);
         localStorage.setItem('user', JSON.stringify(response.data.data));
       }
     } catch {}

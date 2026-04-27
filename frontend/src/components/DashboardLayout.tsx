@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import { studentApi, teacherApi } from '../api';
 import Modal from './Modal';
+import Avatar from './Avatar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -466,13 +467,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
               width: '38px', 
               height: '38px',
               boxShadow: '0 0 12px rgba(37, 99, 235, 0.15)',
-              border: '2px solid #fff'
+              border: '2px solid #fff',
+              overflow: 'hidden',
+              borderRadius: '50%'
             }}>
-              {hasAvatar ? (
-                <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
-              ) : (
-                <span>{user?.firstName?.[0]}{user?.lastName?.[0]}</span>
-              )}
+              <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={38} />
             </div>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -545,130 +544,134 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       {/* Profile Edit Modal */}
       {showProfile && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', width: 'min(92vw, 460px)', margin: '0 auto', maxHeight: '90vh', overflowY: 'auto', padding: 'clamp(1rem, 2vw, 2rem)' }}>
-            <div className="modal-header">
-              <h3 className="modal-title">Edit Profile</h3>
+          <div className="modal-window-responsive animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9' }}>
+              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Edit Profile</h3>
               <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowProfile(false)}><X size={20} /></button>
             </div>
 
-            <div className="profile-avatar-lg shadow-sm">
-              {hasAvatar ? (
-                <img src={getAvatarUrl(user.avatar)} alt="Profile" className="avatar-image" />
+            <div className="modal-scroll-area" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <Avatar 
+                  firstName={user?.firstName} 
+                  lastName={user?.lastName} 
+                  avatarUrl={user?.avatar} 
+                  size={80} 
+                  className="shadow-md"
+                  style={{ marginBottom: '1rem', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                />
+
+                {(role === 'student' || role === 'teacher') && (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        handleAvatarUpload(file);
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ borderRadius: 12, padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                    >
+                      <User size={14} style={{ marginRight: '6px' }} />
+                      {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                    {hasAvatar && (
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        style={{ borderRadius: 12, padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        onClick={handleDeleteAvatar}
+                        disabled={uploadingAvatar}
+                      >
+                        <X size={14} style={{ marginRight: '6px' }} />
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="profile-tabs" style={{ marginBottom: '1.5rem' }}>
+                <button className={`profile-tab ${profileTab === 'info' ? 'active' : ''}`} onClick={() => { setProfileTab('info'); setProfileMsg(null); }}>
+                  <Settings size={14} style={{ marginRight: '6px', display: 'inline-block' }} />
+                  Personal Info
+                </button>
+                <button className={`profile-tab ${profileTab === 'security' ? 'active' : ''}`} onClick={() => { setProfileTab('security'); setProfileMsg(null); }}>
+                  <Shield size={14} style={{ marginRight: '6px', display: 'inline-block' }} />
+                  Security
+                </button>
+              </div>
+
+              {profileMsg && (
+                <div className={`alert alert-${profileMsg.type === 'success' ? 'success' : 'error'}`} style={{ marginBottom: '1.5rem', borderRadius: 12 }}>
+                  <AlertCircle size={14} style={{ marginRight: '6px' }} />
+                  {profileMsg.text}
+                </div>
+              )}
+
+              {profileTab === 'info' ? (
+                <form id="profile-form" onSubmit={handleProfileUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>First Name</label>
+                      <input className="form-input" value={profileForm.firstName} onChange={e => setProfileForm({ ...profileForm, firstName: e.target.value })} required style={{ borderRadius: 12 }} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Last Name</label>
+                      <input className="form-input" value={profileForm.lastName} onChange={e => setProfileForm({ ...profileForm, lastName: e.target.value })} required style={{ borderRadius: 12 }} />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Email Address</label>
+                    <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6, borderRadius: 12, background: '#f8fafc' }} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Department</label>
+                    <input className="form-input" value={profileForm.department} onChange={e => setProfileForm({ ...profileForm, department: e.target.value })} placeholder="e.g. Computer Science" style={{ borderRadius: 12 }} />
+                  </div>
+                </form>
               ) : (
-                <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+                <form id="password-form" onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Current Password</label>
+                    <input className="form-input" type="password" value={passwordForm.currentPassword}
+                      onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required style={{ borderRadius: 12 }} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>New Password</label>
+                    <input className="form-input" type="password" value={passwordForm.newPassword}
+                      onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required style={{ borderRadius: 12 }} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Confirm New Password</label>
+                    <input className="form-input" type="password" value={passwordForm.confirmPassword}
+                      onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required style={{ borderRadius: 12 }} />
+                  </div>
+                </form>
               )}
             </div>
 
-            {(role === 'student' || role === 'teacher') && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '-0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-                <input
-                  ref={avatarInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    handleAvatarUpload(file);
-                    e.target.value = '';
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm transition-colors"
-                  style={{ width: 'auto' }}
-                  onClick={() => avatarInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                >
-                  <User size={14} className="mr-1" />
-                  {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                </button>
-                {hasAvatar && (
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm transition-colors"
-                    style={{ width: 'auto' }}
-                    onClick={handleDeleteAvatar}
-                    disabled={uploadingAvatar}
-                  >
-                    <X size={14} className="mr-1" />
-                    Delete Photo
-                  </button>
-                )}
-              </div>
-            )}
-
-            <div className="profile-tabs">
-              <button className={`profile-tab ${profileTab === 'info' ? 'active' : ''}`} onClick={() => { setProfileTab('info'); setProfileMsg(null); }}>
-                <Settings size={14} className="mr-1 inline-block" />
-                Personal Info
-              </button>
-              <button className={`profile-tab ${profileTab === 'security' ? 'active' : ''}`} onClick={() => { setProfileTab('security'); setProfileMsg(null); }}>
-                <Shield size={14} className="mr-1 inline-block" />
-                Security
+            <div className="modal-footer" style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowProfile(false)} style={{ width: 'auto', borderRadius: 12, fontWeight: 700 }}>Cancel</button>
+              <button 
+                type="submit" 
+                form={profileTab === 'info' ? "profile-form" : "password-form"} 
+                className="btn btn-primary" 
+                style={{ width: 'auto', borderRadius: 12, fontWeight: 800, padding: '0.75rem 1.5rem', background: '#3b82f6', boxShadow: '0 4px 12px rgba(59,130,246,0.2)' }} 
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
-
-            {profileMsg && (
-              <div className={`alert alert-${profileMsg.type === 'success' ? 'success' : 'error'}`}>
-                <AlertCircle size={14} className="mr-1" />
-                {profileMsg.text}
-              </div>
-            )}
-
-            {profileTab === 'info' && (
-              <form onSubmit={handleProfileUpdate}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">First Name</label>
-                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={profileForm.firstName} onChange={e => setProfileForm({ ...profileForm, firstName: e.target.value })} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Last Name</label>
-                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={profileForm.lastName} onChange={e => setProfileForm({ ...profileForm, lastName: e.target.value })} required />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6 }} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Department</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={profileForm.department} onChange={e => setProfileForm({ ...profileForm, department: e.target.value })} placeholder="e.g. Computer Science" />
-                </div>
-                <div className="modal-actions">
-                  <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowProfile(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} disabled={saving}>
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {profileTab === 'security' && (
-              <form onSubmit={handlePasswordChange}>
-                <div className="form-group">
-                  <label className="form-label">Current Password</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="password" value={passwordForm.currentPassword}
-                    onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">New Password</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="password" value={passwordForm.newPassword}
-                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Confirm New Password</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="password" value={passwordForm.confirmPassword}
-                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required />
-                </div>
-                <div className="modal-actions">
-                  <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowProfile(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} disabled={saving}>
-                    {saving ? 'Changing...' : 'Change Password'}
-                  </button>
-                </div>
-              </form>
-            )}
           </div>
         </div>
       )}
