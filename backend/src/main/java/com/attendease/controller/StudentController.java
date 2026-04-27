@@ -466,6 +466,64 @@ public class StudentController {
                 return ResponseEntity.ok(ApiResponse.success("Messages marked as read", null));
         }
 
+        // Delete message for everyone (only sender can do this)
+        @DeleteMapping("/messages/{id}")
+        @jakarta.transaction.Transactional
+        public ResponseEntity<ApiResponse<Void>> deleteMessageForEveryone(
+                        @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User student) {
+                Message msg = messageRepository.findById(id)
+                                .filter(m -> m.getSender().getId().equals(student.getId()))
+                                .orElseThrow(() -> new ResourceNotFoundException("Message not found or not authorized"));
+                messageRepository.delete(java.util.Objects.requireNonNull(msg));
+                return ResponseEntity.ok(ApiResponse.success("Message deleted for everyone", null));
+        }
+
+        // Hide message for current user only
+        @PostMapping("/messages/{id}/hide")
+        @jakarta.transaction.Transactional
+        public ResponseEntity<ApiResponse<Void>> hideMessage(
+                        @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User student) {
+                Message msg = messageRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+
+                if (msg.getSender().getId().equals(student.getId())) {
+                        msg.setDeletedForSender(true);
+                } else if (msg.getReceiver().getId().equals(student.getId())) {
+                        msg.setDeletedForReceiver(true);
+                }
+                messageRepository.save(java.util.Objects.requireNonNull(msg));
+                return ResponseEntity.ok(ApiResponse.success("Message hidden", null));
+        }
+
+        // Delete group message for everyone (only sender can do this)
+        @DeleteMapping("/messages/group/{id}")
+        @jakarta.transaction.Transactional
+        public ResponseEntity<ApiResponse<Void>> deleteGroupMessageForEveryone(
+                        @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User student) {
+                CourseMessage msg = courseMessageRepository.findById(id)
+                                .filter(m -> m.getSender().getId().equals(student.getId()))
+                                .orElseThrow(() -> new ResourceNotFoundException("Message not found or not authorized"));
+                courseMessageRepository.delete(java.util.Objects.requireNonNull(msg));
+                return ResponseEntity.ok(ApiResponse.success("Group message deleted for everyone", null));
+        }
+
+        // Hide group message for current user
+        @PostMapping("/messages/group/{id}/hide")
+        @jakarta.transaction.Transactional
+        public ResponseEntity<ApiResponse<Void>> hideGroupMessage(
+                        @PathVariable @org.springframework.lang.NonNull Long id, @AuthenticationPrincipal User student) {
+                CourseMessage msg = courseMessageRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+                String deleted = msg.getDeletedForUsers() == null ? "" : msg.getDeletedForUsers();
+                if (!deleted.contains("," + student.getId() + ",")) {
+                        deleted += "," + student.getId() + ",";
+                        msg.setDeletedForUsers(deleted);
+                        courseMessageRepository.save(java.util.Objects.requireNonNull(msg));
+                }
+                return ResponseEntity.ok(ApiResponse.success("Group message hidden", null));
+        }
+
+
         @PostMapping("/messages/group")
         public ResponseEntity<ApiResponse<CourseMessage>> sendGroupMessage(
                         @RequestBody Map<String, Object> body, @AuthenticationPrincipal User student) {

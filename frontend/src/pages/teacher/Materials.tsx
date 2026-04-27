@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, ChevronDown, Edit2, Users } from 'lucide-react';
+import { Search, Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, ChevronDown, Edit2, Users, Clock, MessageSquare } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -151,6 +151,12 @@ const TeacherMaterials: React.FC = () => {
     const [feedbackVal, setFeedbackVal] = useState('');
 
     /* ── Data ──────────────────────────────────────────────── */
+    const fadeInKeyframes = `
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
     const load = () => {
         setLoading(true);
         teacherApi.getCourses().then(r => {
@@ -194,8 +200,15 @@ const TeacherMaterials: React.FC = () => {
             teacherApi.getCourse(selectedCourse).then(r => {
                 setEnrollments(r.data?.data?.enrollments || []);
             }).catch(() => setEnrollments([]));
+
+            // Auto-scroll to assignments if requested
+            if (searchParams.get('section') === 'assignments') {
+                setTimeout(() => {
+                    document.getElementById('assignments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 500);
+            }
         }
-    }, [selectedCourse]);
+    }, [selectedCourse, searchParams]);
 
     const activeCourseData = courses.find(c => c.id === selectedCourse);
 
@@ -223,9 +236,14 @@ const TeacherMaterials: React.FC = () => {
         e.preventDefault();
         if (submitting) return;
         const lines = form.content.split('\n');
-        const title = lines[0].trim();
+        let title = lines[0].trim();
         const description = lines.slice(1).join('\n').trim();
-        if (!title) { showAlert('Error', 'Please enter a title', 'error'); return; }
+
+        if (!title && file) {
+            title = file.name;
+        }
+
+        if (!title) { showAlert('Error', 'Please enter a title or attach a file', 'error'); return; }
         if (!selectedCourse) { showAlert('Error', 'No course selected', 'error'); return; }
         if (form.type === 'link') {
             if (!form.externalLink) { showAlert('Error', 'Please enter a URL', 'error'); return; }
@@ -388,11 +406,11 @@ const TeacherMaterials: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
                     {/* ── LEFT COLUMN ── */}
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem', letterSpacing: '-0.03em' }}>Academic Repository</h2>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                    <p style={{ fontSize: '1.05rem', color: '#64748b', margin: 0 }}>Curated materials for <strong style={{ color: '#3b82f6', fontWeight: 800 }}>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
+                                    <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
                                     {activeCourseData?.joinCode && (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
                                             onClick={() => {
@@ -548,53 +566,210 @@ const TeacherMaterials: React.FC = () => {
                                     {showAll ? 'Show Less' : `See All ${nonAssignments.length} Materials`}
                                 </button>
                             )}
-                            {nonAssignments.length === 0 && (
-                                <div style={{ textAlign: 'center', padding: '3rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
-                                    <BookOpen size={32} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
-                                    <p style={{ color: '#94a3b8', fontWeight: 600 }}>No materials in this category.</p>
-                                </div>
-                            )}
+                        </div>
+                        <div id="assignments-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', marginTop: '0.5rem' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.1rem 0 0', fontWeight: 500 }}>Manage student submissions</p>
+                            </div>
+                            <button onClick={() => navigate(`/teacher/assignments?courseId=${selectedCourse}`)} style={{ 
+                                padding: '0.45rem 1rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', 
+                                fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer', transition: 'all .2s',
+                                display: 'flex', alignItems: 'center', gap: '0.4rem'
+                            }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#3b82f6'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                            >
+                                View All
+                                <ArrowUpRight size={14} />
+                            </button>
                         </div>
 
-                        <div style={{ borderTop: '1px solid #f1f5f9', marginBottom: '2rem' }} />
-
-                        {/* Active Assignments */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments ({assignments.length})</h2>
-                            {assignments.length > 4 && <span onClick={() => setShowAllAssignments(!showAllAssignments)} style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>{showAllAssignments ? 'Show Less' : 'View All'}</span>}
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                             {displayAssignments.map(m => {
                                 const isUrgent = m.dueDate && new Date(m.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
                                 const isPast = m.dueDate && new Date(m.dueDate) < new Date();
+                                const isExpanded = expandedId === m.id;
                                 return (
-                                    <div key={m.id} onClick={() => toggleExpand(m)} style={{
-                                        background: '#fff', borderRadius: 18, padding: '1.25rem', cursor: 'pointer',
-                                        border: '1px solid #f1f5f9',
-                                        borderLeftWidth: 6, borderLeftStyle: 'solid',
-                                        borderLeftColor: isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6',
-                                        transition: 'all .2s', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
-                                    }}
-                                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.08)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)'; }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                                            <span style={{
-                                                fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em',
-                                                padding: '3px 8px', borderRadius: 6,
-                                                background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff',
-                                                color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb'
+                                    <div key={m.id} style={{ 
+                                        borderRadius: 20, 
+                                        border: `1px solid ${isExpanded ? '#3b82f6' : '#f1f5f9'}`, 
+                                        overflow: 'hidden', transition: 'all .2s', 
+                                        boxShadow: isExpanded ? '0 10px 25px rgba(59,130,246,.08)' : '0 1px 3px rgba(0,0,0,0.04)',
+                                        background: '#fff'
+                                    }}>
+                                        <div onClick={() => toggleExpand(m)} style={{
+                                            display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem',
+                                            background: isExpanded ? '#f8fafc' : '#fff', 
+                                            cursor: 'pointer', transition: 'all .2s',
+                                            borderLeft: `6px solid ${isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}`
+                                        }}
+                                            onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#fafbfc'; }}
+                                            onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = '#fff'; }}
+                                        >
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
+                                                    <span style={{ 
+                                                        fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', 
+                                                        padding: '3px 8px', borderRadius: 6, 
+                                                        background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', 
+                                                        color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb'
+                                                    }}>
+                                                        {isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : 'OPEN'}
+                                                    </span>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                        <Clock size={12} />
+                                                        {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No due date'}
+                                                    </span>
+                                                </div>
+                                                <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: '#0f172a' }}>{m.title}</h3>
+                                            </div>
+                                            <div style={{ 
+                                                width: 32, height: 32, borderRadius: '50%', background: isExpanded ? '#eff6ff' : '#f8fafc',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: isExpanded ? '#3b82f6' : '#94a3b8', 
+                                                transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' 
                                             }}>
-                                                {isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : 'OPEN'}
-                                            </span>
-                                            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8' }}>
-                                                {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : 'No due date'}
-                                            </span>
+                                                <ChevronDown size={20} />
+                                            </div>
                                         </div>
-                                        <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem', lineHeight: 1.35 }}>{m.title}</h4>
-                                        <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {m.description || 'View details to grade submissions.'}
-                                        </p>
+
+                                        {isExpanded && (
+                                            <div style={{ padding: '2rem', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
+                                                {/* Navigation Tabs */}
+                                                <div style={{ 
+                                                    display: 'flex', gap: '2rem', borderBottom: '2px solid #f1f5f9', marginBottom: '2rem',
+                                                    position: 'relative'
+                                                }}>
+                                                    {['Instructions', 'Submissions'].map(t => {
+                                                        const active = detailTab === t.toLowerCase();
+                                                        return (
+                                                            <button key={t} onClick={(e) => { e.stopPropagation(); setDetailTab(t.toLowerCase() as any); }} style={{
+                                                                padding: '0.6rem 0.5rem', background: 'none', border: 'none', cursor: 'pointer',
+                                                                fontSize: '0.8rem', fontWeight: 600, color: active ? '#3b82f6' : '#94a3b8',
+                                                                borderBottom: `2px solid ${active ? '#3b82f6' : 'transparent'}`,
+                                                                marginBottom: -2, transition: 'all .2s',
+                                                                display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                                            }}>
+                                                                {t === 'Instructions' ? <FileText size={16} /> : <Users size={16} />}
+                                                                {t}
+                                                                {t === 'Submissions' && (
+                                                                    <span style={{ 
+                                                                        fontSize: '0.7rem', padding: '2px 8px', borderRadius: 999, 
+                                                                        background: active ? '#eff6ff' : '#f1f5f9', color: active ? '#3b82f6' : '#64748b' 
+                                                                    }}>{submissions.length}</span>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {detailTab === 'instructions' ? (
+                                                    <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                                        {m.description && (
+                                                            <div style={{ 
+                                                                fontSize: '1.05rem', color: '#334155', lineHeight: 1.8, 
+                                                                whiteSpace: 'pre-wrap', marginBottom: '2rem',
+                                                                padding: '1.5rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #f1f5f9'
+                                                            }}>
+                                                                {m.description}
+                                                            </div>
+                                                        )}
+                                                        {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
+                                                        
+                                                        <div style={{ marginTop: '2.5rem' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                                                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Class Comments</h4>
+                                                                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600 }}>{comments.length} Discussion{comments.length !== 1 ? 's' : ''}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                                                {comments.map((c: any) => (
+                                                                    <div key={c.id} style={{ display: 'flex', gap: '1rem' }}>
+                                                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={36} />
+                                                                        <div style={{ flex: 1 }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: 2 }}>
+                                                                                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                                                                            </div>
+                                                                            <div style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                                {comments.length === 0 && (
+                                                                    <div style={{ textAlign: 'center', padding: '2rem', background: '#fafbfc', borderRadius: 16, border: '1px dashed #e2e8f0' }}>
+                                                                        <MessageSquare size={24} color="#cbd5e1" style={{ marginBottom: '0.5rem' }} />
+                                                                        <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>No comments yet. Start the conversation!</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'fadeIn 0.3s ease-out' }}>
+                                                        {submissions.length === 0 ? (
+                                                            <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#fafbfc', borderRadius: 20, border: '2px dashed #e2e8f0' }}>
+                                                                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                                                    <Users size={32} color="#94a3b8" />
+                                                                </div>
+                                                                <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>No submissions yet</h4>
+                                                                <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '300px', margin: '0 auto' }}>Wait for students to upload their work for this assignment.</p>
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ display: 'grid', gap: '1rem' }}>
+                                                                {submissions.map((s: any) => (
+                                                                    <div key={s.id} style={{ 
+                                                                        padding: '1.25rem 1.5rem', background: '#fff', borderRadius: 20, 
+                                                                        border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'all .2s'
+                                                                    }}
+                                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(59,130,246,0.06)'; }}
+                                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'; }}
+                                                                    >
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                                                            <Avatar firstName={s.student?.firstName} lastName={s.student?.lastName} size={48} />
+                                                                            <div>
+                                                                                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>{s.student?.firstName} {s.student?.lastName}</div>
+                                                                                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                                    <Clock size={14} />
+                                                                                    Submitted {new Date(s.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                                            {s.filePath && (
+                                                                                <button onClick={(e) => { e.stopPropagation(); downloadFile('submission', s.id, s.fileName); }} style={{ 
+                                                                                    padding: '0.7rem 1.25rem', borderRadius: 12, background: '#f8fafc', 
+                                                                                    border: '1px solid #e2e8f0', fontSize: '0.88rem', fontWeight: 700, 
+                                                                                    cursor: 'pointer', color: '#475569', transition: 'all .2s',
+                                                                                    display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                                                                }}
+                                                                                    onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
+                                                                                    onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; }}
+                                                                                >
+                                                                                    <Download size={16} />
+                                                                                    Download
+                                                                                </button>
+                                                                            )}
+                                                                            <button onClick={(e) => { e.stopPropagation(); setGradingId(s.id); setGradeVal(s.grade || ''); }} style={{ 
+                                                                                padding: '0.7rem 1.5rem', borderRadius: 12, background: s.grade ? '#eff6ff' : '#3b82f6', 
+                                                                                color: s.grade ? '#3b82f6' : '#fff', border: 'none', fontSize: '0.88rem', fontWeight: 800, 
+                                                                                cursor: 'pointer', transition: 'all .2s',
+                                                                                boxShadow: s.grade ? 'none' : '0 4px 12px rgba(59,130,246,0.3)'
+                                                                            }}
+                                                                                onMouseEnter={e => { if (!s.grade) e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                                                                onMouseLeave={e => { if (!s.grade) e.currentTarget.style.transform = 'none'; }}
+                                                                            >
+                                                                                {s.grade ? `Graded: ${s.grade}%` : 'Grade Now'}
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -653,39 +828,25 @@ const TeacherMaterials: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Instructor Dashboard */}
-                        <div style={{
-                            background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-                            borderRadius: 22, padding: '1.5rem', color: '#fff', position: 'relative', overflow: 'hidden',
-                            boxShadow: '0 10px 30px rgba(15,23,42,.15)'
-                        }}>
-                            <div style={{ position: 'absolute', right: -20, bottom: -20, width: 100, height: 100, background: 'rgba(59,130,246,.15)', borderRadius: '50%', filter: 'blur(30px)', pointerEvents: 'none' }} />
-                            <div style={{ position: 'absolute', left: -20, top: -20, width: 80, height: 80, background: 'rgba(34,211,238,.1)', borderRadius: '50%', filter: 'blur(20px)', pointerEvents: 'none' }} />
-                            
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(59,130,246,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Users size={16} color="#3b82f6" />
+                        {/* Assignments Summary */}
+                        <div id="assignments-sidebar" style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0 }}>Active Assignments</h3>
+                                <div style={{ width: 32, height: 32, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <FileText size={16} color="#3b82f6" />
                                 </div>
-                                <h3 style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,.6)', margin: 0 }}>TEACHER DASHBOARD</h3>
                             </div>
-                            
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.75rem', lineHeight: 1.2 }}>Enhance Your <span style={{ color: '#3b82f6' }}>Classroom</span></h2>
-                            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.7)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                                Share resources, track student progress, and manage assignments in real-time.
-                            </p>
-                            
-                            <button onClick={() => setShowModal(true)} style={{
-                                width: '100%', padding: '0.85rem', borderRadius: 14, border: 'none',
-                                background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
-                                fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.65rem',
-                                transition: 'all .2s', boxShadow: '0 4px 12px rgba(59,130,246,.3)'
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                            >
-                                <Plus size={18} /> Create Material
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {assignments.slice(0, 3).map(a => (
+                                    <div key={a.id} onClick={() => { toggleExpand(a); document.getElementById('assignments-section')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ padding: '0.75rem', borderRadius: 12, border: '1px solid #f8fafc', background: '#f8fafc', cursor: 'pointer' }}>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.2rem' }}>{a.title}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{a.dueDate ? `Due ${new Date(a.dueDate).toLocaleDateString()}` : 'No due date'}</div>
+                                    </div>
+                                ))}
+                                {assignments.length === 0 && <p style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>No active assignments</p>}
+                            </div>
                         </div>
+
                     </div>
                 </div>
             )}
@@ -748,7 +909,7 @@ const TeacherMaterials: React.FC = () => {
                                             onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
                                             onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; }}
                                             placeholder={"Material Title (First line)\nDescription and instructions (Rest of lines)"} 
-                                            value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} required 
+                                            value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} 
                                         />
                                     </div>
                                 </div>

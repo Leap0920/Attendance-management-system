@@ -176,8 +176,15 @@ const StudentMaterials: React.FC = () => {
                 const data = r.data?.data;
                 setEnrollments(data?.enrollments || []);
             }).catch(() => {});
+
+            // Auto-scroll to assignments if requested
+            if (searchParams.get('section') === 'assignments') {
+                setTimeout(() => {
+                    document.getElementById('assignments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 500);
+            }
         }
-    }, [selectedCourse]);
+    }, [selectedCourse, searchParams]);
 
     const filtered = materials.filter(m => {
         if (typeFilter) {
@@ -361,10 +368,10 @@ const StudentMaterials: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
                     {/* ── LEFT COLUMN ── */}
                     <div>
-                        <div style={{ marginBottom: '2rem' }}>
-                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem', letterSpacing: '-0.03em' }}>Academic Repository</h2>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                <p style={{ fontSize: '1.05rem', color: '#64748b', margin: 0 }}>Curated materials for <strong style={{ color: '#3b82f6', fontWeight: 800 }}>{activeCourseData?.courseName || 'this course'}</strong>.</p>
+                                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || 'this course'}</strong>.</p>
                                 {activeCourseData?.joinCode && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
                                         onClick={() => {
@@ -457,7 +464,7 @@ const StudentMaterials: React.FC = () => {
 
                                                 {/* Comments section */}
                                                 <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
-                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '1rem' }}>Class Comments ({comments.filter(c => !c.isPrivate).length})</h4>
+                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>Class Comments ({comments.filter(c => !c.isPrivate).length})</h4>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
                                                         {comments.filter(c => !c.isPrivate).map((c: any) => {
                                                             const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
@@ -465,11 +472,11 @@ const StudentMaterials: React.FC = () => {
                                                                 <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
                                                                     <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={32} variant={isTeacher ? 'blue' : 'green'} />
                                                                     <div style={{ flex: 1, background: isTeacher ? '#f5f3ff' : '#f8fafc', padding: '0.75rem 1rem', borderRadius: '0 12px 12px 12px', border: `1px solid ${isTeacher ? '#ede9fe' : '#f1f5f9'}` }}>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                                                                             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName} {isTeacher && ' (Professor)'}</span>
                                                                             <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                                                                         </div>
-                                                                        <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
+                                                                        <div style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -518,13 +525,11 @@ const StudentMaterials: React.FC = () => {
                         <div style={{ borderTop: '1px solid #f1f5f9', marginBottom: '2rem' }} />
 
                         {/* ── Active Assignments ── */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.25rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
-                            {materials.filter(m => m.type === 'assignment').length > 4 && (
-                                <span onClick={() => setShowAllAssignments(!showAllAssignments)} style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>
-                                    {showAllAssignments ? 'Show Less' : `View All (${materials.filter(m => m.type === 'assignment').length})`}
-                                </span>
-                            )}
+                        <div id="assignments-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
+                            <span onClick={() => navigate(`/student/assignments?courseId=${selectedCourse}`)} style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>
+                                View All ({materials.filter(m => m.type === 'assignment').length})
+                            </span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                             {(showAllAssignments ? materials.filter(m => m.type === 'assignment') : materials.filter(m => m.type === 'assignment').slice(0, 4)).map(m => {
@@ -685,39 +690,6 @@ const StudentMaterials: React.FC = () => {
                                     ))
                                 )}
                             </div>
-                        </div>
-
-                        {/* Instructor Office */}
-                        <div style={{
-                            background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-                            borderRadius: 22, padding: '1.75rem', color: '#fff', position: 'relative', overflow: 'hidden',
-                            boxShadow: '0 15px 35px rgba(15,23,42,.2)'
-                        }}>
-                            <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, background: 'rgba(59,130,246,.15)', borderRadius: '50%', filter: 'blur(30px)' }} />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem' }}>
-                                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Users size={20} color="#3b82f6" />
-                                </div>
-                                <div>
-                                    <h3 style={{ fontSize: '0.65rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Lead Instructor</h3>
-                                    <h2 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0 }}>{activeCourseData?.teacher ? `${activeCourseData.teacher.firstName} ${activeCourseData.teacher.lastName}` : 'Professor'}</h2>
-                                </div>
-                            </div>
-                            <p style={{ fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '1.5rem', fontStyle: 'italic' }}>
-                                Connect with your professor for guidance on materials or assignment feedback.
-                            </p>
-                            <button onClick={() => navigate('/student/messages')} style={{
-                                width: '100%', padding: '0.85rem', borderRadius: 14, border: 'none',
-                                background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.88rem', 
-                                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', 
-                                justifyContent: 'center', gap: '0.6rem', transition: 'all .2s',
-                                boxShadow: '0 4px 12px rgba(59,130,246,0.3)'
-                            }}
-                                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                            >
-                                <MessageSquare size={16} /> Send Message
-                            </button>
                         </div>
 
                     </div>
