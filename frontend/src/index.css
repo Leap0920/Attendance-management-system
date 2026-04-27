@@ -163,7 +163,85 @@ code {
   animation: pulse-subtle 2s infinite ease-in-out;
 }
 
-/* Page Transitions */
-.page-container {
-  animation: fadeIn 0.4s ease-out;
+/* Progress Shimmer Animation */
+@keyframes progress-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.progress-shimmer {
+  background-size: 200% 100% !important;
+  animation: progress-shimmer 2s infinite linear;
+}
+
+.sd-course-card {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.sd-course-card:hover {
+  transform: translateY(-8px) scale(1.02) rotateX(2deg) rotateY(2deg) !important;
+  z-index: 10;
+}
+
+/* Modal Responsiveness */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem !important; /* p-6 equivalent */
+  transition: all 0.3s ease;
+}
+
+.modal-window-responsive {
+  max-height: calc(100vh - 3rem) !important;
+  display: flex;
+  flex-direction: column;
+  width: 95% !important;
+  max-width: 650px !important;
+  margin: auto !important;
+  border-radius: 1.5rem !important; /* rounded-2xl */
+  background: #fff;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.modal-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.modal-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-scroll-area::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .modal-window-responsive {
+    width: 95% !important;
+    max-height: calc(100vh - 4rem) !important;
+    border-radius: 1.25rem !important;
+    margin: auto !important;
+  }
+  
+  .responsive-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

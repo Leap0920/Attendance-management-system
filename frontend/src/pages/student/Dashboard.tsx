@@ -245,51 +245,81 @@ const StudentDashboard: React.FC = () => {
                 {data.courses?.map((cd: any, idx: number) => (
                   <div
                     key={cd.course.id}
-                    className="sd-course-card"
+                    className="sd-course-card premium-card animate-slide-up"
+                    style={{ animationDelay: `${idx * 0.1}s` }}
                     onClick={() => navigate(`/student/materials?courseId=${cd.course.id}`)}
                   >
                     <div
                       className="sd-course-card-top"
-                      style={{ background: cd.course.coverColor
-                        ? `linear-gradient(135deg, ${cd.course.coverColor} 0%, ${adjustColor(cd.course.coverColor, 30)} 100%)`
-                        : CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
+                      style={{ 
+                        background: cd.course.coverColor
+                          ? `linear-gradient(135deg, ${cd.course.coverColor} 0%, ${adjustColor(cd.course.coverColor, 30)} 100%)`
+                          : CARD_GRADIENTS[idx % CARD_GRADIENTS.length],
+                        position: 'relative',
+                        overflow: 'hidden'
                       }}
                     >
-                      <span className="sd-course-code">{cd.course.courseCode}</span>
-                      <h4 className="sd-course-name">{cd.course.courseName}</h4>
-                      <span className="sd-course-teacher">
-                        {cd.course.teacher ? `${cd.course.teacher.firstName} ${cd.course.teacher.lastName}` : 'Instructor'}
+                      {/* Decorative abstract circle for premium feel */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '-20px',
+                        right: '-20px',
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        filter: 'blur(30px)'
+                      }} />
+
+                      <span className="sd-course-code" style={{ 
+                        background: 'rgba(255, 255, 255, 0.2)', 
+                        backdropFilter: 'blur(4px)',
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
+                        letterSpacing: '1px'
+                      }}>
+                        {cd.course.courseCode}
                       </span>
-                      {cd.course.description && (
-                        <p className="sd-course-desc">{cd.course.description}</p>
-                      )}
+                      <h4 className="sd-course-name" style={{ fontSize: '1.25rem', marginTop: '0.75rem', fontWeight: 800 }}>
+                        {cd.course.courseName}
+                      </h4>
+                      <p className="sd-course-desc" style={{ opacity: 0.9, fontSize: '0.8rem', marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {cd.course.description || 'Join this class to start your learning journey.'}
+                      </p>
                     </div>
-                    <div className="sd-course-card-bottom">
+
+                    <div className="sd-course-card-bottom" style={{ 
+                      background: 'rgba(255, 255, 255, 0.8)', 
+                      backdropFilter: 'blur(10px)',
+                      borderTop: '1px solid rgba(0, 0, 0, 0.03)'
+                    }}>
                       <div className="sd-attendance-row">
-                        <span className="sd-attendance-label">Attendance</span>
+                        <span className="sd-attendance-label" style={{ fontWeight: 700, fontSize: '0.75rem', opacity: 0.7 }}>ATTENDANCE</span>
                         <span className="sd-attendance-pct" style={{
-                          color: cd.attendanceRate >= 80 ? 'var(--accent-blue)' : cd.attendanceRate >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)'
+                          fontWeight: 800,
+                          color: cd.attendanceRate >= 80 ? '#10b981' : cd.attendanceRate >= 60 ? '#f59e0b' : '#ef4444'
                         }}>{cd.attendanceRate}%</span>
                       </div>
-                      <div className="sd-attendance-bar-track">
+                      <div className="sd-attendance-bar-track" style={{ height: '6px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
                         <div
-                          className="sd-attendance-bar-fill"
+                          className="sd-attendance-bar-fill progress-shimmer"
                           style={{
                             width: `${cd.attendanceRate}%`,
+                            height: '100%',
+                            borderRadius: '10px',
                             background: cd.course.coverColor
                               ? `linear-gradient(90deg, ${cd.course.coverColor}, ${adjustColor(cd.course.coverColor, 20)})`
                               : idx % 2 === 0
-                                ? 'linear-gradient(90deg, #2563eb, #3b82f6)'
-                                : 'linear-gradient(90deg, #7c3aed, #8b5cf6)',
+                                ? 'linear-gradient(90deg, #3b82f6, #60a5fa)'
+                                : 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
                           }}
                         />
                       </div>
-                      <div className="sd-course-meta-row">
-                        {cd.course.room && <span>{cd.course.room}</span>}
-                        {cd.course.schedule && <span>{cd.course.schedule}</span>}
-                        {!cd.course.room && !cd.course.schedule && (
-                          <span>{cd.totalSessions} sessions</span>
-                        )}
+                      <div className="sd-course-meta-row" style={{ marginTop: '1rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b' }}>
+                        {cd.course.teacher && <span>👨‍🏫 {cd.course.teacher.firstName}</span>}
+                        {cd.course.schedule && <span>🕒 {cd.course.schedule}</span>}
                       </div>
                     </div>
                   </div>

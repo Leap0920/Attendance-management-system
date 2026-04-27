@@ -41,7 +41,7 @@ server:
 app:
   jwt:
     secret: attendease-super-secret-key-change-in-production-must-be-at-least-256-bits-long-for-hs256
-    access-token-expiration-ms: 60000        # 1 minute (for strict session control)
+    access-token-expiration-ms: 86400000       # 24 hours (Stable Session)
     refresh-token-expiration-ms: 604800000   # 7 days
 
   encryption:

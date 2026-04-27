@@ -512,33 +512,68 @@ const TeacherDashboard: React.FC = () => {
               </div>
             </div>
             <div className="td-courses-scroll" ref={coursesScrollRef}>
-              {filteredCourses.map((c: any, idx: number) => (
-                <div
-                  key={c.id}
-                  className="td-course-card hover:translate-y-[-4px] transition-all duration-300 shadow-sm hover:shadow-md"
-                  onClick={() => navigate(`/teacher/materials?courseId=${c.id}`)}
-                >
-                  <div className="td-course-cover" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}cc)` : getGradient(idx) }}>
-                    <span className="td-course-category" style={{ background: getCategoryColor(idx) + '22', color: getCategoryColor(idx), border: `1px solid ${getCategoryColor(idx)}44` }}>
-                      {getCategoryLabel(idx)}
-                    </span>
-                  </div>
-                  <div className="td-course-body">
-                    <h4>{c.courseName}</h4>
-                    <p className="td-course-desc">{c.description || c.courseCode + (c.section ? ` · ${c.section}` : '')}</p>
-                    <div className="td-course-meta">
-                      <span>
-                        <Calendar size={12} className="inline mr-1" />
-                        {c.schedule || 'No schedule'}
-                      </span>
-                      <span>
-                        <Users size={12} className="inline mr-1" />
-                        {(data?.courses || []).find((cc: any) => cc.id === c.id)?.enrollmentCount || '–'} Students
+              {filteredCourses.map((c: any, idx: number) => {
+                const courseData = (data?.courses || []).find((cc: any) => cc.id === c.id);
+                return (
+                  <div
+                    key={c.id}
+                    className="td-course-card premium-card animate-slide-up"
+                    style={{ animationDelay: `${idx * 0.1}s` }}
+                    onClick={() => navigate(`/teacher/materials?courseId=${c.id}`)}
+                  >
+                    <div 
+                      className="td-course-cover" 
+                      style={{ 
+                        background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${adjustColor(c.coverColor, 30)})` : getGradient(idx),
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        right: '-10px',
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        filter: 'blur(20px)'
+                      }} />
+                      
+                      <span className="td-course-category" style={{ 
+                        background: 'rgba(255, 255, 255, 0.2)', 
+                        backdropFilter: 'blur(4px)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        fontWeight: 800,
+                        fontSize: '0.65rem',
+                        letterSpacing: '1px'
+                      }}>
+                        {getCategoryLabel(idx)}
                       </span>
                     </div>
+                    <div className="td-course-body" style={{ 
+                      background: 'rgba(255, 255, 255, 0.8)', 
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <h4 style={{ fontWeight: 800, color: '#0f172a' }}>{c.courseName}</h4>
+                      <p className="td-course-desc" style={{ fontWeight: 600, color: '#64748b' }}>
+                        {c.courseCode} · {c.section || 'General'}
+                      </p>
+                      <div className="td-course-meta" style={{ marginTop: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>
+                          <Calendar size={12} className="inline mr-1 text-blue-500" />
+                          {c.schedule?.split(' ')[0] || 'No schedule'}
+                        </span>
+                        <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>
+                          <Users size={12} className="inline mr-1 text-purple-500" />
+                          {courseData?.enrollmentCount || '0'} Students
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredCourses.length === 0 && (
                 <div className="td-no-courses">
                   <p>No courses found. {searchQuery ? 'Try a different search.' : 'Create your first course!'}</p>
@@ -664,5 +699,19 @@ const TeacherDashboard: React.FC = () => {
     </DashboardLayout>
   );
 };
+
+/* ── Helper: lighten a hex color ───────────────────────────── */
+function adjustColor(hex: string, amount: number): string {
+  try {
+    const h = hex.replace('#', '');
+    const num = parseInt(h, 16);
+    let r = Math.min(255, ((num >> 16) & 0xff) + amount);
+    let g = Math.min(255, ((num >> 8) & 0xff) + amount);
+    let b = Math.min(255, (num & 0xff) + amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  } catch {
+    return hex;
+  }
+}
 
 export default TeacherDashboard;

@@ -36,11 +36,11 @@ const downloadFile = async (type: 'material' | 'submission', id: number, fileNam
 };
 
 const typeConfig: Record<string, { color: string; bg: string; label: string; icon: React.ReactNode }> = {
-    file:         { color: '#ef4444', bg: '#fef2f2', label: 'Resource',      icon: <FileText size={20} color="#ef4444" /> },
-    link:         { color: '#10b981', bg: '#ecfdf5', label: 'External Link',  icon: <LinkIcon size={20} color="#10b981" /> },
-    announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement',   icon: <Bell size={20} color="#f59e0b" /> },
-    assignment:   { color: '#3b82f6', bg: '#eff6ff', label: 'Assignment',     icon: <FileText size={20} color="#3b82f6" /> },
-    video:        { color: '#8b5cf6', bg: '#f5f3ff', label: 'Video Lecture',  icon: <Play size={20} color="#8b5cf6" /> },
+    file: { color: '#ef4444', bg: '#fef2f2', label: 'Resource', icon: <FileText size={20} color="#ef4444" /> },
+    link: { color: '#10b981', bg: '#ecfdf5', label: 'External Link', icon: <LinkIcon size={20} color="#10b981" /> },
+    announcement: { color: '#f59e0b', bg: '#fffbeb', label: 'Announcement', icon: <Bell size={20} color="#f59e0b" /> },
+    assignment: { color: '#3b82f6', bg: '#eff6ff', label: 'Assignment', icon: <FileText size={20} color="#3b82f6" /> },
+    video: { color: '#8b5cf6', bg: '#f5f3ff', label: 'Video Lecture', icon: <Play size={20} color="#8b5cf6" /> },
 };
 
 const figureOutType = (m: any) => {
@@ -134,6 +134,9 @@ const TeacherMaterials: React.FC = () => {
     const [fwdCourses, setFwdCourses] = useState<number[]>([]);
     const [showForward, setShowForward] = useState(false);
     const [gradingId, setGradingId] = useState<number | null>(null);
+    const [gradeVal, setGradeVal] = useState('');
+    const [feedbackVal, setFeedbackVal] = useState('');
+    const [targetCourses, setTargetCourses] = useState<number[]>([]);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown on click outside
@@ -163,7 +166,7 @@ const TeacherMaterials: React.FC = () => {
     };
 
     const loadMaterials = (id: number) => {
-        teacherApi.getMaterials(id).then(r => setMaterials(r.data.data || [])).catch(() => {});
+        teacherApi.getMaterials(id).then(r => setMaterials(r.data.data || [])).catch(() => { });
     };
 
     const toggleExpand = async (m: any) => {
@@ -171,9 +174,9 @@ const TeacherMaterials: React.FC = () => {
         setExpandedId(m.id);
         setDetailTab('instructions');
         setNewComment('');
-        try { const r = await teacherApi.getComments(m.id); setComments(r.data.data || []); } catch {}
+        try { const r = await teacherApi.getComments(m.id); setComments(r.data.data || []); } catch { }
         if (m.type === 'assignment') {
-            try { const r = await teacherApi.getSubmissions(m.id); setSubmissions(r.data.data || []); } catch {}
+            try { const r = await teacherApi.getSubmissions(m.id); setSubmissions(r.data.data || []); } catch { }
         } else { setSubmissions([]); }
     };
 
@@ -213,8 +216,6 @@ const TeacherMaterials: React.FC = () => {
         return true;
     });
 
-    const nonAssignments = filtered.filter(m => m.type !== 'assignment');
-    const displayMaterials = showAll ? nonAssignments : nonAssignments.slice(0, 5);
 
     /* ── Handlers ────────────────────────────────────────────── */
     const handleCreate = async (e: React.FormEvent) => {
@@ -229,14 +230,14 @@ const TeacherMaterials: React.FC = () => {
         }
 
         if (!title) { showAlert('Error', 'Please enter a title or attach a file', 'error'); return; }
-        if (!selectedCourse) { showAlert('Error', 'No course selected', 'error'); return; }
+        if (targetCourses.length === 0) { showAlert('Error', 'Please select at least one classroom', 'error'); return; }
         if (form.type === 'link') {
             if (!form.externalLink) { showAlert('Error', 'Please enter a URL', 'error'); return; }
             if (!isValidUrl(form.externalLink)) { showAlert('Invalid URL', 'Please enter a valid URL starting with http:// or https://', 'error'); return; }
         }
         setSubmitting(true);
         const fd = new FormData();
-        fd.append('courseIds', String(selectedCourse));
+        fd.append('courseIds', targetCourses.join(','));
         fd.append('type', form.type);
         fd.append('title', title);
         if (description) fd.append('description', description);
@@ -301,7 +302,7 @@ const TeacherMaterials: React.FC = () => {
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
             setPreviewName(fileName);
-            
+
             const ext = fileName.split('.').pop()?.toLowerCase();
             if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) setPreviewType('image');
             else if (ext === 'pdf') setPreviewType('pdf');
@@ -327,31 +328,31 @@ const TeacherMaterials: React.FC = () => {
                     <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/teacher/dashboard')}>Materials Library</h1>
                     <nav style={{ display: 'flex', gap: '3rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center' }}>
                         <span style={{ color: '#3b82f6', borderBottom: '3px solid #3b82f6', paddingBottom: 6, cursor: 'pointer' }}>Browse</span>
-                        
+
                         {/* Course Switcher Dropdown */}
                         <div style={{ position: 'relative' }} ref={menuRef}>
-                            <div 
-                                style={{ 
-                                    color: isMenuOpen ? '#3b82f6' : '#94a3b8', 
-                                    cursor: 'pointer', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                            <div
+                                style={{
+                                    color: isMenuOpen ? '#3b82f6' : '#94a3b8',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     gap: '6px',
                                     background: isMenuOpen ? '#eff6ff' : 'transparent',
                                     padding: '4px 8px',
                                     borderRadius: '8px',
                                     transition: 'all 0.2s'
-                                }} 
+                                }}
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                onMouseEnter={e => { if(!isMenuOpen) e.currentTarget.style.color = '#3b82f6'; }}
-                                onMouseLeave={e => { if(!isMenuOpen) e.currentTarget.style.color = '#94a3b8'; }}
+                                onMouseEnter={e => { if (!isMenuOpen) e.currentTarget.style.color = '#3b82f6'; }}
+                                onMouseLeave={e => { if (!isMenuOpen) e.currentTarget.style.color = '#94a3b8'; }}
                             >
                                 <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                     {activeCourseData?.courseCode || 'Switch Classroom'}
                                 </span>
                                 <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
                             </div>
-                            
+
                             {isMenuOpen && (
                                 <div style={{
                                     position: 'absolute', top: '100%', left: 0, marginTop: '10px',
@@ -362,8 +363,8 @@ const TeacherMaterials: React.FC = () => {
                                     <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
                                     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                         {courses.map(c => (
-                                            <div 
-                                                key={c.id} 
+                                            <div
+                                                key={c.id}
                                                 onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }}
                                                 style={{
                                                     padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
@@ -371,8 +372,8 @@ const TeacherMaterials: React.FC = () => {
                                                     color: selectedCourse === c.id ? '#3b82f6' : '#334155',
                                                     display: 'flex', flexDirection: 'column', gap: '2px'
                                                 }}
-                                                onMouseEnter={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = '#f8fafc'; }}
-                                                onMouseLeave={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                                                onMouseEnter={e => { if (selectedCourse !== c.id) e.currentTarget.style.background = '#f8fafc'; }}
+                                                onMouseLeave={e => { if (selectedCourse !== c.id) e.currentTarget.style.background = 'transparent'; }}
                                             >
                                                 <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
                                                 <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
@@ -426,7 +427,7 @@ const TeacherMaterials: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                            <button onClick={() => setShowModal(true)} style={{
+                            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} style={{
                                 display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.5rem',
                                 background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.88rem',
                                 borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
@@ -572,8 +573,8 @@ const TeacherMaterials: React.FC = () => {
                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
                                 <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.1rem 0 0', fontWeight: 500 }}>Manage student submissions</p>
                             </div>
-                            <button onClick={() => navigate(`/teacher/assignments?courseId=${selectedCourse}`)} style={{ 
-                                padding: '0.45rem 1rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff', 
+                            <button onClick={() => navigate(`/teacher/assignments?courseId=${selectedCourse}`)} style={{
+                                padding: '0.45rem 1rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff',
                                 fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer', transition: 'all .2s',
                                 display: 'flex', alignItems: 'center', gap: '0.4rem'
                             }}
@@ -591,16 +592,16 @@ const TeacherMaterials: React.FC = () => {
                                 const isPast = m.dueDate && new Date(m.dueDate) < new Date();
                                 const isExpanded = expandedId === m.id;
                                 return (
-                                    <div key={m.id} style={{ 
-                                        borderRadius: 20, 
-                                        border: `1px solid ${isExpanded ? '#3b82f6' : '#f1f5f9'}`, 
-                                        overflow: 'hidden', transition: 'all .2s', 
+                                    <div key={m.id} style={{
+                                        borderRadius: 20,
+                                        border: `1px solid ${isExpanded ? '#3b82f6' : '#f1f5f9'}`,
+                                        overflow: 'hidden', transition: 'all .2s',
                                         boxShadow: isExpanded ? '0 10px 25px rgba(59,130,246,.08)' : '0 1px 3px rgba(0,0,0,0.04)',
                                         background: '#fff'
                                     }}>
                                         <div onClick={() => toggleExpand(m)} style={{
                                             display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem',
-                                            background: isExpanded ? '#f8fafc' : '#fff', 
+                                            background: isExpanded ? '#f8fafc' : '#fff',
                                             cursor: 'pointer', transition: 'all .2s',
                                             borderLeft: `6px solid ${isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}`
                                         }}
@@ -609,10 +610,10 @@ const TeacherMaterials: React.FC = () => {
                                         >
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
-                                                    <span style={{ 
-                                                        fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', 
-                                                        padding: '3px 8px', borderRadius: 6, 
-                                                        background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', 
+                                                    <span style={{
+                                                        fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em',
+                                                        padding: '3px 8px', borderRadius: 6,
+                                                        background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff',
                                                         color: isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb'
                                                     }}>
                                                         {isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : 'OPEN'}
@@ -624,11 +625,11 @@ const TeacherMaterials: React.FC = () => {
                                                 </div>
                                                 <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: '#0f172a' }}>{m.title}</h3>
                                             </div>
-                                            <div style={{ 
+                                            <div style={{
                                                 width: 32, height: 32, borderRadius: '50%', background: isExpanded ? '#eff6ff' : '#f8fafc',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: isExpanded ? '#3b82f6' : '#94a3b8', 
-                                                transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' 
+                                                color: isExpanded ? '#3b82f6' : '#94a3b8',
+                                                transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s'
                                             }}>
                                                 <ChevronDown size={20} />
                                             </div>
@@ -637,7 +638,7 @@ const TeacherMaterials: React.FC = () => {
                                         {isExpanded && (
                                             <div style={{ padding: '2rem', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
                                                 {/* Navigation Tabs */}
-                                                <div style={{ 
+                                                <div style={{
                                                     display: 'flex', gap: '2rem', borderBottom: '2px solid #f1f5f9', marginBottom: '2rem',
                                                     position: 'relative'
                                                 }}>
@@ -654,9 +655,9 @@ const TeacherMaterials: React.FC = () => {
                                                                 {t === 'Instructions' ? <FileText size={16} /> : <Users size={16} />}
                                                                 {t}
                                                                 {t === 'Submissions' && (
-                                                                    <span style={{ 
-                                                                        fontSize: '0.7rem', padding: '2px 8px', borderRadius: 999, 
-                                                                        background: active ? '#eff6ff' : '#f1f5f9', color: active ? '#3b82f6' : '#64748b' 
+                                                                    <span style={{
+                                                                        fontSize: '0.7rem', padding: '2px 8px', borderRadius: 999,
+                                                                        background: active ? '#eff6ff' : '#f1f5f9', color: active ? '#3b82f6' : '#64748b'
                                                                     }}>{submissions.length}</span>
                                                                 )}
                                                             </button>
@@ -667,8 +668,8 @@ const TeacherMaterials: React.FC = () => {
                                                 {detailTab === 'instructions' ? (
                                                     <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                                         {m.description && (
-                                                            <div style={{ 
-                                                                fontSize: '1.05rem', color: '#334155', lineHeight: 1.8, 
+                                                            <div style={{
+                                                                fontSize: '1.05rem', color: '#334155', lineHeight: 1.8,
                                                                 whiteSpace: 'pre-wrap', marginBottom: '2rem',
                                                                 padding: '1.5rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #f1f5f9'
                                                             }}>
@@ -676,7 +677,7 @@ const TeacherMaterials: React.FC = () => {
                                                             </div>
                                                         )}
                                                         {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => handlePreview('material', m.id, m.fileName)} />}
-                                                        
+
                                                         <div style={{ marginTop: '2.5rem' }}>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                                                 <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Class Comments</h4>
@@ -717,8 +718,8 @@ const TeacherMaterials: React.FC = () => {
                                                         ) : (
                                                             <div style={{ display: 'grid', gap: '1rem' }}>
                                                                 {submissions.map((s: any) => (
-                                                                    <div key={s.id} style={{ 
-                                                                        padding: '1.25rem 1.5rem', background: '#fff', borderRadius: 20, 
+                                                                    <div key={s.id} style={{
+                                                                        padding: '1.25rem 1.5rem', background: '#fff', borderRadius: 20,
                                                                         border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                                                         boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'all .2s'
                                                                     }}
@@ -737,9 +738,9 @@ const TeacherMaterials: React.FC = () => {
                                                                         </div>
                                                                         <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                                             {s.filePath && (
-                                                                                <button onClick={(e) => { e.stopPropagation(); handlePreview('submission', s.id, s.fileName); }} style={{ 
-                                                                                    padding: '0.7rem 1.25rem', borderRadius: 12, background: '#f8fafc', 
-                                                                                    border: '1px solid #e2e8f0', fontSize: '0.88rem', fontWeight: 700, 
+                                                                                <button onClick={(e) => { e.stopPropagation(); handlePreview('submission', s.id, s.fileName); }} style={{
+                                                                                    padding: '0.7rem 1.25rem', borderRadius: 12, background: '#f8fafc',
+                                                                                    border: '1px solid #e2e8f0', fontSize: '0.88rem', fontWeight: 700,
                                                                                     cursor: 'pointer', color: '#475569', transition: 'all .2s',
                                                                                     display: 'flex', alignItems: 'center', gap: '0.5rem'
                                                                                 }}
@@ -750,9 +751,9 @@ const TeacherMaterials: React.FC = () => {
                                                                                     View Work
                                                                                 </button>
                                                                             )}
-                                                                            <button onClick={(e) => { e.stopPropagation(); setGradingId(s.id); setGradeVal(s.grade || ''); }} style={{ 
-                                                                                padding: '0.7rem 1.5rem', borderRadius: 12, background: s.grade ? '#eff6ff' : '#3b82f6', 
-                                                                                color: s.grade ? '#3b82f6' : '#fff', border: 'none', fontSize: '0.88rem', fontWeight: 800, 
+                                                                            <button onClick={(e) => { e.stopPropagation(); setGradingId(s.id); setGradeVal(s.grade || ''); }} style={{
+                                                                                padding: '0.7rem 1.5rem', borderRadius: 12, background: s.grade ? '#eff6ff' : '#3b82f6',
+                                                                                color: s.grade ? '#3b82f6' : '#fff', border: 'none', fontSize: '0.88rem', fontWeight: 800,
                                                                                 cursor: 'pointer', transition: 'all .2s',
                                                                                 boxShadow: s.grade ? 'none' : '0 4px 12px rgba(59,130,246,0.3)'
                                                                             }}
@@ -851,20 +852,13 @@ const TeacherMaterials: React.FC = () => {
                 </div>
             )}
 
-            {/* Detail Modal */}
-
-
             {/* Create Modal */}
             {showModal && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowModal(false)} />
-                    <div style={{ 
-                        position: 'relative', zIndex: 1, background: '#fff', borderRadius: 28, width: '100%', maxWidth: 650, 
-                        boxShadow: '0 30px 70px rgba(0,0,0,.2)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                        animation: 'modalIn .3s ease-out'
-                    }}>
+                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowModal(false)}>
+                    <div style={{ position: 'relative', background: '#fff', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
+                        
                         {/* Header */}
-                        <div style={{ padding: '1.5rem 2rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ padding: '1.5rem 2rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                             <div>
                                 <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Create New Material</h3>
                                 <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>Share resources and assignments with your students</p>
@@ -872,121 +866,146 @@ const TeacherMaterials: React.FC = () => {
                             <button onClick={() => setShowModal(false)} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: '#fff', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,.05)' }}><X size={20} /></button>
                         </div>
 
-                        <form onSubmit={handleCreate} style={{ padding: '2rem', maxHeight: '75vh', overflowY: 'auto' }}>
-                            {/* Type Selection Chips */}
-                            <div style={{ marginBottom: '2rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>What are you posting?</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
-                                    {[
-                                        { id: 'file', label: 'Document', icon: <FileText size={18} />, color: '#ef4444' },
-                                        { id: 'link', label: 'Link/Video', icon: <Play size={18} />, color: '#8b5cf6' },
-                                        { id: 'announcement', label: 'Notice', icon: <Bell size={18} />, color: '#f59e0b' },
-                                        { id: 'assignment', label: 'Assignment', icon: <BookOpen size={18} />, color: '#3b82f6' },
-                                    ].map(t => (
-                                        <div key={t.id} onClick={() => { setForm({ ...form, type: t.id }); setFile(null); }} style={{
-                                            padding: '1rem', borderRadius: 16, border: `2px solid ${form.type === t.id ? t.color : '#f1f5f9'}`,
-                                            background: form.type === t.id ? `${t.color}08` : '#fff', cursor: 'pointer', transition: 'all .2s',
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center'
-                                        }}>
-                                            <div style={{ color: form.type === t.id ? t.color : '#94a3b8' }}>{t.icon}</div>
-                                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: form.type === t.id ? t.color : '#64748b' }}>{t.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Content Inputs */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Title & Details</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <textarea 
-                                            style={{ 
-                                                width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '1rem', fontSize: '0.9rem', 
-                                                resize: 'vertical', minHeight: 120, fontFamily: 'inherit', outline: 'none', transition: 'all .2s',
-                                                background: '#f8fafc'
-                                            }}
-                                            onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
-                                            onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; }}
-                                            placeholder={"Material Title (First line)\nDescription and instructions (Rest of lines)"} 
-                                            value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} 
-                                        />
+                        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                            <div className="modal-scroll-area" style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
+                                {/* Type Selection Chips */}
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>What are you posting?</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                                        {[
+                                            { id: 'file', label: 'Document', icon: <FileText size={18} />, color: '#ef4444' },
+                                            { id: 'link', label: 'Link/Video', icon: <Play size={18} />, color: '#8b5cf6' },
+                                            { id: 'announcement', label: 'Notice', icon: <Bell size={18} />, color: '#f59e0b' },
+                                            { id: 'assignment', label: 'Assignment', icon: <BookOpen size={18} />, color: '#3b82f6' },
+                                        ].map(t => (
+                                            <div key={t.id} onClick={() => { setForm({ ...form, type: t.id }); setFile(null); }} style={{
+                                                padding: '1rem', borderRadius: 16, border: `2px solid ${form.type === t.id ? t.color : '#f1f5f9'}`,
+                                                background: form.type === t.id ? `${t.color}08` : '#fff', cursor: 'pointer', transition: 'all .2s',
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center'
+                                            }}>
+                                                <div style={{ color: form.type === t.id ? t.color : '#94a3b8' }}>{t.icon}</div>
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: form.type === t.id ? t.color : '#64748b' }}>{t.label}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
-                                {form.type === 'link' && (
-                                    <div style={{ animation: 'fadeIn .2s ease-out' }}>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>External URL</label>
-                                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                            <div style={{ position: 'absolute', left: '1rem', color: '#94a3b8' }}><LinkIcon size={18} /></div>
-                                            <input 
-                                                style={{ 
-                                                    width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem 0.85rem 2.75rem', 
-                                                    fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc', transition: 'all .2s'
+                                <div className="form-group">
+                                    <label className="form-label" style={{ fontWeight: 800, color: '#64748b', marginBottom: 12, display: 'block', textTransform: 'uppercase', fontSize: '0.7rem' }}>Target Classrooms</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', maxHeight: '150px', overflowY: 'auto', padding: '1rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                                        {courses.map(c => (
+                                            <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: targetCourses.includes(c.id) ? '#eff6ff' : 'transparent' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={targetCourses.includes(c.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) setTargetCourses([...targetCourses, c.id]);
+                                                        else setTargetCourses(targetCourses.filter(id => id !== c.id));
+                                                    }}
+                                                    style={{ width: 18, height: 18, cursor: 'pointer' }}
+                                                />
+                                                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: targetCourses.includes(c.id) ? '#3b82f6' : '#334155' }}>
+                                                    {c.courseCode} <span style={{ fontWeight: 500, opacity: 0.6 }}>· {c.section}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {targetCourses.length === 0 && <p style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 700, marginTop: -12, marginBottom: 12 }}>* Please select at least one classroom</p>}
+                                </div>
+
+                                {/* Content Inputs */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Title & Details</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <textarea
+                                                style={{
+                                                    width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '1rem', fontSize: '0.9rem',
+                                                    resize: 'vertical', minHeight: 120, fontFamily: 'inherit', outline: 'none', transition: 'all .2s',
+                                                    background: '#f8fafc'
                                                 }}
                                                 onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
                                                 onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; }}
-                                                value={form.externalLink} onChange={e => setForm({ ...form, externalLink: e.target.value })} 
-                                                placeholder="https://youtube.com/watch?v=..." 
+                                                placeholder={"Material Title (First line)\nDescription and instructions (Rest of lines)"}
+                                                value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
                                             />
                                         </div>
                                     </div>
-                                )}
 
-                                {(form.type === 'file' || form.type === 'assignment') && (
-                                    <div style={{ animation: 'fadeIn .2s ease-out' }}>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Attachment</label>
-                                        <label style={{
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '2rem',
-                                            border: '2px dashed #e2e8f0', borderRadius: 20, cursor: 'pointer', transition: 'all .2s',
-                                            background: file ? '#f0f9ff' : '#fafbfc', color: file ? '#0284c7' : '#94a3b8'
-                                        }}
-                                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#f8fafc'; }}
-                                            onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = file ? '#f0f9ff' : '#fafbfc'; }}
-                                        >
-                                            <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
-                                            <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? '#e0f2fe' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <Upload size={20} />
+                                    {form.type === 'link' && (
+                                        <div style={{ animation: 'fadeIn .2s ease-out' }}>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>External URL</label>
+                                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                                <div style={{ position: 'absolute', left: '1rem', color: '#94a3b8' }}><LinkIcon size={18} /></div>
+                                                <input
+                                                    style={{
+                                                        width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem 0.85rem 2.75rem',
+                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc', transition: 'all .2s'
+                                                    }}
+                                                    onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
+                                                    onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; }}
+                                                    value={form.externalLink} onChange={e => setForm({ ...form, externalLink: e.target.value })}
+                                                    placeholder="https://youtube.com/watch?v=..."
+                                                />
                                             </div>
-                                            <div style={{ textAlign: 'center' }}>
-                                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: file ? '#0369a1' : '#475569' }}>{file ? file.name : 'Select a file to upload'}</div>
-                                                <div style={{ fontSize: '0.75rem', marginTop: 4 }}>PDF, DOCX, ZIP or Images (Max 10MB)</div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
 
-                                {form.type === 'assignment' && (
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', animation: 'fadeIn .2s ease-out' }}>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Due Date</label>
-                                            <input type="datetime-local" 
-                                                style={{ 
-                                                    width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem', 
-                                                    fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc'
-                                                }}
-                                                value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} 
-                                            />
+                                    {(form.type === 'file' || form.type === 'assignment') && (
+                                        <div style={{ animation: 'fadeIn .2s ease-out' }}>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Attachment</label>
+                                            <label style={{
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '2rem',
+                                                border: '2px dashed #e2e8f0', borderRadius: 20, cursor: 'pointer', transition: 'all .2s',
+                                                background: file ? '#f0f9ff' : '#fafbfc', color: file ? '#0284c7' : '#94a3b8'
+                                            }}
+                                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#f8fafc'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = file ? '#f0f9ff' : '#fafbfc'; }}
+                                            >
+                                                <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
+                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? '#e0f2fe' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Upload size={20} />
+                                                </div>
+                                                <div style={{ textAlign: 'center' }}>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: file ? '#0369a1' : '#475569' }}>{file ? file.name : 'Select a file to upload'}</div>
+                                                    <div style={{ fontSize: '0.75rem', marginTop: 4 }}>PDF, DOCX, ZIP or Images (Max 10MB)</div>
+                                                </div>
+                                            </label>
                                         </div>
-                                        <div>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Points</label>
-                                            <input type="number" defaultValue="100"
-                                                style={{ 
-                                                    width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem', 
-                                                    fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc'
-                                                }}
-                                            />
+                                    )}
+
+                                    {form.type === 'assignment' && (
+                                        <div className="responsive-modal-grid" style={{ animation: 'fadeIn .2s ease-out' }}>
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Due Date</label>
+                                                <input type="datetime-local"
+                                                    style={{
+                                                        width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem',
+                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc'
+                                                    }}
+                                                    value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Points</label>
+                                                <input type="number" defaultValue="100"
+                                                    style={{
+                                                        width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem',
+                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc'
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
+
                             </div>
-
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2.5rem' }}>
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1.5rem 2rem', background: '#f8fafc', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
                                 <button type="button" onClick={() => setShowModal(false)} disabled={submitting}
                                     style={{ padding: '0.85rem 1.75rem', borderRadius: 16, border: 'none', background: '#f1f5f9', color: '#64748b', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit' }}>Discard</button>
                                 <button type="submit" disabled={submitting}
-                                    style={{ 
-                                        padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', background: '#3b82f6', color: '#fff', 
+                                    style={{
+                                        padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', background: '#3b82f6', color: '#fff',
                                         fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
                                         boxShadow: '0 8px 20px rgba(59,130,246,0.3)', transition: 'all .2s'
                                     }}
@@ -1013,7 +1032,7 @@ const TeacherMaterials: React.FC = () => {
             {showForward && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 1001, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,.4)', backdropFilter: 'blur(6px)' }} onClick={() => setShowForward(false)} />
-                    <div style={{ position: 'relative', zIndex: 1, background: '#fff', borderRadius: 24, padding: '2rem', width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,.18)' }}>
+                    <div className="modal-window-responsive" style={{ position: 'relative', zIndex: 1, background: '#fff', borderRadius: 24, padding: '2rem', width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,.18)' }}>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.35rem' }}>Forward Material</h3>
                         <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.25rem' }}>Select sections to share this content:</p>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
@@ -1037,6 +1056,57 @@ const TeacherMaterials: React.FC = () => {
                 </div>
             )}
             {/* File Preview Modal */}
+            {/* ── Grading Modal ── */}
+            {gradingId && (
+                <div className="modal-overlay" onClick={() => setGradingId(null)} style={{ zIndex: 1000 }}>
+                    <div className="modal shadow-xl animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px', borderRadius: '24px' }}>
+                        <div className="modal-header" style={{ border: 'none', paddingBottom: 0 }}>
+                            <h3 className="modal-title" style={{ fontSize: '1.5rem', fontWeight: 900 }}>Grade Submission</h3>
+                            <button className="modal-close" onClick={() => setGradingId(null)}><X size={20} /></button>
+                        </div>
+                        <div style={{ padding: '0 2rem 2rem' }}>
+                            <div className="form-group" style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                                <label className="form-label" style={{ fontWeight: 800, color: '#64748b', marginBottom: '1rem', display: 'block' }}>GRADE (0-100)</label>
+                                <input
+                                    type="number"
+                                    className="form-input"
+                                    value={gradeVal}
+                                    onChange={e => setGradeVal(e.target.value)}
+                                    placeholder="0"
+                                    autoFocus
+                                    style={{
+                                        fontSize: '3rem', fontWeight: 900, textAlign: 'center', height: '100px',
+                                        borderRadius: '20px', border: '2px solid #e2e8f0', color: '#3b82f6',
+                                        background: '#f8fafc'
+                                    }}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label" style={{ fontWeight: 800, color: '#64748b' }}>FEEDBACK</label>
+                                <textarea
+                                    className="form-input"
+                                    value={feedbackVal}
+                                    onChange={e => setFeedbackVal(e.target.value)}
+                                    placeholder="Provide constructive feedback..."
+                                    style={{ minHeight: '120px', borderRadius: '16px', padding: '1rem', lineHeight: '1.6' }}
+                                />
+                            </div>
+                            <div className="modal-actions" style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
+                                <button className="btn btn-secondary" onClick={() => setGradingId(null)} style={{ flex: 1, borderRadius: '14px', fontWeight: 700 }}>Cancel</button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => handleGrade(gradingId, gradeVal, feedbackVal)}
+                                    disabled={!gradeVal || submitting}
+                                    style={{ flex: 2, borderRadius: '14px', fontWeight: 800, background: '#3b82f6', boxShadow: '0 8px 20px rgba(59,130,246,0.3)' }}
+                                >
+                                    {submitting ? 'Submitting...' : 'Confirm Grade'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {previewUrl && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 2100, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
                     <div style={{ padding: '1rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>

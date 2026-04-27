@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Search, FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History } from 'lucide-react';
+import { Search, FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History, Trash2 } from 'lucide-react';
 
 const downloadFile = async (type: 'material' | 'submission', id: number, fileName: string) => {
     try {
@@ -60,6 +60,7 @@ const TeacherAssignments: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [enrollments, setEnrollments] = useState<any[]>([]);
+    const [targetCourses, setTargetCourses] = useState<number[]>([]);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -180,7 +181,7 @@ const TeacherAssignments: React.FC = () => {
         
         setSubmitting(true);
         const fd = new FormData();
-        fd.append('courseIds', String(selectedCourse));
+        fd.append('courseIds', targetCourses.join(','));
         fd.append('type', 'assignment');
         fd.append('title', title);
         if (description) fd.append('description', description);
@@ -323,7 +324,7 @@ const TeacherAssignments: React.FC = () => {
                                 </div>
                             </div>
                             
-                            <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                                 <Plus size={16} /> New Assignment
                             </button>
                         </div>
@@ -395,38 +396,94 @@ const TeacherAssignments: React.FC = () => {
                 </div>
             )}
 
-            {/* Create Assignment Modal */}
             {showModal && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-                    <div style={{ background: '#fff', width: '100%', maxWidth: 650, borderRadius: 28, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-                        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>New Assignment</h3>
-                            <button onClick={() => setShowModal(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} color="#64748b" /></button>
+                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowModal(false)}>
+                    <div style={{ position: 'relative', background: '#fff', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
+                        
+                        {/* Header */}
+                        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>New Assignment</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748b' }}>Post instructions and materials to your sections</p>
+                            </div>
+                            <button onClick={() => setShowModal(false)} style={{ border: 'none', background: '#f8fafc', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}><X size={20} color="#64748b" /></button>
                         </div>
-                        <form onSubmit={handleCreate} style={{ padding: '2rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Title & Instructions</label>
-                                    <textarea required style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.25rem', fontSize: '0.95rem', minHeight: 180, outline: 'none', transition: 'border-color 0.2s', fontFamily: 'inherit' }} placeholder="Assignment title (first line)&#10;Detailed instructions..." value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+
+                        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                            {/* Scrollable Body */}
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '2rem' }} className="modal-scroll-area">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Due Date</label>
-                                        <input type="datetime-local" style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '0.85rem 1.25rem', fontSize: '0.9rem', outline: 'none' }} value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
+                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Title & Instructions</label>
+                                        <textarea 
+                                            required 
+                                            style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.25rem', fontSize: '0.95rem', minHeight: 150, outline: 'none', transition: 'all 0.2s', fontFamily: 'inherit', background: '#f8fafc' }} 
+                                            onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
+                                            onBlur={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
+                                            placeholder="Assignment title (first line)&#10;Detailed instructions..." 
+                                            value={form.content} 
+                                            onChange={e => setForm({ ...form, content: e.target.value })} 
+                                        />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Attachment</label>
-                                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem', border: '2px dashed #e2e8f0', borderRadius: 20, cursor: 'pointer', background: file ? '#f0f9ff' : '#fafbfc', transition: 'all 0.2s' }}>
-                                            <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
-                                            <Upload size={24} color={file ? '#3b82f6' : '#94a3b8'} style={{ marginBottom: 8 }} />
-                                            <div style={{ fontWeight: 700, color: file ? '#3b82f6' : '#475569', fontSize: '0.8rem', textAlign: 'center' }}>{file ? file.name : 'Upload instruction file'}</div>
-                                        </label>
+
+                                    <div className="responsive-modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '2rem' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Due Date</label>
+                                                <input 
+                                                    type="datetime-local" 
+                                                    style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '0.85rem 1.25rem', fontSize: '0.9rem', outline: 'none', background: '#f8fafc' }} 
+                                                    value={form.dueDate} 
+                                                    onChange={e => setForm({ ...form, dueDate: e.target.value })} 
+                                                />
+                                            </div>
+                                            
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Target Sections</label>
+                                                <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '1rem', background: '#f8fafc', borderRadius: 16, border: '1.5px solid #e2e8f0' }}>
+                                                    {courses.map(c => (
+                                                        <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: targetCourses.includes(c.id) ? '#eff6ff' : 'transparent', marginBottom: '4px' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={targetCourses.includes(c.id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) setTargetCourses([...targetCourses, c.id]);
+                                                                    else setTargetCourses(targetCourses.filter(id => id !== c.id));
+                                                                }}
+                                                                style={{ width: 18, height: 18, cursor: 'pointer' }}
+                                                            />
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: targetCourses.includes(c.id) ? '#3b82f6' : '#334155' }}>
+                                                                {c.courseCode} <span style={{ fontWeight: 500, opacity: 0.6 }}>· {c.section}</span>
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                {targetCourses.length === 0 && <p style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 700, marginTop: '8px' }}>* Select at least one section</p>}
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Attachment</label>
+                                            <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', border: '2px dashed #e2e8f0', borderRadius: 20, cursor: 'pointer', background: file ? '#f0f9ff' : '#f8fafc', transition: 'all 0.2s', flex: 1, minHeight: '180px' }}
+                                                onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'}
+                                                onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                            >
+                                                <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
+                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? '#e0f2fe' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+                                                    <Upload size={22} color={file ? '#3b82f6' : '#94a3b8'} />
+                                                </div>
+                                                <div style={{ fontWeight: 700, color: file ? '#0369a1' : '#475569', fontSize: '0.85rem', textAlign: 'center' }}>{file ? file.name : 'Upload instruction file'}</div>
+                                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 6 }}>PDF, DOCX, ZIP or Images (10MB)</div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2.5rem' }}>
-                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.85rem 2rem', borderRadius: 16, border: 'none', background: '#f1f5f9', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                                <button type="submit" disabled={submitting} style={{ padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 20px rgba(59,130,246,0.3)' }}>{submitting ? 'Creating...' : 'Create Assignment'}</button>
+
+                            {/* Footer */}
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1.5rem 2rem', background: '#f8fafc', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
+                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.85rem 2rem', borderRadius: 16, border: 'none', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>Cancel</button>
+                                <button type="submit" disabled={submitting} style={{ padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 8px 20px rgba(59,130,246,0.3)', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>{submitting ? 'Creating...' : 'Create Assignment'}</button>
                             </div>
                         </form>
                     </div>
@@ -470,7 +527,11 @@ const TeacherAssignments: React.FC = () => {
                                             <Avatar firstName={student.firstName} lastName={student.lastName} size={40} />
                                             <div>
                                                 <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{student.firstName} {student.lastName}</div>
-                                                <div style={{ fontSize: '0.7rem', color: status === 'missing' ? '#ef4444' : '#10b981', fontWeight: 800, textTransform: 'uppercase' }}>{status}</div>
+                                                <div style={{ fontSize: '0.7rem', color: status === 'missing' ? '#ef4444' : '#10b981', fontWeight: 800, textTransform: 'uppercase' }}>
+                                                    {status === 'missing' ? (
+                                                        selectedAssignment.dueDate && new Date(selectedAssignment.dueDate) < new Date() ? 'MISSING' : ''
+                                                    ) : status}
+                                                </div>
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>

@@ -7,6 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.Formula;
 
 @Entity
 @Table(name = "course_materials")
@@ -17,6 +18,9 @@ public class CourseMaterial {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Formula("(SELECT COUNT(*) FROM assignment_submissions s WHERE s.material_id = id)")
+    private Integer submissionCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
