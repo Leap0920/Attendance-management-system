@@ -391,7 +391,22 @@ const TeacherMaterials: React.FC = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                             <div>
                                 <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.35rem', letterSpacing: '-0.03em' }}>Academic Repository</h2>
-                                <p style={{ fontSize: '1.05rem', color: '#64748b' }}>Curated materials for <strong style={{ color: '#3b82f6', fontWeight: 800 }}>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                    <p style={{ fontSize: '1.05rem', color: '#64748b', margin: 0 }}>Curated materials for <strong style={{ color: '#3b82f6', fontWeight: 800 }}>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
+                                    {activeCourseData?.joinCode && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(activeCourseData.joinCode);
+                                                showAlert('Copied', 'Join code copied to clipboard!');
+                                            }}
+                                            title="Click to copy join code"
+                                        >
+                                            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Code:</span>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#0f172a', fontFamily: 'monospace' }}>{activeCourseData.joinCode}</span>
+                                            <Share size={12} color="#94a3b8" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <button onClick={() => setShowModal(true)} style={{
                                 display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.5rem',
