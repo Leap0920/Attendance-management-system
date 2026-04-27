@@ -191,6 +191,8 @@ const StudentMessages: React.FC = () => {
   const loadGroupMessages = useCallback((courseId: number) => {
     studentApi.getGroupMessages(courseId).then((res) => {
       const newMsgs = dedupeById(Array.isArray(res.data?.data) ? res.data.data : []);
+      // Sort messages by createdAt ascending (oldest first, newest last)
+      newMsgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       setMessages((prev) => {
         if (prev.length !== newMsgs.length) {
           setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 40);
@@ -203,6 +205,8 @@ const StudentMessages: React.FC = () => {
   const loadDmMessages = useCallback((userId: number) => {
     studentApi.getDmMessages(userId).then((res) => {
       const newMsgs = dedupeById(Array.isArray(res.data?.data) ? res.data.data : []);
+      // Sort messages by createdAt ascending (oldest first, newest last)
+      newMsgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       setMessages((prev) => {
         if (prev.length !== newMsgs.length) {
           setTimeout(() => scrollToBottom(prev.length === 0 ? 'auto' : 'smooth'), 40);
@@ -256,8 +260,14 @@ const StudentMessages: React.FC = () => {
       setReplyingTo(null);
       refreshConversations();
 
-      if (viewMode === 'group' && selectedCourse) loadGroupMessages(selectedCourse);
-      if (viewMode === 'dm' && selectedUser) loadDmMessages(selectedUser);
+      if (viewMode === 'group' && selectedCourse) {
+        loadGroupMessages(selectedCourse);
+        setTimeout(() => scrollToBottom('smooth'), 100);
+      }
+      if (viewMode === 'dm' && selectedUser) {
+        loadDmMessages(selectedUser);
+        setTimeout(() => scrollToBottom('smooth'), 100);
+      }
     } catch (err) {
       showApiError(err);
     } finally {
@@ -499,6 +509,34 @@ const StudentMessages: React.FC = () => {
                             </div>
                           </div>
 
+                          {/* Action buttons - always AFTER bubble, positioned by CSS */}
+                          <div className={`message-actions ${isMine ? 'mine' : 'theirs'}`}>
+                            <button
+                              type="button"
+                              className="message-action-btn"
+                              title="React"
+                              onClick={() => setPickerOpenFor(getMessageReactionKey(m.id))}
+                            >
+                              <Smile size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="message-action-btn"
+                              title="Reply"
+                              onClick={() => handleReply(m.id)}
+                            >
+                              <Reply size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="message-action-btn"
+                              title="More options"
+                              onClick={(e) => handleContextMenu(e, m.id)}
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                          </div>
+
                           {reactionEntries.length > 0 && (
                             <div className="reaction-row">
                               {reactionEntries.map(([emoji, count]) => (
@@ -591,24 +629,26 @@ const StudentMessages: React.FC = () => {
               }
             }}
           >
-            <Smile size={16} />
+            <Smile size={18} />
             <span>React</span>
           </button>
           <button 
             className="context-menu-item"
             onClick={() => handleReply(contextMenu.messageId)}
           >
-            <Reply size={16} />
+            <Reply size={18} />
             <span>Reply</span>
           </button>
           {isOwnMessage(messages.find(m => m.id === contextMenu.messageId)) && (
-            <button 
-              className="context-menu-item danger"
-              onClick={() => handleDeleteForEveryone(contextMenu.messageId)}
-            >
-              <Trash2 size={16} />
-              <span>Delete</span>
-            </button>
+            <>
+              <button 
+                className="context-menu-item danger"
+                onClick={() => handleDeleteForEveryone(contextMenu.messageId)}
+              >
+                <Trash2 size={18} />
+                <span>Unsend</span>
+              </button>
+            </>
           )}
         </div>
       )}
