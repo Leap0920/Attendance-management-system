@@ -18,4 +18,8 @@ public class RegisterRequest {
     private String role = "student";
     private String studentId;
     private String department;
+    private String phoneNumber;
+    private String bio;
+    private String gender;
+    private String birthday;
 }

@@ -18,6 +18,10 @@ public class UserDto {
     private String avatar;
     private String studentId;
     private String department;
+    private String phoneNumber;
+    private String bio;
+    private String gender;
+    private String birthday;
     private String status;
     private boolean mfaEnabled;
     private LocalDateTime createdAt;
@@ -34,6 +38,10 @@ public class UserDto {
                 .avatar(user.getAvatar())
                 .studentId(user.getStudentId())
                 .department(user.getDepartment())
+                .phoneNumber(user.getPhoneNumber())
+                .bio(user.getBio())
+                .gender(user.getGender())
+                .birthday(user.getBirthday())
                 .status(user.getStatus())
                 .mfaEnabled(user.getMfaEnabled() != null && user.getMfaEnabled())
                 .createdAt(user.getCreatedAt())

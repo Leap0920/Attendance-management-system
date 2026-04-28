@@ -10,5 +10,7 @@ public class AuthResponse {
     private String tokenType;
     private UserDto user;
     private boolean mfaRequired;
-    private String mfaToken; // temporary token for MFA verification
+    private String mfaToken;
+    private boolean emailVerificationRequired;
+    private String email;
 }

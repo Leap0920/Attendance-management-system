@@ -1,6 +1,5 @@
 package com.attendease;
 
-import com.attendease.entity.User;
 import com.attendease.repository.LoginAttemptRepository;
 import com.attendease.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;

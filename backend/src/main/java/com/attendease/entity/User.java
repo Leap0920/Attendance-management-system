@@ -40,6 +40,15 @@ public class User {
 
     private String department;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    private String bio;
+
+    private String gender;
+
+    private String birthday;
+
     @Column(nullable = false)
     private String status; // active, inactive, pending
 
@@ -53,6 +62,15 @@ public class User {
     @Column(name = "mfa_enabled")
     private Boolean mfaEnabled = false;
 
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "email_code_expiry")
+    private LocalDateTime emailCodeExpiry;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -60,9 +78,6 @@ public class User {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Column(name = "last_login")
-    private LocalDateTime lastLogin;
 
     @Column(name = "current_session_id")
     private String currentSessionId;

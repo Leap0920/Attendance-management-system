@@ -30,6 +30,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final LoginSecurityService loginSecurityService;
+    private final EmailService emailService;
+    private final java.util.Random random = new java.util.Random();
 
     private static final int MAX_ATTEMPTS = 5;
     private static final int LOCKOUT_MINUTES = 15;
@@ -67,19 +69,16 @@ public class AuthService {
         if ("admin".equals(user.getRole())) {
             refreshTokenRepository.revokeAllByUserId(user.getId());
             user.setCurrentSessionId(sessionId);
-            // Check for New IP Alert
             checkNewAdminIP(user, httpRequest);
         }
 
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // Record successful login in Audit Log for all users
         auditService.log(user, "login", "user", user.getId(), httpRequest);
 
         // Check if MFA is enabled
         if (user.getMfaEnabled() != null && user.getMfaEnabled()) {
-            // Return MFA required response with temporary token
             String mfaToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getEmail(), "mfa_pending", sessionId);
             return AuthResponse.builder()
                     .mfaRequired(true)
@@ -109,18 +108,26 @@ public class AuthService {
                 .role(request.getRole())
                 .studentId(request.getStudentId())
                 .department(request.getDepartment())
-                .status("active")
+                .phoneNumber(request.getPhoneNumber())
+                .bio(request.getBio())
+                .gender(request.getGender())
+                .birthday(request.getBirthday())
+                .status("pending")
                 .mfaEnabled(false)
                 .build();
 
+        String code = String.format("%06d", random.nextInt(1000000));
+        user.setVerificationCode(code);
+        user.setEmailCodeExpiry(LocalDateTime.now().plusMinutes(5));
+
         user = userRepository.save(java.util.Objects.requireNonNull(user));
+        emailService.sendVerificationCode(user.getEmail(), code);
         auditService.log(user, "register", "user", user.getId(), httpRequest);
 
-        String sessionId = UUID.randomUUID().toString();
-        user.setCurrentSessionId(sessionId);
-        userRepository.save(user);
-
-        return generateAuthResponse(user, httpRequest, sessionId);
+        return AuthResponse.builder()
+                .emailVerificationRequired(true)
+                .email(user.getEmail())
+                .build();
     }
 
     @Transactional
@@ -192,5 +199,41 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
+    public AuthResponse verifyEmail(String email, String code, HttpServletRequest httpRequest) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
 
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(code)) {
+            throw new UnauthorizedException("Invalid verification code");
+        }
+
+        if (user.getEmailCodeExpiry() != null && user.getEmailCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new UnauthorizedException("Verification code has expired");
+        }
+
+        // Code is valid
+        user.setStatus("active");
+        user.setVerificationCode(null);
+        user.setEmailCodeExpiry(null);
+        
+        String sessionId = UUID.randomUUID().toString();
+        user.setCurrentSessionId(sessionId);
+        user = userRepository.save(user);
+
+        return generateAuthResponse(user, httpRequest, sessionId);
+    }
+
+    @Transactional
+    public void resendVerificationCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        String code = String.format("%06d", random.nextInt(1000000));
+        user.setVerificationCode(code);
+        user.setEmailCodeExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        emailService.sendVerificationCode(user.getEmail(), code);
+    }
 }

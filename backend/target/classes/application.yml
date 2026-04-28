@@ -6,6 +6,18 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: carlobaclao789@gmail.com
+    password: ijlxhoyruplmppql
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   datasource:
     url: jdbc:postgresql://localhost:5432/attendease_db
     username: postgres

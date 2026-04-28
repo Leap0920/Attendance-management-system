@@ -5,8 +5,10 @@ import { User } from '../types';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ mfaRequired: boolean }>;
-  register: (data: any) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ mfaRequired?: boolean; emailVerificationRequired?: boolean; email?: string }>;
+  register: (data: any) => Promise<{ emailVerificationRequired?: boolean; email?: string }>;
+  verifyEmail: (email: string, code: string) => Promise<void>;
+  resendCode: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   refreshUser: () => Promise<void>;
@@ -61,6 +63,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { mfaRequired: true };
     }
 
+    if (data.emailVerificationRequired) {
+      return { emailVerificationRequired: true, email: data.email };
+    }
+
     if (data.accessToken) {
       localStorage.setItem('access_token', data.accessToken);
     }
@@ -68,12 +74,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUserState(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
     }
-    return { mfaRequired: false };
+    return {};
   };
 
   const register = async (data: any) => {
     const response = await authApi.register(data);
     const { data: resData } = response.data;
+    if (resData.emailVerificationRequired) {
+      return { emailVerificationRequired: true, email: resData.email };
+    }
     if (resData.accessToken) {
       localStorage.setItem('access_token', resData.accessToken);
     }
@@ -81,6 +90,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUserState(resData.user);
       localStorage.setItem('user', JSON.stringify(resData.user));
     }
+    return {};
+  };
+
+  const verifyEmail = async (email: string, code: string) => {
+    const response = await authApi.verifyEmail(email, code);
+    const { data } = response.data;
+    if (data.accessToken) {
+      localStorage.setItem('access_token', data.accessToken);
+    }
+    if (data.user) {
+      setUserState(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+  };
+
+  const resendCode = async (email: string) => {
+    await authApi.resendCode(email);
   };
 
   const logout = async () => {
@@ -101,7 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, resendCode, logout, setUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -24,6 +24,7 @@ public class LoginSecurityService {
     private static final int MAX_ATTEMPTS = 5;
     private static final int LOCKOUT_MINUTES = 15;
 
+    @SuppressWarnings("null")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordAttempt(String email, HttpServletRequest request, boolean success) {
         String ip = request != null ? request.getRemoteAddr() : "unknown";

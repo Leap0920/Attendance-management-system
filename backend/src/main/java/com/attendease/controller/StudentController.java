@@ -25,6 +25,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/student")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class StudentController {
 
         private final CourseRepository courseRepository;

@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import MagicRings from '../../components/MagicRings/MagicRings';
 import './Login.css';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -25,6 +31,8 @@ const Login: React.FC = () => {
       const result = await login(email, password);
       if (result.mfaRequired) {
         navigate('/mfa');
+      } else if (result.emailVerificationRequired) {
+        navigate('/verify-email', { state: { email: result.email } });
       } else {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         navigate(`/${user.role || ''}`);
@@ -160,7 +168,11 @@ const Login: React.FC = () => {
                 type="submit" 
                 className={`btn ${isLocked ? 'btn-danger' : 'btn-primary'}`} 
                 disabled={loading || isLocked}
-                style={isLocked ? { cursor: 'not-allowed', opacity: 0.8, background: '#ef4444', borderColor: '#ef4444' } : {}}
+                style={{ 
+                  width: '100%', 
+                  marginBottom: '1rem',
+                  ...(isLocked ? { cursor: 'not-allowed', opacity: 0.8, background: '#ef4444', borderColor: '#ef4444' } : {}) 
+                }}
               >
                 {loading ? 'Signing in…' : isLocked ? 'Account Locked' : 'Sign in'}
               </button>

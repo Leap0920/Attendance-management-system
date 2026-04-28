@@ -43,6 +43,7 @@ com\attendease\repository\EnrollmentRepository.class
 com\attendease\controller\AuthController.class
 com\attendease\entity\Course$CourseBuilder.class
 com\attendease\security\JwtTokenProvider.class
+com\attendease\service\EmailService.class
 com\attendease\repository\SettingRepository.class
 com\attendease\entity\AuditLog.class
 com\attendease\exception\ResourceNotFoundException.class

@@ -94,6 +94,28 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(UserDto.fromEntity(user)));
     }
 
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyEmail(
+            @RequestBody java.util.Map<String, String> body,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+        
+        String email = body.get("email");
+        String code = body.get("code");
+        
+        AuthResponse authResponse = authService.verifyEmail(email, code, httpRequest);
+        setTokenCookie(httpResponse, authResponse.getAccessToken());
+        
+        return ResponseEntity.ok(ApiResponse.success("Email verified successfully", authResponse));
+    }
+
+    @PostMapping("/resend-code")
+    public ResponseEntity<ApiResponse<Void>> resendCode(@RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        authService.resendVerificationCode(email);
+        return ResponseEntity.ok(ApiResponse.success("Verification code resent", null));
+    }
+
     private void setTokenCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("access_token", token);
         cookie.setHttpOnly(true);
