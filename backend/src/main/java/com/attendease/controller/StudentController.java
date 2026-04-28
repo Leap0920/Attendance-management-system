@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.attendease.entity.SecurityEvent;
@@ -27,6 +28,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/student")
+@PreAuthorize("hasRole('STUDENT')")
 @RequiredArgsConstructor
 @SuppressWarnings("null")
 public class StudentController {

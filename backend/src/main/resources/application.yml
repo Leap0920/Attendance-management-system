@@ -9,8 +9,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: carlobaclao789@gmail.com
-    password: ijlxhoyruplmppql
+    username: ${MAIL_USERNAME:carlobaclao789@gmail.com}
+    password: ${MAIL_PASSWORD:ijlxhoyruplmppql}
     properties:
       mail:
         smtp:
@@ -20,8 +20,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/attendease_db
-    username: postgres
-    password: leapfrog
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:leapfrog}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -52,12 +52,12 @@ server:
 # Application-specific configuration
 app:
   jwt:
-    secret: attendease-super-secret-key-change-in-production-must-be-at-least-256-bits-long-for-hs256
+    secret: ${JWT_SECRET:attendease-super-secret-key-change-in-production-must-be-at-least-256-bits-long-for-hs256}
     access-token-expiration-ms: 86400000       # 24 hours (Stable Session)
     refresh-token-expiration-ms: 604800000   # 7 days
 
   encryption:
-    aes-secret-key: "AttendEaseAES256SecretKey@Dev32!"  # Must be exactly 32 bytes for AES-256
+    aes-secret-key: ${AES_SECRET:AttendEaseAES256SecretKey@Dev32!}
 
   cors:
     allowed-origins: http://localhost:5173,http://192.168.1.2:5173,http://192.168.137.1:5173,http://192.168.137.7:5173,http://192.168.1.122:5173
