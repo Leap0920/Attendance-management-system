@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Lock, Phone, Calendar, Info, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
@@ -25,6 +25,24 @@ const Register: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [staticRingsFallback, setStaticRingsFallback] = useState(false);
+
+    // On mount, if it's a reload, we want a clean state
+    useEffect(() => {
+        try {
+            // Check if page was reloaded
+            const isReload = (
+                (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload' ||
+                (window.performance.navigation && window.performance.navigation.type === 1)
+            );
+            
+            if (isReload) {
+                setStep(1);
+                setError('');
+            }
+        } catch (e) {
+            console.error('Error checking navigation type:', e);
+        }
+    }, []);
     
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -203,17 +221,20 @@ const Register: React.FC = () => {
                                         }}>+63</div>
                                         <input 
                                             className="form-input" 
-                                            name="phoneNumber" 
-                                            placeholder="912 345 6789" 
-                                            value={form.phoneNumber} 
+                                            name="phoneNumber"
+                                            value={form.phoneNumber}
                                             onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, '').substring(0, 10);
-                                                setForm({ ...form, phoneNumber: val });
+                                                let val = e.target.value.replace(/\D/g, '');
+                                                if (val.startsWith('0')) val = val.substring(1);
+                                                setForm({ ...form, phoneNumber: val.substring(0, 10) });
                                             }} 
+                                            placeholder="912 345 6789" 
+                                            maxLength={10}
                                             style={{ 
                                                 borderRadius: '0 12px 12px 0',
                                                 borderLeft: 'none',
-                                                paddingLeft: '0.5rem'
+                                                paddingLeft: '0.5rem',
+                                                width: '100%'
                                             }} 
                                             required
                                         />

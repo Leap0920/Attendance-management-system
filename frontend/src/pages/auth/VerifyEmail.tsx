@@ -116,8 +116,8 @@ const VerifyEmail: React.FC = () => {
             </div>
             <div className="login-page__scrim" aria-hidden />
 
-            <div className="login-page__inner" style={{ maxWidth: '500px', display: 'block' }}>
-                <header className="login-hero animate-slide-up stagger-1" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <div className="login-page__inner" style={{ maxWidth: '480px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '1.5rem' }}>
+                <header className="login-hero animate-slide-up stagger-1" style={{ textAlign: 'center', marginBottom: '1rem' }}>
                     <div style={{ 
                         display: 'inline-flex', 
                         padding: '1.25rem', 
@@ -145,7 +145,7 @@ const VerifyEmail: React.FC = () => {
                     </p>
                 </header>
 
-                <div className="login-card-wrap animate-slide-up stagger-2">
+                <div className="login-card-wrap animate-slide-up stagger-2" style={{ maxWidth: '460px', margin: '0 auto' }}>
                     <div className="login-card" style={{ padding: '2.5rem' }}>
                         {error && (
                             <div className="alert alert-error animate-fade-in" style={{ marginBottom: '1.5rem' }}>

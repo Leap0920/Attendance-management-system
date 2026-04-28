@@ -431,8 +431,8 @@ const AdminUsers: React.FC = () => {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '0.85rem' }}>
-              <button className="btn btn-secondary" style={{ flex: 1, border: 'none' }} onClick={() => setShowDeleteConfirm(null)}>Retain Account</button>
-              <button className="btn btn-danger shadow-md" style={{ flex: 1 }} onClick={() => handleDelete(showDeleteConfirm)}>Purge Data</button>
+              <button className="btn btn-secondary" style={{ flex: 1, border: 'none' }} onClick={() => setShowDeleteConfirm(null)}>Cancel</button>
+              <button className="btn btn-danger shadow-md" style={{ flex: 1 }} onClick={() => handleDelete(showDeleteConfirm)}>Delete</button>
             </div>
           </div>
         </div>

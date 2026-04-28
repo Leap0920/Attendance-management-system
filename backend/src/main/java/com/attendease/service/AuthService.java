@@ -92,8 +92,16 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request, HttpServletRequest httpRequest) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email already registered");
+        java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            String status = existingUser.get().getStatus();
+            if (!"pending".equals(status)) {
+                throw new BadRequestException("An account with this email already exists and is " + status + ". Please sign in.");
+            }
+            // Allow re-registration if status is pending (incomplete verification)
+            refreshTokenRepository.revokeAllByUserId(existingUser.get().getId());
+            userRepository.delete(existingUser.get());
+            userRepository.flush();
         }
 
         if (!("student".equals(request.getRole()) || "teacher".equals(request.getRole()))) {

@@ -27,7 +27,7 @@ public class AuthController {
 
         AuthResponse authResponse = authService.login(request, httpRequest);
 
-        if (!authResponse.isMfaRequired()) {
+        if (!authResponse.isMfaRequired() && !authResponse.isEmailVerificationRequired()) {
             setTokenCookie(httpResponse, authResponse.getAccessToken());
         }
 
@@ -41,7 +41,9 @@ public class AuthController {
             HttpServletResponse httpResponse) {
 
         AuthResponse authResponse = authService.register(request, httpRequest);
-        setTokenCookie(httpResponse, authResponse.getAccessToken());
+        if (!authResponse.isEmailVerificationRequired()) {
+            setTokenCookie(httpResponse, authResponse.getAccessToken());
+        }
 
         return ResponseEntity.ok(ApiResponse.success("Registration successful", authResponse));
     }
