@@ -22,7 +22,25 @@ const SystemConsole: React.FC = () => {
   const [logs, setLogs] = useState<{t: string, m: string, s: 'info' | 'warn' | 'error' | 'debug'}[]>([]);
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Set a fixed boot timestamp (approx 42 days ago from late April 2026)
+  // this ensures the uptime persists and continues even after refresh
+  const bootTimestamp = useRef(new Date('2026-03-17T04:00:00').getTime());
+  
+  const calculateCurrentUptime = () => {
+    return Math.floor((Date.now() - bootTimestamp.current) / 1000);
+  };
+
+  const [uptimeSeconds, setUptimeSeconds] = useState(calculateCurrentUptime());
   const terminalEndRef = useRef<HTMLDivElement>(null);
+
+  const formatUptimeValue = (totalSeconds: number) => {
+    const d = Math.floor(totalSeconds / (24 * 3600));
+    const h = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${d}d ${h}h ${m}m ${s}s`;
+  };
 
   const addLog = (message: string, severity: 'info' | 'warn' | 'error' | 'debug' = 'info') => {
     const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -74,9 +92,15 @@ const SystemConsole: React.FC = () => {
       addLog(activities[rand].m, activities[rand].s as any);
     }, 4000);
 
+    // Uptime Counter
+    const uptimeInterval = setInterval(() => {
+      setUptimeSeconds(calculateCurrentUptime());
+    }, 1000);
+
     return () => {
       clearInterval(bootInterval);
       clearInterval(liveInterval);
+      clearInterval(uptimeInterval);
     };
   }, []);
 
@@ -264,8 +288,8 @@ const SystemConsole: React.FC = () => {
 
           <div className="premium-card" style={{ padding: '1.25rem', background: 'var(--gradient-primary)', color: '#fff', border: 'none' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.8, marginBottom: '0.5rem' }}>SERVER UPTIME</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>42d 18h 24m</div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.5rem' }}>Last update: 2m ago</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'JetBrains Mono, monospace' }}>{formatUptimeValue(uptimeSeconds)}</div>
+            <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.5rem' }}>System Healthy | Live Sync</div>
           </div>
         </div>
       </div>

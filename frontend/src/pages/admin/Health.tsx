@@ -46,7 +46,7 @@ const AdminHealth: React.FC = () => {
 
   useEffect(() => {
     fetchHealth();
-    const interval = setInterval(fetchHealth, 15000); // Every 15s for health
+    const interval = setInterval(fetchHealth, 3000); // Polling every 3 seconds for real-time feel
     return () => clearInterval(interval);
   }, [fetchHealth]);
 
