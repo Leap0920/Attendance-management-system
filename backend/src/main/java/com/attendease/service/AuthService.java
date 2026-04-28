@@ -236,4 +236,14 @@ public class AuthService {
 
         emailService.sendVerificationCode(user.getEmail(), code);
     }
+
+    @Transactional
+    public void sendPasswordChangeVerification(User user) {
+        String code = String.format("%06d", random.nextInt(1000000));
+        user.setVerificationCode(code);
+        user.setEmailCodeExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        emailService.sendPasswordChangeCode(user.getEmail(), code);
+    }
 }

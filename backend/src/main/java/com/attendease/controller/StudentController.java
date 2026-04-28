@@ -554,6 +554,7 @@ public class StudentController {
                         @RequestBody Map<String, String> body,
                         @AuthenticationPrincipal User student,
                         HttpServletRequest request) {
+
                 if (body.containsKey("firstName")) student.setFirstName(body.get("firstName"));
                 if (body.containsKey("lastName")) student.setLastName(body.get("lastName"));
                 if (body.containsKey("department")) student.setDepartment(body.get("department"));

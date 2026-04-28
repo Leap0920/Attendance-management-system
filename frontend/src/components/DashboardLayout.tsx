@@ -644,17 +644,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                   <div className="form-group">
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Current Password</label>
                     <input className="form-input" type="password" value={passwordForm.currentPassword}
-                      onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required style={{ borderRadius: 12 }} />
+                        onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} required style={{ borderRadius: 12 }} />
                   </div>
                   <div className="form-group">
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>New Password</label>
                     <input className="form-input" type="password" value={passwordForm.newPassword}
-                      onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required style={{ borderRadius: 12 }} />
+                        onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} required style={{ borderRadius: 12 }} />
                   </div>
                   <div className="form-group">
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Confirm New Password</label>
                     <input className="form-input" type="password" value={passwordForm.confirmPassword}
-                      onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required style={{ borderRadius: 12 }} />
+                        onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} required style={{ borderRadius: 12 }} />
                   </div>
                 </form>
               )}

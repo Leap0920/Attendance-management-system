@@ -937,6 +937,7 @@ public class TeacherController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateProfile(
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal User teacher, HttpServletRequest request) {
+        
         if (body.containsKey("firstName"))
             teacher.setFirstName(body.get("firstName"));
         if (body.containsKey("lastName"))

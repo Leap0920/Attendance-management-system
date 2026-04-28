@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShieldCheck, Mail, ArrowRight, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Mail, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import MagicRings from '../../components/MagicRings/MagicRings';
 import './Login.css'; // Reuse login styles
@@ -117,24 +117,51 @@ const VerifyEmail: React.FC = () => {
             <div className="login-page__scrim" aria-hidden />
 
             <div className="login-page__inner" style={{ maxWidth: '500px', display: 'block' }}>
-                <header className="login-hero" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div style={{ display: 'inline-flex', padding: '1rem', background: '#eff6ff', borderRadius: '20px', color: '#2563eb', marginBottom: '1.5rem' }}>
-                        <ShieldCheck size={40} />
+                <header className="login-hero animate-slide-up stagger-1" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+                    <div style={{ 
+                        display: 'inline-flex', 
+                        padding: '1.25rem', 
+                        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', 
+                        borderRadius: '24px', 
+                        color: '#2563eb', 
+                        marginBottom: '1.75rem',
+                        boxShadow: '0 8px 16px rgba(37, 99, 235, 0.1)'
+                    }}>
+                        <ShieldCheck size={48} />
                     </div>
-                    <h1 className="login-hero__title">Verify your email</h1>
-                    <p className="login-hero__lead">
-                        We've sent a 6-digit verification code to <br />
-                        <strong style={{ color: 'var(--login-text)' }}>{email}</strong>
+                    <h1 className="login-hero__title" style={{ marginBottom: '0.75rem' }}>Secure Verification</h1>
+                    <p className="login-hero__lead" style={{ fontSize: '1rem' }}>
+                        We've sent a 6-digit verification code to
+                        <span style={{ 
+                            display: 'block', 
+                            marginTop: '0.5rem', 
+                            color: '#2563eb', 
+                            fontWeight: 700,
+                            background: '#f0f7ff',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '12px',
+                            border: '1px dashed #bfdbfe'
+                        }}>{email}</span>
                     </p>
                 </header>
 
-                <div className="login-card-wrap">
-                    <div className="login-card">
-                        {error && <div className="alert alert-error">{error}</div>}
-                        {message && <div className="alert alert-success">{message}</div>}
+                <div className="login-card-wrap animate-slide-up stagger-2">
+                    <div className="login-card" style={{ padding: '2.5rem' }}>
+                        {error && (
+                            <div className="alert alert-error animate-fade-in" style={{ marginBottom: '1.5rem' }}>
+                                <AlertCircle size={18} style={{ marginRight: '8px', flexShrink: 0 }} />
+                                {error}
+                            </div>
+                        )}
+                        {message && (
+                            <div className="alert alert-success animate-fade-in" style={{ marginBottom: '1.5rem' }}>
+                                <ShieldCheck size={18} style={{ marginRight: '8px', flexShrink: 0 }} />
+                                {message}
+                            </div>
+                        )}
 
                         <form onSubmit={handleSubmit}>
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '2rem' }}>
+                            <div className="otp-container">
                                 {code.map((digit, idx) => (
                                     <input
                                         key={idx}
@@ -143,17 +170,11 @@ const VerifyEmail: React.FC = () => {
                                         inputMode="numeric"
                                         maxLength={1}
                                         value={digit}
+                                        placeholder="0"
                                         onChange={(e) => handleChange(idx, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(idx, e)}
-                                        className="form-input"
-                                        style={{
-                                            width: '3.5rem',
-                                            height: '4rem',
-                                            textAlign: 'center',
-                                            fontSize: '1.5rem',
-                                            fontWeight: 'bold',
-                                            padding: 0
-                                        }}
+                                        className={`otp-box animate-scale-in stagger-${idx + 1}`}
+                                        autoFocus={idx === 0}
                                         required
                                     />
                                 ))}
@@ -163,42 +184,62 @@ const VerifyEmail: React.FC = () => {
                                 type="submit"
                                 className="btn btn-primary"
                                 disabled={loading}
-                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+                                style={{ 
+                                    width: '100%', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    gap: '0.75rem',
+                                    height: '3.5rem',
+                                    fontSize: '1.05rem',
+                                    borderRadius: '14px',
+                                    boxShadow: '0 10px 20px -5px rgba(37, 99, 235, 0.3)'
+                                }}
                             >
-                                {loading ? 'Verifying...' : (
+                                {loading ? (
                                     <>
-                                        Verify Account <ArrowRight size={18} />
+                                        <RefreshCw size={20} className="animate-spin" /> Verifying...
+                                    </>
+                                ) : (
+                                    <>
+                                        Verify & Continue <ArrowRight size={20} />
                                     </>
                                 )}
                             </button>
                         </form>
 
-                        <div className="login-card__footer">
-                            <p>Didn't receive the code?</p>
+                        <div className="login-card__footer animate-fade-in stagger-5" style={{ marginTop: '2rem' }}>
+                            <p style={{ color: 'var(--login-text-muted)', fontSize: '0.9rem' }}>Didn't receive the code?</p>
                             <button
                                 onClick={handleResend}
                                 disabled={resending}
+                                className="hover:translate-y-[-1px] transition-transform"
                                 style={{
                                     background: 'none',
                                     border: 'none',
                                     color: 'var(--login-blue)',
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     cursor: 'pointer',
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.4rem',
-                                    marginTop: '0.5rem'
+                                    gap: '0.5rem',
+                                    marginTop: '0.6rem',
+                                    fontSize: '0.95rem'
                                 }}
                             >
-                                {resending ? 'Resending...' : (
+                                {resending ? 'Sending...' : (
                                     <>
-                                        <RefreshCw size={16} className={resending ? 'animate-spin' : ''} /> Resend Code
+                                        <RefreshCw size={18} className={resending ? 'animate-spin' : ''} /> Resend OTP
                                     </>
                                 )}
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <footer className="animate-fade-in stagger-5" style={{ textAlign: 'center', marginTop: '3rem', color: 'var(--login-text-muted)', fontSize: '0.85rem' }}>
+                    <p>Protected by AttendEase Security Protocol</p>
+                </footer>
             </div>
         </div>
     );
