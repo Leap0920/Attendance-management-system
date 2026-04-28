@@ -457,3 +457,36 @@
   to { opacity: 1; }
 }
 
+.otp-container {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.otp-box {
+  width: 100%;
+  max-width: 3.5rem;
+  height: 4rem;
+  border: 2px solid #e1e7ef;
+  border-radius: 12px;
+  background: #f8fafc;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--login-text);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.otp-box:focus {
+  border-color: var(--login-blue);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+.otp-box::placeholder {
+  color: #cbd5e1;
+}
+

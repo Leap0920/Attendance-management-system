@@ -13,6 +13,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.attendease.entity.SecurityEvent;
+import com.attendease.entity.SecurityEventType;
+import com.attendease.entity.SecurityEventSeverity;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,6 +43,7 @@ public class StudentController {
         private final CommentRepository commentRepository;
         private final AuditService auditService;
         private final PasswordEncoder passwordEncoder;
+        private final SecurityEventRepository securityEventRepository;
 
         // ── Dashboard ──────────────────────────────────────────────────────
         @GetMapping("/dashboard")
@@ -580,13 +584,36 @@ public class StudentController {
                         throw new BadRequestException("Current password is incorrect");
                 }
 
-                if (newPassword.length() < 6) {
-                        throw new BadRequestException("New password must be at least 6 characters");
+                if (newPassword.length() < 8) {
+                        throw new BadRequestException("New password must be at least 8 characters");
+                }
+
+                // New requirements check
+                boolean hasDigit = false;
+                boolean hasSpecial = false;
+                String specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+                for (char c : newPassword.toCharArray()) {
+                    if (Character.isDigit(c)) hasDigit = true;
+                    else if (specialChars.contains(String.valueOf(c))) hasSpecial = true;
+                }
+                if (!hasDigit || !hasSpecial) {
+                    throw new BadRequestException("Password must contain at least one number and one special character");
                 }
 
                 student.setPassword(passwordEncoder.encode(newPassword));
                 userRepository.save(student);
                 auditService.log(student, "change_password", "user", student.getId(), request);
+
+                // Alert Admin Dashboard
+                SecurityEvent event = new SecurityEvent();
+                event.setType(SecurityEventType.PASSWORD_CHANGE);
+                event.setSeverity(SecurityEventSeverity.LOW);
+                event.setDescription("Profile password changed by user: " + student.getEmail());
+                event.setUserEmail(student.getEmail());
+                event.setIpAddress(request.getRemoteAddr());
+                event.setAcknowledged(false);
+                securityEventRepository.save(event);
+
                 return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
         }
 

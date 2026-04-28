@@ -21,6 +21,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
+import com.attendease.entity.SecurityEvent;
+import com.attendease.entity.SecurityEventType;
+import com.attendease.entity.SecurityEventSeverity;
 
 @RestController
 @RequestMapping("/api/teacher")
@@ -38,6 +41,7 @@ public class TeacherController {
     private final AssignmentSubmissionRepository assignmentSubmissionRepository;
     private final CommentRepository commentRepository;
     private final AuditService auditService;
+    private final SecurityEventRepository securityEventRepository;
     private final PasswordEncoder passwordEncoder;
 
     // ── Dashboard ──────────────────────────────────────────────────────
@@ -1025,13 +1029,36 @@ public class TeacherController {
             throw new BadRequestException("Current password is incorrect");
         }
 
-        if (newPassword.length() < 6) {
-            throw new BadRequestException("New password must be at least 6 characters");
+        if (newPassword.length() < 8) {
+            throw new BadRequestException("New password must be at least 8 characters");
+        }
+
+        // New requirements check
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
+        String specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+        for (char c : newPassword.toCharArray()) {
+            if (Character.isDigit(c)) hasDigit = true;
+            else if (specialChars.contains(String.valueOf(c))) hasSpecial = true;
+        }
+        if (!hasDigit || !hasSpecial) {
+            throw new BadRequestException("Password must contain at least one number and one special character");
         }
 
         teacher.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(java.util.Objects.requireNonNull(teacher));
         auditService.log(teacher, "change_password", "user", teacher.getId(), request);
+
+        // Alert Admin Dashboard
+        SecurityEvent event = new SecurityEvent();
+        event.setType(SecurityEventType.PASSWORD_CHANGE);
+        event.setSeverity(SecurityEventSeverity.LOW);
+        event.setDescription("Profile password changed by user: " + teacher.getEmail());
+        event.setUserEmail(teacher.getEmail());
+        event.setIpAddress(request.getRemoteAddr());
+        event.setAcknowledged(false);
+        securityEventRepository.save(event);
+
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
 

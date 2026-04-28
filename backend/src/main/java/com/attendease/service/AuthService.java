@@ -100,6 +100,8 @@ public class AuthService {
             request.setRole("student");
         }
 
+        validatePassword(request.getPassword());
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -245,5 +247,70 @@ public class AuthService {
         userRepository.save(user);
 
         emailService.sendPasswordChangeCode(user.getEmail(), code);
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("No account found with this email"));
+
+        String code = String.format("%06d", random.nextInt(1000000));
+        user.setVerificationCode(code);
+        user.setEmailCodeExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        emailService.sendPasswordChangeCode(user.getEmail(), code);
+    }
+
+    @Transactional
+    public void resetPassword(String email, String code, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(code)) {
+            throw new BadRequestException("Invalid verification code");
+        }
+
+        if (user.getEmailCodeExpiry() != null && user.getEmailCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Verification code has expired");
+        }
+
+        validatePassword(newPassword);
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setVerificationCode(null);
+        user.setEmailCodeExpiry(null);
+        userRepository.save(user);
+
+        // Alert Admin Dashboard
+        SecurityEvent event = new SecurityEvent();
+        event.setType(SecurityEventType.PASSWORD_CHANGE);
+        event.setSeverity(SecurityEventSeverity.LOW);
+        event.setDescription("Password reset successful for user: " + user.getEmail());
+        event.setUserEmail(user.getEmail());
+        event.setIpAddress("system");
+        event.setAcknowledged(false);
+        securityEventRepository.save(event);
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new BadRequestException("Password must be at least 8 characters long");
+        }
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
+        String specialChars = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+
+        for (char c : password.toCharArray()) {
+            if (Character.isDigit(c)) hasDigit = true;
+            else if (specialChars.contains(String.valueOf(c))) hasSpecial = true;
+        }
+
+        if (!hasDigit) {
+            throw new BadRequestException("Password must contain at least one number");
+        }
+        if (!hasSpecial) {
+            throw new BadRequestException("Password must contain at least one special character");
+        }
     }
 }

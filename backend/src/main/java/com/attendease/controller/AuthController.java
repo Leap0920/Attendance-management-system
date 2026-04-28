@@ -116,6 +116,22 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Verification code resent", null));
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        authService.forgotPassword(email);
+        return ResponseEntity.ok(ApiResponse.success("Password reset code sent to your email", null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+        String newPassword = body.get("newPassword");
+        authService.resetPassword(email, code, newPassword);
+        return ResponseEntity.ok(ApiResponse.success("Password has been reset successfully", null));
+    }
+
     private void setTokenCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie("access_token", token);
         cookie.setHttpOnly(true);

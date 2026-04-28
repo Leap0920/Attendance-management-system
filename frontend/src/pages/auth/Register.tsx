@@ -135,12 +135,32 @@ const Register: React.FC = () => {
                                             value={form.password}
                                             onChange={handleChange}
                                             required
-                                            minLength={6}
+                                            minLength={8}
                                             style={{ paddingLeft: '3rem' }}
                                         />
                                         <button type="button" className="password-toggle-btn" onClick={() => setShowPassword(!showPassword)}>
                                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                         </button>
+                                    </div>
+                                    <div className="password-requirements" style={{ marginTop: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                        {[
+                                            { label: '8+ Characters', met: form.password.length >= 8 },
+                                            { label: '1+ Number', met: /\d/.test(form.password) },
+                                            { label: '1+ Symbol', met: /[!@#$%^&*(),.?":{}|<>]/.test(form.password) }
+                                        ].map((req, i) => (
+                                            <div key={i} style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: '0.4rem', 
+                                                fontSize: '0.72rem',
+                                                fontWeight: 600,
+                                                color: req.met ? '#10b981' : '#94a3b8',
+                                                transition: 'all 0.3s ease'
+                                            }}>
+                                                <CheckCircle size={12} style={{ opacity: req.met ? 1 : 0.4 }} />
+                                                {req.label}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="form-group">

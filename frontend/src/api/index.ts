@@ -10,6 +10,8 @@ export const authApi = {
   refresh: () => api.post('/auth/refresh'),
   verifyEmail: (email: string, code: string) => api.post('/auth/verify-email', { email, code }),
   resendCode: (email: string) => api.post('/auth/resend-code', { email }),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (data: { email: string; code: string; newPassword: string }) => api.post('/auth/reset-password', data),
 };
 
 export const adminApi = {
