@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, FileText, Download, Play, X, Upload, ChevronRight, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History } from 'lucide-react';
+import { Search, FileText, Download, Play, X, Upload, ChevronRight, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History, Shield } from 'lucide-react';
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
@@ -52,6 +52,7 @@ const StudentAssignments: React.FC = () => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'other' | null>(null);
     const [previewName, setPreviewName] = useState('');
+    const [detailTab, setDetailTab] = useState<'submission' | 'discussion' | 'private'>('submission');
 
 
 
@@ -329,9 +330,9 @@ const StudentAssignments: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: '1fr 400px' }}>
-                        {/* Left Side: Instructions & Discussion */}
-                        <div style={{ padding: '1.5rem 2.5rem', borderRight: '1px solid #f1f5f9' }}>
+                    <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 400px' }}>
+                        {/* Left Side: Instructions */}
+                        <div style={{ padding: '1.5rem 2.5rem', borderRight: '1px solid #f1f5f9', overflowY: 'auto' }}>
                             <div style={{ marginBottom: '2rem' }}>
                                 <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', borderBottom: '2px solid #3b82f6', display: 'inline-block', paddingBottom: '0.4rem', marginBottom: '1.25rem' }}>Assignment Instructions</h3>
                                 {selectedAssignment.description && (
@@ -343,127 +344,110 @@ const StudentAssignments: React.FC = () => {
                                     <FileCard fileName={selectedAssignment.fileName} fileSize={selectedAssignment.fileSize} onDownload={() => handlePreview('material', selectedAssignment.id, selectedAssignment.fileName)} />
                                 )}
                             </div>
-
-                            {/* Class Discussion */}
-                            <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                                    <MessageSquare size={16} color="#3b82f6" />
-                                    <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Class Discussion</h4>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                                    {comments.filter(c => !c.isPrivate).map((c: any) => (
-                                        <div key={c.id} style={{ display: 'flex', gap: '0.85rem' }}>
-                                            <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={28} />
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: 2 }}>
-                                                    <span style={{ fontWeight: 700, fontSize: '0.82rem', color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName}</span>
-                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
-                                                </div>
-                                                <div style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.85rem' }}>
-                                    <Avatar firstName={user?.firstName} lastName={user?.lastName} size={32} />
-                                    <div style={{ flex: 1, position: 'relative' }}>
-                                        <input 
-                                            style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.65rem 4rem 0.65rem 1rem', fontSize: '0.85rem', outline: 'none' }} 
-                                            placeholder="Add a public comment..." 
-                                            value={newComment} 
-                                            onChange={e => setNewComment(e.target.value)} 
-                                            onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} 
-                                        />
-                                        <button 
-                                            onClick={handleAddComment} 
-                                            disabled={!newComment.trim()} 
-                                            style={{ position: 'absolute', right: '0.3rem', top: '0.3rem', bottom: '0.3rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 7, padding: '0 0.85rem', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
-                                        >Post</button>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
-                        {/* Right Side: Submission & Private Chat */}
-                        <div style={{ background: '#fafbfc', borderLeft: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
-                            {/* Submission Section */}
-                            <div style={{ padding: '1.5rem', borderBottom: '1px solid #f1f5f9' }}>
-                                <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.85rem', textAlign: 'center' }}>Submit Your Assignment</h4>
-                                {mySubmission ? (
-                                    <div style={{ background: '#fff', borderRadius: 12, padding: '1rem', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                                            <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', padding: '3px 8px', borderRadius: 5, background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff', color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6' }}>{mySubmission.status}</span>
-                                            {mySubmission.grade !== null && <div style={{ fontSize: '1.15rem', fontWeight: 900 }}>{mySubmission.grade}/100</div>}
-                                        </div>
-                                        {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => handlePreview('submission', mySubmission.id, mySubmission.fileName)} />}
-                                        {mySubmission.feedback && <div style={{ marginTop: '0.85rem', padding: '0.85rem', borderRadius: 10, background: '#fffbeb', border: '1px solid #fef3c7', fontSize: '0.82rem', color: '#92400e' }}><strong>Feedback:</strong> {mySubmission.feedback}</div>}
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                                        <textarea 
-                                            style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.85rem', fontSize: '0.85rem', minHeight: 110, outline: 'none', resize: 'vertical' }} 
-                                            placeholder="Write your response..." 
-                                            value={submitContent} 
-                                            onChange={e => setSubmitContent(e.target.value)} 
-                                        />
-                                        <div style={{ position: 'relative' }}>
-                                            {submitFile ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.6rem', background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-                                                    <FileText size={14} color="#3b82f6" />
-                                                    <span style={{ fontSize: '0.78rem', flex: 1, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{submitFile.name}</span>
-                                                    <X size={12} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => setSubmitFile(null)} />
-                                                </div>
-                                            ) : (
-                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.25rem 0.85rem', border: '1px dashed #cbd5e1', borderRadius: 10, cursor: 'pointer', background: '#fff', gap: 2 }}>
-                                                    <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
-                                                    <Upload size={16} color="#3b82f6" />
-                                                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1e293b' }}>Click to upload files</span>
-                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>PDF, DOCX, JPG, PNG (Max 10MB)</span>
-                                                </label>
-                                            )}
-                                        </div>
-                                        <button 
-                                            onClick={handleSubmit} 
-                                            disabled={submitting} 
-                                            style={{ width: '100%', padding: '0.75rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 8px rgba(59,130,246,0.15)' }}
-                                        >
-                                            {submitting ? 'Submitting...' : 'Turn In Assignment'}
-                                        </button>
-                                    </div>
-                                )}
+                        {/* Right Side: Submission & Chats (Tabbed) */}
+                        <div style={{ background: '#fafbfc', borderLeft: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#fff', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
+                                <button onClick={() => setDetailTab('submission')} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'submission' ? '#3b82f6' : 'transparent', color: detailTab === 'submission' ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Submission</button>
+                                <button onClick={() => setDetailTab('discussion')} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'discussion' ? '#3b82f6' : 'transparent', color: detailTab === 'discussion' ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Discussion</button>
+                                <button onClick={() => setDetailTab('private')} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'private' ? '#3b82f6' : 'transparent', color: detailTab === 'private' ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Private</button>
                             </div>
 
-                            {/* Private Chat Section */}
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageSquare size={16} color="#d97706" /></div>
-                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Private Chat</h4>
-                                </div>
-                                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', paddingRight: '0.3rem' }}>
-                                    {comments.filter(c => c.isPrivate).map((c: any) => {
-                                        const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
-                                        return (
-                                            <div key={c.id} style={{ display: 'flex', gap: '0.65rem', flexDirection: isTeacher ? 'row' : 'row-reverse' }}>
-                                                <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={24} />
-                                                <div style={{ flex: 1, background: isTeacher ? '#fff' : '#3b82f6', color: isTeacher ? '#334155' : '#fff', padding: '0.5rem 0.75rem', borderRadius: isTeacher ? '0 10px 10px 10px' : '10px 0 10px 10px', border: isTeacher ? '1px solid #e2e8f0' : 'none', fontSize: '0.8rem' }}>
-                                                    <div style={{ fontSize: '0.6rem', fontWeight: 800, marginBottom: 2, opacity: 0.8 }}>{isTeacher ? 'Instructor' : 'You'}</div>
-                                                    <div>{c.content}</div>
+                            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                {detailTab === 'submission' && (
+                                    <div style={{ padding: '1.5rem', animation: 'fadeIn 0.2s' }}>
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '1.25rem' }}>Your Submission</h4>
+                                        {mySubmission ? (
+                                            <div style={{ background: '#fff', borderRadius: 16, padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff', color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6' }}>{mySubmission.status}</span>
+                                                    {mySubmission.grade !== null && <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>{mySubmission.grade}<span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>/100</span></div>}
                                                 </div>
+                                                {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => handlePreview('submission', mySubmission.id, mySubmission.fileName)} />}
+                                                {mySubmission.content && <div style={{ fontSize: '0.82rem', color: '#475569', background: '#f8fafc', padding: '1rem', borderRadius: 12, marginTop: '1rem', fontStyle: 'italic', border: '1px solid #f1f5f9' }}>"{mySubmission.content}"</div>}
+                                                {mySubmission.feedback && <div style={{ marginTop: '1.25rem', padding: '1.15rem', borderRadius: 14, background: '#fffbeb', border: '1px solid #fef3c7', fontSize: '0.82rem', color: '#92400e' }}><strong>Instructor Feedback:</strong><br/>{mySubmission.feedback}</div>}
                                             </div>
-                                        );
-                                    })}
-                                    {comments.filter(c => c.isPrivate).length === 0 && (
-                                        <div style={{ textAlign: 'center', padding: '1.25rem', background: '#fff', borderRadius: 10, border: '1px solid #f1f5f9', fontSize: '0.75rem', color: '#94a3b8' }}>
-                                            Send a private message to your instructor.
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                                <textarea style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem', fontSize: '0.85rem', minHeight: 120, outline: 'none', resize: 'none', background: '#fff' }} placeholder="Type your answer or response here..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} />
+                                                <div style={{ position: 'relative' }}>
+                                                    {submitFile ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.75rem', background: '#fff', borderRadius: 12, border: '1px solid #3b82f6', boxShadow: '0 4px 6px rgba(59,130,246,0.1)' }}>
+                                                            <FileText size={16} color="#3b82f6" />
+                                                            <span style={{ fontSize: '0.8rem', flex: 1, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{submitFile.name}</span>
+                                                            <button onClick={() => setSubmitFile(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
+                                                        </div>
+                                                    ) : (
+                                                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem 1rem', border: '2px dashed #e2e8f0', borderRadius: 16, cursor: 'pointer', background: '#fff', gap: '0.5rem', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                                                            <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
+                                                            <Upload size={20} color="#3b82f6" />
+                                                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>Attach Files</span>
+                                                            <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>PDF, DOCX, or Images</span>
+                                                        </label>
+                                                    )}
+                                                </div>
+                                                <button onClick={handleSubmit} disabled={submitting || (!submitContent.trim() && !submitFile)} style={{ width: '100%', padding: '0.9rem', background: '#000', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }}>{submitting ? 'Processing...' : 'Turn In Work'}</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {detailTab === 'discussion' && (
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem', animation: 'fadeIn 0.2s', overflow: 'hidden' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                                            <MessageSquare size={16} color="#3b82f6" />
+                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Class Discussion</h4>
                                         </div>
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', gap: 6 }}>
-                                    <input 
-                                        style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 10, padding: '0.5rem 0.85rem', fontSize: '0.8rem', outline: 'none', background: '#fff' }} 
-                                        placeholder="Message instructor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
-                                    <button onClick={handlePrivateComment} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Play size={16} fill="#fff" /></button>
-                                </div>
+                                        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
+                                            {comments.filter(c => !c.isPrivate).map((c: any) => (
+                                                <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
+                                                    <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={28} />
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: 2 }}>
+                                                            <span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                            <span style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.5, background: '#fff', padding: '0.65rem 0.85rem', borderRadius: '0 12px 12px 12px', border: '1px solid #e2e8f0' }}>{c.content}</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {comments.filter(c => !c.isPrivate).length === 0 && <p style={{ textAlign: 'center', padding: '2rem', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No discussion yet.</p>}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#fff', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
+                                            <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.65rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#fff' }} placeholder="Ask a question..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
+                                            <button onClick={handleAddComment} disabled={!newComment.trim()} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 12, padding: '0 1.25rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Post</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {detailTab === 'private' && (
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem', animation: 'fadeIn 0.2s', overflow: 'hidden' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                                            <Shield size={16} color="#d97706" />
+                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Private Chat</h4>
+                                        </div>
+                                        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
+                                            {comments.filter(c => c.isPrivate).map((c: any) => {
+                                                const isT = (c.user?.role || '').toLowerCase().includes('teacher');
+                                                return (
+                                                    <div key={c.id} style={{ display: 'flex', gap: '0.65rem', flexDirection: isT ? 'row' : 'row-reverse' }}>
+                                                        <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={28} />
+                                                        <div style={{ flex: 1, background: isT ? '#fff' : '#3b82f6', color: isT ? '#334155' : '#fff', padding: '0.65rem 0.85rem', borderRadius: isT ? '0 12px 12px 12px' : '12px 0 12px 12px', border: isT ? '1px solid #e2e8f0' : 'none', fontSize: '0.8rem' }}>
+                                                            <div style={{ fontSize: '0.6rem', fontWeight: 800, marginBottom: 2, opacity: 0.8 }}>{isT ? 'Instructor' : 'You'}</div>
+                                                            <div>{c.content}</div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {comments.filter(c => c.isPrivate).length === 0 && <p style={{ textAlign: 'center', padding: '2rem', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>Messages here are only seen by you and your instructor.</p>}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#fff', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
+                                            <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.65rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#fff' }} placeholder="Message instructor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
+                                            <button onClick={handlePrivateComment} disabled={!privateComment.trim()} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 12, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Play size={18} fill="#fff" /></button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

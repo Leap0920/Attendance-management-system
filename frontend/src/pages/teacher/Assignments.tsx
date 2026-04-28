@@ -512,9 +512,9 @@ const TeacherAssignments: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: '1fr 420px' }}>
+                    <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 420px' }}>
                         {/* Left Side: Submissions */}
-                        <div style={{ padding: '2rem', borderRight: '1px solid #f1f5f9' }}>
+                        <div style={{ padding: '2rem', borderRight: '1px solid #f1f5f9', overflowY: 'auto' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     {(['all', 'submitted', 'missing', 'graded'] as const).map(f => (
@@ -559,19 +559,19 @@ const TeacherAssignments: React.FC = () => {
                         </div>
 
                         {/* Right Side: Instructions & Discussion */}
-                        <div style={{ padding: '2rem', background: '#fafbfc' }}>
+                        <div style={{ padding: '2rem', background: '#fafbfc', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
                             <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
                                 <button onClick={() => setDetailTab('instructions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'instructions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'instructions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>Instructions</button>
                                 <button onClick={() => setDetailTab('submissions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'submissions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'submissions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>Discussion</button>
                             </div>
 
                             {detailTab === 'instructions' ? (
-                                <div style={{ animation: 'fadeIn 0.2s' }}>
+                                <div style={{ animation: 'fadeIn 0.2s', flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                                     {selectedAssignment.description && <div style={{ fontSize: '0.9rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.5rem', padding: '1rem', background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>{selectedAssignment.description}</div>}
                                     {selectedAssignment.fileName && <FileCard fileName={selectedAssignment.fileName} fileSize={selectedAssignment.fileSize} onDownload={() => handlePreview('material', selectedAssignment.id, selectedAssignment.fileName)} />}
                                 </div>
                             ) : (
-                                <div style={{ animation: 'fadeIn 0.2s', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                <div style={{ animation: 'fadeIn 0.2s', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.85rem', overflowY: 'auto', marginBottom: '1rem', paddingRight: '0.5rem' }}>
                                         {comments.map((c: any) => (
                                             <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
