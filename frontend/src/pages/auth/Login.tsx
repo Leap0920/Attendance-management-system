@@ -101,8 +101,8 @@ const Login: React.FC = () => {
       <div className="login-page__inner">
         <header className="login-hero">
           <span className="login-hero__badge">Enterprise attendance</span>
-          <h1 className="login-hero__title">
-            Welcome back to <span className="login-hero__title-accent">AttendEase</span>
+          <h1 className="login-hero__title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            Welcome back to <img src="/logo.png" alt="System Logo" style={{ height: '48px', width: 'auto', objectFit: 'contain' }} />
           </h1>
           <p className="login-hero__lead">
             Track sessions, course materials, and messaging in one place — with a dashboard that stays in sync

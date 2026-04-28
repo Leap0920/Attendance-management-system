@@ -447,7 +447,7 @@ textarea.form-input { resize: vertical; }
 .sidebar-section-label {
   font-size: 0.65rem; font-weight: 600; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: 0.1em;
-  margin: 1.25rem 0 0.5rem 0.75rem;
+  margin: 0.5rem 0 0.5rem 0.75rem;
 }
 .sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 0.25rem; }
 .sidebar-link {

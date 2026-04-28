@@ -423,8 +423,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         >
           <X size={24} />
         </button>
-        <div className="sidebar-brand gradient-text" style={{ fontSize: '1.5rem', letterSpacing: '-0.02em', marginBottom: '2.5rem' }}>
-          AttendEase
+        <div className="sidebar-brand" style={{ 
+          padding: '1.5rem 0 0.5rem 0', 
+          margin: '-1rem -1rem 0.5rem -1rem', // Fully bypass sidebar padding (top, left, right)
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          width: 'calc(100% + 2rem)' // Explicitly set width to fill the gap
+        }}>
+          <img 
+            src="/logo.png" 
+            alt="System Logo" 
+            style={{ 
+              width: '140px', 
+              height: 'auto', 
+              objectFit: 'contain',
+              display: 'block'
+            }} 
+          />
         </div>
         <nav className="sidebar-nav">
           {navSections[role]?.map((section) => (

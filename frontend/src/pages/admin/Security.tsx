@@ -32,7 +32,7 @@ const SystemConsole: React.FC = () => {
   useEffect(() => {
     // Initial sequence
     const bootSequence = [
-      { m: 'AttendEase OS v2.4.0 Booting...', s: 'info' },
+      { m: 'System OS v2.4.0 Booting...', s: 'info' },
       { m: 'Kernel initialized. Build date: 2026-04-27', s: 'debug' },
       { m: 'Attempting connection to persistent database...', s: 'info' },
       { m: 'PostgreSQL connection established @ localhost:5432', s: 'info' },
@@ -142,7 +142,7 @@ const SystemConsole: React.FC = () => {
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Terminal size={14} />
-              root@attendease-vm: ~/logs/live.stream
+              root@system-vm: ~/logs/live.stream
             </div>
           </div>
           

@@ -238,7 +238,7 @@ const VerifyEmail: React.FC = () => {
                 </div>
 
                 <footer className="animate-fade-in stagger-5" style={{ textAlign: 'center', marginTop: '3rem', color: 'var(--login-text-muted)', fontSize: '0.85rem' }}>
-                    <p>Protected by AttendEase Security Protocol</p>
+                    <p>Protected by System Security Protocol</p>
                 </footer>
             </div>
         </div>
