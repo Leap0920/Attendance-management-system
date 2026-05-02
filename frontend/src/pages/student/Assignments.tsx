@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
-import Avatar from '../../components/Avatar';
 import { studentApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showApiError } from '../../utils/feedback';
-import { Search, FileText, Download, Play, X, Upload, ChevronRight, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History, Shield } from 'lucide-react';
+import { FileText, Download, Play, X, Upload, ChevronRight, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History, Shield } from 'lucide-react';
+import Avatar from '../../components/Avatar';
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
@@ -31,7 +31,6 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
 );
 
 const StudentAssignments: React.FC = () => {
-    const { user } = useAuth();
     const navigate = useNavigate();
     const [courses, setCourses] = useState<any[]>([]);
     const [assignments, setAssignments] = useState<any[]>([]);
@@ -39,7 +38,6 @@ const StudentAssignments: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'urgent' | 'done' | 'overdue'>('all');
     const [submissionsMap, setSubmissionsMap] = useState<Record<number, any>>({});
-    const menuRef = useRef<HTMLDivElement>(null);
 
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
@@ -191,27 +189,12 @@ const StudentAssignments: React.FC = () => {
     });
 
     return (
-        <DashboardLayout role="student">
-            <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
-                position: 'sticky', top: '0.5rem', zIndex: 10, background: '#fff', marginTop: '-1.9rem',
-                borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>
-                    <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/student/dashboard')}>My Assignments</h1>
-                    <nav style={{ display: 'flex', gap: '3rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center' }}>
-                        <span style={{ color: '#3b82f6', borderBottom: '3px solid #3b82f6', paddingBottom: 6, cursor: 'pointer' }}>Global Tasks</span>
-                    </nav>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                    <div style={{ position: 'relative' }}>
-                        <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input style={{ background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 999, padding: '0.65rem 1.25rem 0.65rem 2.8rem', fontSize: '0.9rem', width: 250, outline: 'none', fontFamily: 'inherit', fontWeight: 500 }} placeholder="Search all assignments..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                    </div>
-                    <Avatar avatarUrl={user?.avatar} firstName={user?.firstName} lastName={user?.lastName} size={42} />
-                </div>
-            </div>
+        <DashboardLayout 
+            role="student" 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+        >
+            {/* Header placeholder - kept empty as we use global TopNavbar */}
 
             {loading ? (
                 <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading all assignments...</p></div>

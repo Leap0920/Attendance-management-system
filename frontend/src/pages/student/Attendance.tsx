@@ -3,11 +3,9 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert } from '../../utils/feedback';
-import Avatar from '../../components/Avatar';
-import { CheckCircle2, AlertCircle, Target, BookOpen, Search } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Target, BookOpen } from 'lucide-react';
 
 const StudentAttendance: React.FC = () => {
-    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [codes, setCodes] = useState<Record<number, string>>({});
@@ -38,13 +36,6 @@ const StudentAttendance: React.FC = () => {
         } finally { setSubmitting(null); }
     };
 
-    const getAvatarUrl = (avatar?: unknown) => {
-        if (typeof avatar !== 'string') return undefined;
-        const v = avatar.trim();
-        if (!v) return undefined;
-        if (v.startsWith('http')) return v;
-        return `http://${window.location.hostname}:8080${v.startsWith('/') ? v : `/${v}`}`;
-    };
 
     const activeSessions = data?.activeSessions || [];
     const courses = data?.courses || [];
@@ -67,15 +58,11 @@ const StudentAttendance: React.FC = () => {
     });
 
     return (
-        <DashboardLayout role="student">
-            {/* ── Top Bar ──────────────────────────────────────── */}
-            <div className="td-topbar shadow-sm">
-                <span className="ta-brand font-extrabold text-xl tracking-tight text-gray-800">My Attendance</span>
-                <div className="td-topbar-actions" style={{ marginLeft: 'auto' }}>
-                    {/* Add any specific actions here if needed */}
-                </div>
-                <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={getAvatarUrl(user?.avatar)} size={38} />
-            </div>
+        <DashboardLayout 
+            role="student" 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+        >
 
             {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
                 <>
@@ -169,15 +156,6 @@ const StudentAttendance: React.FC = () => {
                     <div className="ta-table-section mt-8">
                         <div className="ta-table-header">
                             <h2>Course Breakdown</h2>
-                            <div className="td-search-wrapper" style={{ maxWidth: '280px' }}>
-                                <Search className="td-search-icon" size={16} />
-                                <input 
-                                    className="td-search-input" 
-                                    placeholder="Search by course code or name..." 
-                                    value={searchQuery} 
-                                    onChange={e => setSearchQuery(e.target.value)} 
-                                />
-                            </div>
                         </div>
                         <div className="data-table-wrapper">
                             <table className="data-table relative z-10 w-full">

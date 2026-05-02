@@ -5,7 +5,6 @@ import { useAuth } from '../../auth/AuthContext';
 import Avatar from '../../components/Avatar';
 
 const TeacherReports: React.FC = () => {
-  const { user } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
@@ -75,13 +74,7 @@ const TeacherReports: React.FC = () => {
     return map[status] || 'badge-closed';
   };
 
-  const getAvatarUrl = (avatar?: unknown) => {
-    if (typeof avatar !== 'string') return undefined;
-    const v = avatar.trim();
-    if (!v) return undefined;
-    if (v.startsWith('http')) return v;
-    return `http://${window.location.hostname}:8080${v.startsWith('/') ? v : `/${v}`}`;
-  };
+
 
   const selectedCourseObj = courses.find(c => c.id === selectedCourse);
   const avgRate = report?.students?.length > 0 ? Math.round(report.students.reduce((a: number, s: any) => a + s.rate, 0) / report.students.length * 10) / 10 : 0;
@@ -95,47 +88,45 @@ const TeacherReports: React.FC = () => {
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  return (
-    <DashboardLayout role="teacher">
-      {/* ── Top Bar ──────────────────────────────────────── */}
-      <div className="td-topbar">
-        <div className="td-search-wrapper">
-          <svg className="td-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input className="td-search-input" placeholder="Search reports..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+  const reportsActions = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div className="tr-course-selector" style={{ margin: 0, padding: 0 }}>
+        <div className="tr-dropdown" onClick={() => setShowCourseDropdown(!showCourseDropdown)} style={{ margin: 0, padding: '6px 12px', height: 'auto', borderRadius: '10px' }}>
+          <span className="tr-dropdown-dot" style={{ background: '#3b82f6' }}></span>
+          <span className="tr-dropdown-text" style={{ fontSize: '0.85rem' }}>
+            {selectedCourseObj ? `${selectedCourseObj.courseCode} • ${selectedCourseObj.section || 'Sec A'}` : 'Select course'}
+          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+          {showCourseDropdown && (
+            <div className="tr-dropdown-menu" onClick={e => e.stopPropagation()} style={{ right: 0, left: 'auto', marginTop: '10px' }}>
+              {courses.map(c => (
+                <div key={c.id} className={`tr-dropdown-item ${c.id === selectedCourse ? 'active' : ''}`} onClick={() => { setSelectedCourse(c.id); setShowCourseDropdown(false); }}>
+                  <span className="tr-dropdown-dot" style={{ background: '#3b82f6' }}></span>
+                  {c.courseName} {c.section ? `• ${c.section}` : ''}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="td-topbar-actions" style={{ marginLeft: 'auto' }}>
-          {report && <button className="btn btn-secondary td-topbar-btn" onClick={exportCsv}>Export CSV</button>}
-        </div>
-        <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={getAvatarUrl(user?.avatar)} size={38} />
       </div>
+      {report && <button className="btn btn-secondary td-topbar-btn" onClick={exportCsv} style={{ height: '36px', padding: '0 12px', fontSize: '0.85rem' }}>Export CSV</button>}
+    </div>
+  );
 
+  return (
+    <DashboardLayout 
+      role="teacher" 
+      searchQuery={searchQuery}
+      onSearchChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+      actions={reportsActions}
+    >
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
         <>
-          {/* ── Title + Course Selector ───────────────────── */}
+          {/* ── Title ───────────────────── */}
           <div className="tr-header-section">
             <div className="tr-header-left">
               <h1 className="tr-title">Attendance Reports</h1>
               <p className="tr-subtitle">Monitor student engagement and track session consistency with comprehensive data visualization.</p>
-            </div>
-            <div className="tr-course-selector">
-              <span className="tr-selector-label">SELECT COURSE</span>
-              <div className="tr-dropdown" onClick={() => setShowCourseDropdown(!showCourseDropdown)}>
-                <span className="tr-dropdown-dot" style={{ background: '#3b82f6' }}></span>
-                <span className="tr-dropdown-text">
-                  {selectedCourseObj ? `${selectedCourseObj.courseName} • ${selectedCourseObj.section || 'Sec A'}` : 'Select course'}
-                </span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-                {showCourseDropdown && (
-                  <div className="tr-dropdown-menu" onClick={e => e.stopPropagation()}>
-                    {courses.map(c => (
-                      <div key={c.id} className={`tr-dropdown-item ${c.id === selectedCourse ? 'active' : ''}`} onClick={() => { setSelectedCourse(c.id); setShowCourseDropdown(false); }}>
-                        <span className="tr-dropdown-dot" style={{ background: '#3b82f6' }}></span>
-                        {c.courseName} {c.section ? `• ${c.section}` : ''}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 

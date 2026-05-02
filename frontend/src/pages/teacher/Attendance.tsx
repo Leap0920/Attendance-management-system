@@ -3,10 +3,9 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import Avatar from '../../components/Avatar';
+
 
 const TeacherAttendance: React.FC = () => {
-  const { user } = useAuth();
   const [sessions, setSessions] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,13 +85,7 @@ const TeacherAttendance: React.FC = () => {
     } catch { setRecords([]); setShowRecords(session); }
   };
 
-  const getAvatarUrl = (avatar?: unknown) => {
-    if (typeof avatar !== 'string') return undefined;
-    const v = avatar.trim();
-    if (!v) return undefined;
-    if (v.startsWith('http')) return v;
-    return `http://${window.location.hostname}:8080${v.startsWith('/') ? v : `/${v}`}`;
-  };
+
 
   const activeSessions = sessions.filter(s => s.status === 'active');
   const closedSessions = sessions.filter(s => s.status !== 'active');
@@ -113,18 +106,15 @@ const TeacherAttendance: React.FC = () => {
   const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
   const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  return (
-    <DashboardLayout role="teacher">
-      {/* ── Top Bar ──────────────────────────────────────── */}
-      <div className="td-topbar">
-        <span className="ta-brand">Attendance Management</span>
-        <div className="td-topbar-actions" style={{ marginLeft: 'auto' }}>
-          <button className="btn btn-secondary td-topbar-btn" onClick={() => setShowModal(true)}>+ Create Course</button>
-          <button className="btn btn-primary td-topbar-btn" onClick={() => setShowModal(true)}>+ New Session</button>
-        </div>
-        <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={getAvatarUrl(user?.avatar)} size={38} />
-      </div>
+  const attendanceActions = (
+    <div className="td-topbar-actions">
+      <button className="btn btn-secondary td-topbar-btn" onClick={() => setShowModal(true)}>+ Create Course</button>
+      <button className="btn btn-primary td-topbar-btn" onClick={() => setShowModal(true)}>+ New Session</button>
+    </div>
+  );
 
+  return (
+    <DashboardLayout role="teacher" actions={attendanceActions}>
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : (
         <>
           {/* ── Stats Row ─────────────────────────────────── */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, 
   Plus, 
   Clock, 
   BookOpen, 
@@ -23,7 +22,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import Avatar from '../../components/Avatar';
+
 
 /* ── helpers ───────────────────────────────────────────────── */
 
@@ -57,7 +56,7 @@ const getCategoryLabel = (index: number) => [
   'ENGINEERING', 'SOCIAL SCIENCES', 'MANDATORY', 'COMPUTER SCIENCE',
   'BUSINESS', 'ARTS', 'EDUCATION', 'GENERAL',
 ][index % 8];
-const getCategoryColor = (index: number) => CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -275,17 +274,29 @@ const TeacherDashboard: React.FC = () => {
 
   const teacherName = data?.teacherName || user?.firstName || 'Teacher';
 
-  const getAvatarUrl = (avatar?: unknown) => {
-    if (typeof avatar !== 'string') return undefined;
-    const value = avatar.trim();
-    if (!value) return undefined;
-    if (value.startsWith('http://') || value.startsWith('https://')) return value;
-    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
-  };
+
+
+  const dashboardActions = (
+    <>
+      <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowAttendance(true)}>
+        <Plus size={14} strokeWidth={2.5} />
+        New Session
+      </button>
+      <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowCreateCourse(true)}>
+        <Plus size={14} strokeWidth={2.5} />
+        Create Course
+      </button>
+    </>
+  );
 
   /* ── render ──────────────────────────────────────────────── */
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout 
+      role="teacher"
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      actions={dashboardActions}
+    >
       {loading ? (
         <div className="loading-screen"><div className="spinner"></div></div>
       ) : loadError ? (
@@ -296,39 +307,6 @@ const TeacherDashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* ── Top Bar ──────────────────────────────────────── */}
-          <div className="td-topbar">
-            <div className="td-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-              <Search className="td-search-icon" size={16} />
-              <input
-                className="td-search-input"
-                placeholder="Search courses, students, sessions..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="td-topbar-actions">
-              <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowAttendance(true)}>
-                <Plus size={14} strokeWidth={2.5} />
-                New Session
-              </button>
-              <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowCreateCourse(true)}>
-                <Plus size={14} strokeWidth={2.5} />
-                Create Course
-              </button>
-            </div>
-            <div className="td-topbar-profile">
-              <span className="td-topbar-name">{user?.firstName} {user?.lastName}</span>
-              <span className="td-topbar-role">{user?.role === 'teacher' ? 'Senior Instructor' : user?.role}</span>
-            </div>
-            <Avatar
-              firstName={user?.firstName}
-              lastName={user?.lastName}
-              avatarUrl={getAvatarUrl(user?.avatar)}
-              size={38}
-            />
-          </div>
-
           {/* ── Welcome Banner ────────────────────────────────── */}
           <div className="td-welcome-banner">
             <div className="td-welcome-left">

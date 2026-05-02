@@ -116,23 +116,19 @@ const StudentDashboard: React.FC = () => {
   /* Recent activity — we gather recent materials info from courses if available */
   const recentActivity: { icon: 'file' | 'announcement'; title: string; subtitle: string }[] = [];
 
-  return (
-    <DashboardLayout role="student">
-      {/* ── Sticky Mobile Topbar ───────────────────────── */}
-      <div className="sd-header">
-        <div>
-          <h1 className="sd-header-title">Welcome back, {user?.firstName || 'Student'}!</h1>
-          <p className="sd-header-subtitle">Here's your learning overview.</p>
-        </div>
-        <button
-          className="sd-join-btn"
-          onClick={() => setShowJoin(true)}
-        >
-          <Plus size={16} strokeWidth={2.5} />
-          Join New Course
-        </button>
-      </div>
+  const studentActions = (
+    <button className="sd-join-btn" onClick={() => setShowJoin(true)}>
+      <Plus size={16} strokeWidth={2.5} />
+      Join New Course
+    </button>
+  );
 
+  return (
+    <DashboardLayout role="student" actions={studentActions}>
+      <div className="sd-welcome-header">
+        <h1 className="sd-header-title">Welcome back, {user?.firstName || 'Student'}!</h1>
+        <p className="sd-header-subtitle">Here's your learning overview.</p>
+      </div>
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : data && (
         <>
           {/* ── Active Sessions — Submit Attendance ── */}

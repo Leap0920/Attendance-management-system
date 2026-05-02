@@ -1,25 +1,26 @@
 import React, { useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  LogOut, 
   User, 
   Settings, 
   Shield, 
   X, 
   AlertCircle,
-  Menu,
-  ChevronRight,
-  Terminal,
-  Activity
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { studentApi, teacherApi } from '../api';
 import Modal from './Modal';
 import Avatar from './Avatar';
+import TopNavbar from './TopNavbar';
+import { AnimatedThemeToggle } from './AnimatedThemeToggle';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   role: 'admin' | 'teacher' | 'student';
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
+  actions?: React.ReactNode;
 }
 
 interface NavSection {
@@ -89,7 +90,13 @@ const navSections: Record<string, NavSection[]> = {
   ],
 };
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
+  children, 
+  role,
+  searchQuery,
+  onSearchChange,
+  actions
+}) => {
   const { user, logout, setUser, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -235,13 +242,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
   const hasAvatar = typeof user?.avatar === 'string' && user.avatar.trim().length > 0;
 
-  const getAvatarUrl = (avatar?: unknown) => {
-    if (typeof avatar !== 'string') return '';
-    const value = avatar.trim();
-    if (!value) return '';
-    if (value.startsWith('http://') || value.startsWith('https://')) return value;
-    return `http://${window.location.hostname}:8080${value.startsWith('/') ? value : `/${value}`}`;
-  };
 
   const isActive = (path: string) => {
     if (path === `/${role}`) return location.pathname === path;
@@ -249,17 +249,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const openProfile = () => {
-    setProfileForm({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      department: (user as any)?.department || '',
-    });
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    setProfileMsg(null);
-    setProfileTab('info');
-    setShowProfile(true);
-  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -425,13 +414,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         </button>
         <div className="sidebar-brand" style={{ 
           padding: '1.5rem 0 0.5rem 0', 
-          margin: '-1rem -1rem 0.5rem -1rem', // Fully bypass sidebar padding (top, left, right)
+          margin: '-1rem -1rem 0.5rem -1rem',
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          width: 'calc(100% + 2rem)' // Explicitly set width to fill the gap
+          width: 'calc(100% + 2rem)'
         }}>
           <img 
             src="/logo.png" 
@@ -461,66 +450,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                   )}
                 </Link>
               ))}
+
             </React.Fragment>
           ))}
         </nav>
         <div className="sidebar-footer">
-          <div 
-            className="sidebar-profile glass-effect" 
-            onClick={openProfile} 
-            title="Account Settings"
-            style={{ 
-              padding: '0.85rem', 
-              borderRadius: 'var(--radius-md)', 
-              marginBottom: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              border: '1px solid var(--border-glass)'
-            }}
-          >
-            <div className="sidebar-avatar" style={{ 
-              width: '38px', 
-              height: '38px',
-              boxShadow: '0 0 12px rgba(37, 99, 235, 0.15)',
-              border: '2px solid #fff',
-              overflow: 'hidden',
-              borderRadius: '50%'
-            }}>
-              <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={38} />
-            </div>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.fullName}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
-                {user?.role}
-              </div>
-            </div>
+          <div className="sidebar-theme-toggle">
+            <AnimatedThemeToggle className="sidebar-toggle" />
+            <span className="sidebar-toggle-label">Dark Mode</span>
           </div>
-          <button 
-            onClick={() => setShowLogout(true)} 
-            className="btn btn-secondary" 
-            style={{ 
-              width: '100%', 
-              fontSize: '0.8rem', 
-              fontWeight: 700, 
-              background: '#f8fafc',
-              border: '1px solid #f1f5f9',
-              color: 'var(--text-secondary)'
-            }}
-          >
-            <LogOut size={14} />
-            Sign Out
-          </button>
         </div>
-
       </aside>
 
-      <main className="main-content">{children}</main>
+      <div className="main-container">
+        <TopNavbar 
+          searchQuery={searchQuery} 
+          onSearchChange={onSearchChange} 
+          actions={actions} 
+          onProfileClick={() => setShowProfile(true)}
+        />
+        <main className="main-content">{children}</main>
+      </div>
+
 
       {/* Logout Confirmation Modal */}
       {showLogout && (

@@ -5,21 +5,9 @@ import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Search, FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History, Trash2 } from 'lucide-react';
+import { FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History, Trash2 } from 'lucide-react';
 
-const downloadFile = async (type: 'material' | 'submission', id: number, fileName: string) => {
-    try {
-        const res = type === 'material'
-            ? await fileApi.downloadMaterial(id)
-            : await fileApi.downloadSubmission(id);
-        const blob = new Blob([res.data]);
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = fileName || 'download';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    } catch { showAlert('Error', 'Could not download file', 'error'); }
-};
+
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
@@ -45,7 +33,6 @@ const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSi
 );
 
 const TeacherAssignments: React.FC = () => {
-    const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const [courses, setCourses] = useState<any[]>([]);
@@ -246,48 +233,42 @@ const TeacherAssignments: React.FC = () => {
         } catch { showAlert('Error', 'Could not load preview', 'error'); }
     };
 
-    return (
-        <DashboardLayout role="teacher">
-            <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '1rem 2.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '2.5rem',
-                position: 'sticky', top: '0.5rem', zIndex: 10, background: '#fff', marginTop: '-1.9rem',
-                borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5rem' }}>
-                    <h1 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#3b82f6', margin: 0, letterSpacing: '-0.04em', cursor: 'pointer' }} onClick={() => navigate('/teacher/dashboard')}>Assignments</h1>
-                    <nav style={{ display: 'flex', gap: '3rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center' }}>
-                        <span style={{ color: '#3b82f6', borderBottom: '3px solid #3b82f6', paddingBottom: 6, cursor: 'pointer' }}>Manage</span>
-                        <div style={{ position: 'relative' }} ref={menuRef}>
-                            <div style={{ color: isMenuOpen ? '#3b82f6' : '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', background: isMenuOpen ? '#eff6ff' : 'transparent', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                                <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeCourseData?.courseCode || 'Switch Classroom'}</span>
-                                <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-                            </div>
-                            {isMenuOpen && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '10px', background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px', zIndex: 100 }}>
-                                    <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
-                                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                        {courses.map(c => (
-                                            <div key={c.id} onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }} style={{ padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: selectedCourse === c.id ? '#eff6ff' : 'transparent', color: selectedCourse === c.id ? '#3b82f6' : '#334155', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
-                                                <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </nav>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                    <div style={{ position: 'relative' }}>
-                        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <input style={{ background: '#f1f5f9', border: 'none', borderRadius: 999, padding: '0.5rem 1rem 0.5rem 2.2rem', fontSize: '0.85rem', width: 240, outline: 'none', fontFamily: 'inherit', fontWeight: 500 }} placeholder="Search assignments…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+    const assignmentsActions = (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center', marginRight: '1rem' }}>
+                <div style={{ position: 'relative' }} ref={menuRef}>
+                    <div style={{ color: isMenuOpen ? '#3b82f6' : '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', background: isMenuOpen ? '#eff6ff' : 'transparent', padding: '6px 12px', borderRadius: '10px', transition: 'all 0.2s', border: '1px solid', borderColor: isMenuOpen ? '#3b82f6' : 'transparent' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                        <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeCourseData?.courseCode || 'Select Course'}</span>
+                        <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
                     </div>
-                    <Avatar avatarUrl={user?.avatar} firstName={user?.firstName} lastName={user?.lastName} size={36} />
+                    {isMenuOpen && (
+                        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '10px', background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px', zIndex: 100 }}>
+                            <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
+                            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                {courses.map(c => (
+                                    <div key={c.id} onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }} style={{ padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: selectedCourse === c.id ? '#eff6ff' : 'transparent', color: selectedCourse === c.id ? '#3b82f6' : '#334155', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
+                                        <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
+            </nav>
+            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <Plus size={16} /> New Assignment
+            </button>
+        </div>
+    );
 
+    return (
+        <DashboardLayout 
+            role="teacher" 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            actions={assignmentsActions}
+        >
             {loading ? (
                 <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading assignments...</p></div>
             ) : (
@@ -323,10 +304,6 @@ const TeacherAssignments: React.FC = () => {
                                     ))}
                                 </div>
                             </div>
-                            
-                            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                <Plus size={16} /> New Assignment
-                            </button>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -614,7 +591,7 @@ const TeacherAssignments: React.FC = () => {
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                                 <button onClick={() => setGradingId(null)} style={{ flex: 1, padding: '0.85rem', borderRadius: 12, border: 'none', background: '#f1f5f9', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                                <button onClick={() => handleGrade(gradingId, gradeVal, feedbackVal)} style={{ flex: 1, padding: '0.85rem', borderRadius: 12, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Grade</button>
+                                <button onClick={() => gradingId && handleGrade(gradingId, gradeVal, feedbackVal)} style={{ flex: 1, padding: '0.85rem', borderRadius: 12, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Grade</button>
                             </div>
                         </div>
                     </div>
@@ -630,8 +607,8 @@ const TeacherAssignments: React.FC = () => {
                             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{previewName}</h3>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Download</button>
-                            <button onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>
+                            <button onClick={() => { if (previewUrl) { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); } }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Download</button>
+                            <button onClick={() => { if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>
                         </div>
                     </div>
                     <div style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
@@ -643,7 +620,7 @@ const TeacherAssignments: React.FC = () => {
                             <div style={{ textAlign: 'center', color: '#fff' }}>
                                 <FileText size={64} color="#3b82f6" style={{ marginBottom: '1rem' }} />
                                 <p>Preview not available for this file type.</p>
-                                <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '0.75rem 2rem', fontWeight: 700, cursor: 'pointer', marginTop: '1rem' }}>Download to View</button>
+                                <button onClick={() => { if (previewUrl) { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); } }} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '0.75rem 2rem', fontWeight: 700, cursor: 'pointer', marginTop: '1rem' }}>Download to View</button>
                             </div>
                         )}
                     </div>

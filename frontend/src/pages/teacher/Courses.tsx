@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, 
   Plus, 
   LayoutGrid, 
   List, 
@@ -20,7 +19,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import Avatar from '../../components/Avatar';
+
 
 const DAYS = [
   { key: 'M', label: 'M' }, { key: 'T', label: 'T' }, { key: 'W', label: 'W' },
@@ -51,7 +50,6 @@ function formatTime12(t: string): string {
 
 const TeacherCourses: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -119,13 +117,7 @@ const TeacherCourses: React.FC = () => {
     } catch (err: any) { showApiError(err); }
   };
 
-  const getAvatarUrl = (avatar?: unknown) => {
-    if (typeof avatar !== 'string') return undefined;
-    const v = avatar.trim();
-    if (!v) return undefined;
-    if (v.startsWith('http')) return v;
-    return `http://${window.location.hostname}:8080${v.startsWith('/') ? v : `/${v}`}`;
-  };
+
 
   const filtered = courses.filter(c => {
     if (c.status !== activeTab) return false;
@@ -134,28 +126,24 @@ const TeacherCourses: React.FC = () => {
     return c.courseName?.toLowerCase().includes(q) || c.courseCode?.toLowerCase().includes(q) || c.section?.toLowerCase().includes(q);
   });
 
-  return (
-    <DashboardLayout role="teacher">
-      {/* ── Top Bar ──────────────────────────────────────── */}
-      <div className="td-topbar shadow-sm">
-        <div className="td-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-          <Search className="td-search-icon" size={18} />
-          <input className="td-search-input" placeholder="Search courses..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-          {searchQuery && <X className="cursor-pointer text-muted hover:text-gray-600 transition-colors" size={16} onClick={() => setSearchQuery('')} />}
-        </div>
-        <div className="td-topbar-actions">
-          <button className="btn btn-secondary td-topbar-btn transition-all active:scale-95" onClick={() => setShowNewSession(true)}>
-            <Plus size={16} className="mr-1" /> New Session
-          </button>
-          <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowModal(true)}>
-            <Plus size={16} className="mr-1" /> Create Course
-          </button>
-        </div>
-        <div className="hover:scale-105 transition-transform cursor-pointer">
-          <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={getAvatarUrl(user?.avatar)} size={38} />
-        </div>
-      </div>
+  const coursesActions = (
+    <>
+      <button className="btn btn-secondary td-topbar-btn transition-all active:scale-95" onClick={() => setShowNewSession(true)}>
+        <Plus size={16} className="mr-1" /> New Session
+      </button>
+      <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowModal(true)}>
+        <Plus size={16} className="mr-1" /> Create Course
+      </button>
+    </>
+  );
 
+  return (
+    <DashboardLayout 
+      role="teacher" 
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      actions={coursesActions}
+    >
       {/* ── Page Header ──────────────────────────────────── */}
       <div className="mt-4 mb-6">
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>My Courses</h1>
