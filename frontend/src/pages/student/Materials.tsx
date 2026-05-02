@@ -329,10 +329,7 @@ const StudentMaterials: React.FC = () => {
                     )}
                 </div>
             </nav>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Bell size={22} />
-                <span style={{ position: 'absolute', top: 2, right: 2, width: 8, height: 8, background: '#ef4444', borderRadius: '50%', border: '2px solid #fff' }} />
-            </button>
+
         </div>
     );
 
