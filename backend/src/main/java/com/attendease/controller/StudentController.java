@@ -249,18 +249,26 @@ public class StudentController {
 
                 // Determine status (present vs late)
                 LocalDateTime now = LocalDateTime.now();
-                LocalDateTime lateThreshold = session.getStartTime().plusMinutes(session.getLateMinutes());
                 String status;
 
-                if (now.isAfter(session.getEndTime())) {
-                        if (!session.getAllowLate()) {
+                // Check if late system is disabled for this session
+                if (!session.getAllowLate()) {
+                        // Late system disabled - everyone is "present" if within session time
+                        if (now.isAfter(session.getEndTime())) {
                                 throw new BadRequestException("Attendance window has closed");
                         }
-                        status = "late";
-                } else if (now.isAfter(lateThreshold)) {
-                        status = "late";
-                } else {
                         status = "present";
+                } else {
+                        // Late system enabled - check threshold
+                        LocalDateTime lateThreshold = session.getStartTime().plusMinutes(session.getLateMinutes());
+                        
+                        if (now.isAfter(session.getEndTime())) {
+                                throw new BadRequestException("Attendance window has closed");
+                        } else if (now.isAfter(lateThreshold)) {
+                                status = "late";
+                        } else {
+                                status = "present";
+                        }
                 }
 
                 AttendanceRecord record = AttendanceRecord.builder()

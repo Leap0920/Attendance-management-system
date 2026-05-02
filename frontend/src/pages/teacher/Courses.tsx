@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -13,7 +13,10 @@ import {
   RefreshCw,
   Clock,
   BookOpen,
-  ArrowRight
+  ArrowRight,
+  Palette,
+  Image as ImageIcon,
+  Upload
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
@@ -22,8 +25,13 @@ import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
 
 const DAYS = [
-  { key: 'M', label: 'M' }, { key: 'T', label: 'T' }, { key: 'W', label: 'W' },
-  { key: 'Th', label: 'Th' }, { key: 'F', label: 'F' }, { key: 'S', label: 'S' },
+  { key: 'Su', label: 'Sun' },
+  { key: 'M', label: 'Mon' },
+  { key: 'T', label: 'Tue' },
+  { key: 'W', label: 'Wed' },
+  { key: 'Th', label: 'Thu' },
+  { key: 'F', label: 'Fri' },
+  { key: 'Sa', label: 'Sat' },
 ];
 
 const COURSE_GRADIENTS = [
@@ -37,16 +45,58 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #DC2626 100%)',
 ];
 
-const CATEGORY_LABELS = ['ONGOING', 'SOCIAL SCIENCES', 'LEADERSHIP', 'ENGINEERING', 'COMPUTER SCIENCE', 'BUSINESS', 'EDUCATION', 'GENERAL'];
-
 const getGradient = (idx: number) => COURSE_GRADIENTS[idx % COURSE_GRADIENTS.length];
-const getCategory = (idx: number) => CATEGORY_LABELS[idx % CATEGORY_LABELS.length];
 
 function formatTime12(t: string): string {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
   return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
+
+function adjustColor(hex: string, amount: number): string {
+  try {
+    const h = hex.replace('#', '');
+    const num = parseInt(h, 16);
+    let r = Math.min(255, ((num >> 16) & 0xff) + amount);
+    let g = Math.min(255, ((num >> 8) & 0xff) + amount);
+    let b = Math.min(255, (num & 0xff) + amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  } catch {
+    return hex;
+  }
+}
+
+const BG_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#475569'];
+const BG_IMAGES = [
+  '36796dba4d1a7b0ec7a1a4b28a5b3e98.jpg', '57a01220653971e4e2cff753fa272479.jpg', '669a8eed28456200f4ff95097a0db078.jpg',
+  '6a0ee617bb9e1b0a5ab9ac0e44a7e51f.jpg', '6e7f2df1ec42a44deade0468b5c3c416.jpg', '7003c41241e8b565589c6abd02fd21fa.jpg',
+  '7733001d7a1780e69890b4a77ac10f0b.jpg', '8b98a2f4a3e3f30f5635fcad59270443.jpg', '97cb2c4c04f03958bda41b2fee0ce67c.jpg',
+  '9a7f7abda033d415c34ca89055d0d495.jpg', 'bd21141e01f48c911e1c42ffb1cd1f5a.jpg', 'c3c77155748f15ffee61cbc1fe9705d6.jpg',
+  'd9b29715b473dd0a5b37e1bc9929907b.jpg', 'dffd9d976bdfd65a869e322a0e4f32b0.jpg', 'e4f0270d3e1ce8b4aeefe601076f4c2e.jpg',
+  'e9a477fe6444851b976195d99fd45349.jpg', 'f271614b55f4c150ca1e1517c6486b2d.jpg', 'f9780f1993b3a4a6d643c3ddccc6e300.jpg',
+  'ff9235cd827885e439aef1bb9e153754.jpg'
+];
+
+const getCourseBg = (val: string, idx: number) => {
+    if (!val) return { background: getGradient(idx) };
+    if (val.startsWith('#')) return { 
+      background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
+      backgroundColor: val 
+    };
+    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    if (val.includes('.') || val.includes('/') || val.includes(':')) return {
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    return { background: val };
+};
 
 const TeacherCourses: React.FC = () => {
   const navigate = useNavigate();
@@ -56,12 +106,14 @@ const TeacherCourses: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [form, setForm] = useState({ courseCode: '', courseName: '', section: '', room: '' });
+  const [form, setForm] = useState({ courseCode: '', courseName: '', section: '', room: '', coverColor: '#3b82f6' });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:30');
   const [showNewSession, setShowNewSession] = useState(false);
   const [sessionForm, setSessionForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
+  const [coverTab, setCoverTab] = useState<'colors' | 'presets' | 'upload'>('colors');
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const loadCourses = () => {
     teacherApi.getCourses().then(res => { setCourses(res.data.data || []); setLoading(false); }).catch(() => setLoading(false));
@@ -77,11 +129,21 @@ const TeacherCourses: React.FC = () => {
     try {
       await teacherApi.createCourse({ ...form, schedule: buildSchedule() });
       setShowModal(false);
-      setForm({ courseCode: '', courseName: '', section: '', room: '' });
+      setForm({ courseCode: '', courseName: '', section: '', room: '', coverColor: '#3b82f6' });
       setSelectedDays([]); setStartTime('09:00'); setEndTime('10:30');
       showAlert('Success', 'Course created successfully!', 'success');
       loadCourses();
     } catch (err: any) { showApiError(err); }
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm({ ...form, coverColor: reader.result as string });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleArchive = (e: React.MouseEvent, id: number) => {
@@ -174,10 +236,7 @@ const TeacherCourses: React.FC = () => {
               <div key={c.id} className={`${viewMode === 'grid' ? 'tc-card' : 'tc-list-item'} group hover:shadow-lg transition-all cursor-pointer`} onClick={() => navigate(`/teacher/materials?courseId=${c.id}`)}>
                 {viewMode === 'grid' ? (
                   <>
-                    <div className="tc-card-cover overflow-hidden" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}bb)` : getGradient(idx) }}>
-                      <span className="tc-category-badge glass transition-all" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)' }}>
-                        {getCategory(idx)}
-                      </span>
+                    <div className="tc-card-cover overflow-hidden" style={getCourseBg(c.coverColor, idx)}>
                       <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/materials?courseId=${c.id}`); }}>
                           <Edit2 size={14} color="white" />
@@ -209,7 +268,10 @@ const TeacherCourses: React.FC = () => {
                 ) : (
                   /* ── List View ──────────────────────────── */
                   <>
-                    <div className="tc-list-color" style={{ background: c.coverColor || COURSE_GRADIENTS[idx % COURSE_GRADIENTS.length].match(/#[0-9A-Fa-f]{6}/)?.[0] || '#4285F4' }}></div>
+                    <div className="tc-list-color" style={{ 
+                        ...getCourseBg(c.coverColor, idx),
+                        backgroundSize: '100% 100%'
+                    }}></div>
                     <div className="tc-list-info flex-grow">
                       <h4 className="group-hover:text-blue-600 transition-colors m-0">{c.courseName}</h4>
                       <div className="flex gap-3 text-xs text-muted mt-1">
@@ -292,11 +354,11 @@ const TeacherCourses: React.FC = () => {
                 <label className="form-label">Schedule</label>
                 <div className="day-picker flex gap-2 mb-3">
                     {DAYS.map(d => (
-                        <div key={d.key} 
-                             className={`day-chip cursor-pointer w-8 h-8 flex items-center justify-center rounded-full border transition-all text-xs font-bold ${selectedDays.includes(d.key) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300'}`} 
-                             onClick={() => toggleDay(d.key)}>
-                            {d.label}
-                        </div>
+                         <div key={d.key} 
+                              className={`day-chip ${selectedDays.includes(d.key) ? 'selected' : ''}`} 
+                              onClick={() => toggleDay(d.key)}>
+                             {d.label}
+                         </div>
                     ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -305,6 +367,56 @@ const TeacherCourses: React.FC = () => {
                 </div>
               </div>
               <div className="form-group"><label className="form-label">Room</label><div className="relative"><MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input className="form-input pl-10 focus:ring-2 focus:ring-blue-100 transition-all" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} placeholder="Room 301" /></div></div>
+              
+              <div className="form-group">
+                <label className="form-label">Course Cover</label>
+                <div className="cover-preview" style={getCourseBg(form.coverColor || '#3b82f6', 0)}>
+                   <div style={{ zIndex: 1, textAlign: 'center' }}>
+                     <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{form.courseName || 'Course Name'}</div>
+                     <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{form.courseCode || 'CODE101'}</div>
+                   </div>
+                </div>
+                
+                <div className="cover-selector-tabs">
+                  <div className={`cover-tab ${coverTab === 'colors' ? 'active' : ''}`} onClick={() => setCoverTab('colors')}>Colors</div>
+                  <div className={`cover-tab ${coverTab === 'presets' ? 'active' : ''}`} onClick={() => setCoverTab('presets')}>Backgrounds</div>
+                  <div className={`cover-tab ${coverTab === 'upload' ? 'active' : ''}`} onClick={() => setCoverTab('upload')}>Custom</div>
+                </div>
+
+                {coverTab === 'colors' && (
+                  <div className="cover-options-grid">
+                    {BG_COLORS.map(color => (
+                      <div 
+                        key={color} 
+                        className={`color-option ${form.coverColor === color ? 'active' : ''}`}
+                        style={{ background: color }}
+                        onClick={() => setForm({ ...form, coverColor: color })}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {coverTab === 'presets' && (
+                  <div className="cover-options-grid">
+                    {BG_IMAGES.map(img => (
+                      <div 
+                        key={img} 
+                        className={`image-option ${form.coverColor === `/bg/${img}` ? 'active' : ''}`}
+                        style={{ backgroundImage: `url(/bg/${img})` }}
+                        onClick={() => setForm({ ...form, coverColor: `/bg/${img}` })}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {coverTab === 'upload' && (
+                  <div className="cover-upload-zone" onClick={() => coverInputRef.current?.click()}>
+                    <Upload size={24} style={{ marginBottom: '0.5rem', color: 'var(--text-muted)' }} />
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>Click to upload custom image</div>
+                    <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+                  </div>
+                )}
+              </div>
               <div className="modal-actions border-t pt-4 mt-6">
                   <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Create Course</button>

@@ -40,7 +40,7 @@ public class Course {
     private String room;
 
     @Builder.Default
-    @Column(name = "cover_color")
+    @Column(name = "cover_color", columnDefinition = "TEXT")
     private String coverColor = "#4285F4";
 
     @Builder.Default

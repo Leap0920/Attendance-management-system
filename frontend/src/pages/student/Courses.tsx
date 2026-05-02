@@ -27,10 +27,41 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #DC2626 100%)',
 ];
 
-const CATEGORY_LABELS = ['ENROLLED', 'MANDATORY', 'ELECTIVE', 'CORE', 'TRACK', 'GENERAL'];
-
 const getGradient = (idx: number) => COURSE_GRADIENTS[idx % COURSE_GRADIENTS.length];
-const getCategory = (idx: number) => CATEGORY_LABELS[idx % CATEGORY_LABELS.length];
+
+function adjustColor(hex: string, amount: number): string {
+  try {
+    const h = hex.replace('#', '');
+    const num = parseInt(h, 16);
+    let r = Math.min(255, ((num >> 16) & 0xff) + amount);
+    let g = Math.min(255, ((num >> 8) & 0xff) + amount);
+    let b = Math.min(255, (num & 0xff) + amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  } catch {
+    return hex;
+  }
+}
+
+const getCourseBg = (val: string, idx: number) => {
+    if (!val) return { background: getGradient(idx) };
+    if (val.startsWith('#')) return { 
+      background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
+      backgroundColor: val 
+    };
+    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    if (val.includes('.') || val.includes('/') || val.includes(':')) return {
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    return { background: val };
+};
 
 const StudentCourses: React.FC = () => {
   const navigate = useNavigate();
@@ -146,10 +177,7 @@ const StudentCourses: React.FC = () => {
                 <div key={c.id} className={`${viewMode === 'grid' ? 'tc-card' : 'tc-list-item'} group hover:shadow-lg transition-all cursor-pointer`} onClick={() => navigate(`/student/materials?courseId=${c.id}`)}>
                   {viewMode === 'grid' ? (
                     <>
-                      <div className="tc-card-cover overflow-hidden" style={{ background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${c.coverColor}bb)` : getGradient(idx) }}>
-                        <span className="tc-category-badge glass transition-all" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)' }}>
-                          {getCategory(idx)}
-                        </span>
+                      <div className="tc-card-cover overflow-hidden" style={getCourseBg(c.coverColor, idx)}>
                         <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
                           {activeTab === 'active' && (
                             <button className="tc-action-icon hover:scale-110 transition-transform hover:bg-red-500" title="Drop Course" onClick={(e) => handleLeaveCourse(e, c.id)}>
@@ -180,7 +208,11 @@ const StudentCourses: React.FC = () => {
                   ) : (
                     /* ── List View ──────────────────────────── */
                     <>
-                      <div className="tc-list-color" style={{ background: c.coverColor || COURSE_GRADIENTS[idx % COURSE_GRADIENTS.length].match(/#[0-9A-Fa-f]{6}/)?.[0] || '#4285F4' }}></div>
+                      <div className="tc-list-color" style={{ 
+                        ...getCourseBg(c.coverColor, idx),
+                        backgroundSize: 'cover',
+                        backgroundImage: c.coverColor?.startsWith('#') ? 'none' : getCourseBg(c.coverColor, idx).backgroundImage
+                    }}></div>
                       <div className="tc-list-info flex-grow">
                         <h4 className="group-hover:text-blue-600 transition-colors m-0">{c.courseName}</h4>
                         <div className="flex gap-3 text-xs text-muted mt-1">

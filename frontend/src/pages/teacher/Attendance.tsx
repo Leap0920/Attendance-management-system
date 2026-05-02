@@ -12,18 +12,24 @@ const TeacherAttendance: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showRecords, setShowRecords] = useState<any>(null);
   const [records, setRecords] = useState<any[]>([]);
-  const [form, setForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
+  const [form, setForm] = useState({ courseId: '', sessionTitle: '', duration: '10', customLate: false, lateMinutes: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [targetReopen, setTargetReopen] = useState<any>(null);
   const [reopenDuration, setReopenDuration] = useState('10');
+  const [teacherSettings, setTeacherSettings] = useState<any>({ lateEnabled: true, lateMinutes: 15 });
   const itemsPerPage = 8;
 
   const load = () => {
-    Promise.all([teacherApi.getSessions(), teacherApi.getCourses()]).then(([sessRes, courseRes]) => {
+    Promise.all([
+      teacherApi.getSessions(), 
+      teacherApi.getCourses(),
+      teacherApi.getAttendanceSettings()
+    ]).then(([sessRes, courseRes, settingsRes]) => {
       setSessions(sessRes.data.data || []);
       setCourses(courseRes.data.data || []);
+      setTeacherSettings(settingsRes.data.data || { lateEnabled: true, lateMinutes: 15 });
       setLoading(false);
     }).catch(() => setLoading(false));
   };
@@ -43,9 +49,20 @@ const TeacherAttendance: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await teacherApi.createAttendance({ courseId: Number(form.courseId), sessionTitle: form.sessionTitle, duration: Number(form.duration), allowLate: true });
+      const payload: any = { 
+        courseId: Number(form.courseId), 
+        sessionTitle: form.sessionTitle, 
+        duration: Number(form.duration)
+      };
+      
+      // Include lateMinutes only if custom override is enabled
+      if (form.customLate && form.lateMinutes) {
+        payload.lateMinutes = Number(form.lateMinutes);
+      }
+      
+      const res = await teacherApi.createAttendance(payload);
       setShowModal(false);
-      setForm({ courseId: '', sessionTitle: '', duration: '10' });
+      setForm({ courseId: '', sessionTitle: '', duration: '10', customLate: false, lateMinutes: '' });
       const code = res.data?.data?.attendanceCode || '';
       showAlert('Success', `Session started! Code: ${code}`, 'success');
       load();
@@ -291,6 +308,52 @@ const TeacherAttendance: React.FC = () => {
               </div>
               <div className="form-group"><label className="form-label">Session Title (optional)</label><input className="form-input" value={form.sessionTitle} onChange={e => setForm({ ...form, sessionTitle: e.target.value })} placeholder="e.g. Week 5" /></div>
               <div className="form-group"><label className="form-label">Duration (minutes)</label><input className="form-input" type="number" min="1" max="120" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} /></div>
+              
+              {/* Late Threshold Settings */}
+              <div className="form-group" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="customLate"
+                    checked={form.customLate}
+                    onChange={e => setForm({ ...form, customLate: e.target.checked, lateMinutes: e.target.checked ? String(teacherSettings.lateMinutes) : '' })}
+                    style={{ marginRight: '0.5rem', width: '16px', height: '16px' }}
+                  />
+                  <label htmlFor="customLate" style={{ fontWeight: 500, cursor: 'pointer', margin: 0 }}>
+                    Custom late threshold for this session
+                  </label>
+                </div>
+                
+                {!form.customLate && (
+                  <div style={{ fontSize: '0.875rem', color: '#64748b', marginLeft: '1.5rem' }}>
+                    {teacherSettings.lateEnabled ? (
+                      <>Using your default: <strong>{teacherSettings.lateMinutes} minutes</strong></>
+                    ) : (
+                      <>Late marking is <strong>disabled</strong> in your settings</>
+                    )}
+                  </div>
+                )}
+                
+                {form.customLate && (
+                  <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+                    <label className="form-label" style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Late threshold (minutes)</label>
+                    <input 
+                      className="form-input" 
+                      type="number" 
+                      min="1" 
+                      max="1440"
+                      value={form.lateMinutes} 
+                      onChange={e => setForm({ ...form, lateMinutes: e.target.value })}
+                      placeholder={String(teacherSettings.lateMinutes)}
+                      style={{ maxWidth: '150px' }}
+                    />
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                      Students submitting after this time will be marked as "Late"
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button><button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Start Session</button></div>
             </form>
           </div>

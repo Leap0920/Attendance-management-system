@@ -135,8 +135,7 @@ public class TeacherController {
             joinCode = generateCode(6);
         } while (courseRepository.existsByJoinCode(joinCode));
 
-        String[] colors = { "#4285F4", "#EA4335", "#FBBC04", "#34A853", "#9C27B0", "#FF5722", "#00BCD4" };
-        String coverColor = colors[new Random().nextInt(colors.length)];
+        String coverColor = body.getOrDefault("coverColor", "#4285F4");
 
         Course course = Course.builder()
                 .teacher(teacher)
@@ -213,6 +212,8 @@ public class TeacherController {
             course.setSchedule(body.get("schedule"));
         if (body.containsKey("room"))
             course.setRoom(body.get("room"));
+        if (body.containsKey("coverColor"))
+            course.setCoverColor(body.get("coverColor"));
 
         course = courseRepository.save(java.util.Objects.requireNonNull(course));
         auditService.log(teacher, "update_course", "course", id, request);
@@ -280,8 +281,21 @@ public class TeacherController {
         } while (attendanceSessionRepository.findByAttendanceCodeAndStatus(code, "active").isPresent());
 
         int duration = body.containsKey("duration") ? Integer.parseInt(body.get("duration").toString()) : 10;
-        boolean allowLate = body.containsKey("allowLate") ? Boolean.parseBoolean(body.get("allowLate").toString())
-                : true;
+        
+        // Determine late settings: override > teacher preference > system default
+        boolean allowLate;
+        int lateMinutes;
+        
+        if (body.containsKey("lateMinutes")) {
+            // Per-session override provided
+            lateMinutes = Integer.parseInt(body.get("lateMinutes").toString());
+            allowLate = true;
+        } else {
+            // Use teacher preferences
+            allowLate = teacher.getAttendanceLateEnabled() != null ? teacher.getAttendanceLateEnabled() : true;
+            lateMinutes = teacher.getAttendanceLateMinutes() != null ? teacher.getAttendanceLateMinutes() : 15;
+        }
+        
         LocalDateTime now = LocalDateTime.now();
 
         AttendanceSession session = AttendanceSession.builder()
@@ -294,7 +308,7 @@ public class TeacherController {
                 .endTime(now.plusMinutes(duration))
                 .status("active")
                 .allowLate(allowLate)
-                .lateMinutes(5)
+                .lateMinutes(lateMinutes)
                 .build();
 
         session = attendanceSessionRepository.save(java.util.Objects.requireNonNull(session));
@@ -399,6 +413,20 @@ public class TeacherController {
         } else if (session.getDurationMinutes() != null) {
             duration = session.getDurationMinutes();
         }
+
+        // Update late settings if provided, otherwise keep existing or use teacher preferences
+        if (body != null && body.containsKey("lateMinutes")) {
+            int lateMinutes = Integer.parseInt(body.get("lateMinutes").toString());
+            session.setLateMinutes(lateMinutes);
+            session.setAllowLate(true);
+        } else if (session.getLateMinutes() == null) {
+            // Session doesn't have late settings, use teacher preferences
+            boolean allowLate = teacher.getAttendanceLateEnabled() != null ? teacher.getAttendanceLateEnabled() : true;
+            int lateMinutes = teacher.getAttendanceLateMinutes() != null ? teacher.getAttendanceLateMinutes() : 15;
+            session.setAllowLate(allowLate);
+            session.setLateMinutes(lateMinutes);
+        }
+        // else: keep existing session's late settings
 
         session.setEndTime(now.plusMinutes(duration));
         session = attendanceSessionRepository.save(session);
@@ -1062,6 +1090,47 @@ public class TeacherController {
         securityEventRepository.save(event);
 
         return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
+    }
+
+    // ── Settings ───────────────────────────────────────────────────────
+    @GetMapping("/settings/attendance")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAttendanceSettings(
+            @AuthenticationPrincipal User teacher) {
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("lateEnabled", teacher.getAttendanceLateEnabled() != null ? teacher.getAttendanceLateEnabled() : true);
+        settings.put("lateMinutes", teacher.getAttendanceLateMinutes() != null ? teacher.getAttendanceLateMinutes() : 15);
+        return ResponseEntity.ok(ApiResponse.success(settings));
+    }
+
+    @PutMapping("/settings/attendance")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateAttendanceSettings(
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User teacher,
+            HttpServletRequest request) {
+        
+        if (body.containsKey("lateEnabled")) {
+            teacher.setAttendanceLateEnabled((Boolean) body.get("lateEnabled"));
+        }
+        
+        if (body.containsKey("lateMinutes")) {
+            int lateMinutes = Integer.parseInt(body.get("lateMinutes").toString());
+            if (lateMinutes < 1) {
+                throw new BadRequestException("Late threshold must be at least 1 minute");
+            }
+            if (lateMinutes > 120) {
+                throw new BadRequestException("Late threshold cannot exceed 120 minutes (session max duration)");
+            }
+            teacher.setAttendanceLateMinutes(lateMinutes);
+        }
+        
+        teacher = userRepository.save(teacher);
+        auditService.log(teacher, "update_attendance_settings", "user", teacher.getId(), request);
+        
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("lateEnabled", teacher.getAttendanceLateEnabled());
+        settings.put("lateMinutes", teacher.getAttendanceLateMinutes());
+        
+        return ResponseEntity.ok(ApiResponse.success("Attendance settings updated", settings));
     }
 
     // ── Helpers ────────────────────────────────────────────────────────

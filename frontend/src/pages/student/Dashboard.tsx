@@ -248,9 +248,7 @@ const StudentDashboard: React.FC = () => {
                     <div
                       className="sd-course-card-top"
                       style={{ 
-                        background: cd.course.coverColor
-                          ? `linear-gradient(135deg, ${cd.course.coverColor} 0%, ${adjustColor(cd.course.coverColor, 30)} 100%)`
-                          : CARD_GRADIENTS[idx % CARD_GRADIENTS.length],
+                        ...getCourseBg(cd.course.coverColor, idx),
                         position: 'relative',
                         overflow: 'hidden'
                       }}
@@ -413,5 +411,26 @@ function adjustColor(hex: string, amount: number): string {
     return hex;
   }
 }
+
+const getCourseBg = (val: string, idx: number) => {
+    if (!val) return { background: CARD_GRADIENTS[idx % CARD_GRADIENTS.length] };
+    if (val.startsWith('#')) return { 
+      background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
+      backgroundColor: val 
+    };
+    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    if (val.includes('.') || val.includes('/') || val.includes(':')) return {
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    return { background: val };
+};
 
 export default StudentDashboard;

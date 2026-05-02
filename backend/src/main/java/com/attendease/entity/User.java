@@ -84,6 +84,14 @@ public class User {
     @Column(name = "current_session_id")
     private String currentSessionId;
 
+    @Builder.Default
+    @Column(name = "attendance_late_enabled")
+    private Boolean attendanceLateEnabled = true;
+
+    @Builder.Default
+    @Column(name = "attendance_late_minutes")
+    private Integer attendanceLateMinutes = 15;
+
     public String getFullName() {
         return firstName + " " + lastName;
     }

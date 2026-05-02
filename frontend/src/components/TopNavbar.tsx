@@ -63,7 +63,17 @@ const TopNavbar: React.FC<TopNavbarProps> = ({ searchQuery, onSearchChange, acti
               <button className="dropdown-item" onClick={() => { setShowDropdown(false); onProfileClick?.(); }}>
                 <User size={16} /> My Profile
               </button>
-              <button className="dropdown-item" onClick={() => setShowDropdown(false)}>
+              <button className="dropdown-item" onClick={() => { 
+                setShowDropdown(false); 
+                // Navigate to settings based on user role
+                if (user?.role === 'teacher') {
+                  navigate('/teacher/settings');
+                } else if (user?.role === 'student') {
+                  navigate('/student/settings');
+                } else if (user?.role === 'admin') {
+                  navigate('/admin/settings');
+                }
+              }}>
                 <Settings size={16} /> Settings
               </button>
               <div className="dropdown-divider" />

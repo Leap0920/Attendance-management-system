@@ -104,6 +104,10 @@ export const teacherApi = {
   uploadAvatar: (data: FormData) =>
     api.post('/teacher/profile/avatar', data),
   deleteAvatar: () => api.delete('/teacher/profile/avatar'),
+
+  // Settings
+  getAttendanceSettings: () => api.get('/teacher/settings/attendance'),
+  updateAttendanceSettings: (data: any) => api.put('/teacher/settings/attendance', data),
 };
 
 export const studentApi = {

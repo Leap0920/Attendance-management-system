@@ -16,7 +16,10 @@ import {
   CircleDashed,
   ExternalLink,
   Calendar,
-  UserCheck
+  UserCheck,
+  Palette,
+  Image as ImageIcon,
+  Upload
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
@@ -27,12 +30,13 @@ import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 /* ── helpers ───────────────────────────────────────────────── */
 
 const DAYS = [
-  { key: 'M', label: 'M' },
-  { key: 'T', label: 'T' },
-  { key: 'W', label: 'W' },
-  { key: 'Th', label: 'Th' },
-  { key: 'F', label: 'F' },
-  { key: 'S', label: 'S' },
+  { key: 'Su', label: 'Sun' },
+  { key: 'M', label: 'Mon' },
+  { key: 'T', label: 'Tue' },
+  { key: 'W', label: 'Wed' },
+  { key: 'Th', label: 'Thu' },
+  { key: 'F', label: 'Fri' },
+  { key: 'Sa', label: 'Sat' },
 ];
 
 const COURSE_GRADIENTS = [
@@ -46,16 +50,7 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #FF8A65 100%)',
 ];
 
-const CATEGORY_COLORS = [
-  '#4285F4', '#F4A742', '#7B68EE', '#EA4335',
-  '#34A853', '#00BCD4', '#9C27B0', '#FF5722',
-];
-
 const getGradient = (index: number) => COURSE_GRADIENTS[index % COURSE_GRADIENTS.length];
-const getCategoryLabel = (index: number) => [
-  'ENGINEERING', 'SOCIAL SCIENCES', 'MANDATORY', 'COMPUTER SCIENCE',
-  'BUSINESS', 'ARTS', 'EDUCATION', 'GENERAL',
-][index % 8];
 
 
 function timeAgo(dateStr: string): string {
@@ -132,7 +127,7 @@ const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ end
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>({ courses: [], activeSessions: [], recentSessions: [], totalCourses: 0, totalStudents: 0, totalSessions: 0 });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,13 +139,60 @@ const TeacherDashboard: React.FC = () => {
 
   // Forms
   const [attendForm, setAttendForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
-  const [courseForm, setCourseForm] = useState({ courseName: '', courseCode: '', section: '', schedule: '', room: '' });
+  const [courseForm, setCourseForm] = useState({ courseName: '', courseCode: '', section: '', schedule: '', room: '', coverColor: '#3b82f6' });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:30');
   const [targetReopenSession, setTargetReopenSession] = useState<{ id: number; title: string } | null>(null);
   const [reopenDuration, setReopenDuration] = useState('10');
   const [reopeningId, setReopeningId] = useState<number | null>(null);
+  const [coverTab, setCoverTab] = useState<'colors' | 'presets' | 'upload'>('colors');
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const BG_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#475569'];
+  const BG_IMAGES = [
+    '36796dba4d1a7b0ec7a1a4b28a5b3e98.jpg',
+    '57a01220653971e4e2cff753fa272479.jpg',
+    '669a8eed28456200f4ff95097a0db078.jpg',
+    '6a0ee617bb9e1b0a5ab9ac0e44a7e51f.jpg',
+    '6e7f2df1ec42a44deade0468b5c3c416.jpg',
+    '7003c41241e8b565589c6abd02fd21fa.jpg',
+    '7733001d7a1780e69890b4a77ac10f0b.jpg',
+    '8b98a2f4a3e3f30f5635fcad59270443.jpg',
+    '97cb2c4c04f03958bda41b2fee0ce67c.jpg',
+    '9a7f7abda033d415c34ca89055d0d495.jpg',
+    'bd21141e01f48c911e1c42ffb1cd1f5a.jpg',
+    'c3c77155748f15ffee61cbc1fe9705d6.jpg',
+    'd9b29715b473dd0a5b37e1bc9929907b.jpg',
+    'dffd9d976bdfd65a869e322a0e4f32b0.jpg',
+    'e4f0270d3e1ce8b4aeefe601076f4c2e.jpg',
+    'e9a477fe6444851b976195d99fd45349.jpg',
+    'f271614b55f4c150ca1e1517c6486b2d.jpg',
+    'f9780f1993b3a4a6d643c3ddccc6e300.jpg',
+    'ff9235cd827885e439aef1bb9e153754.jpg'
+  ];
+
+  const getCourseBg = (val: string, idx: number) => {
+    if (!val) return { background: getGradient(idx) };
+    if (val.startsWith('#')) return { 
+      background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
+      backgroundColor: val 
+    };
+    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    if (val.includes('.') || val.includes('/') || val.includes(':')) return {
+      backgroundImage: `url("${val}")`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center'
+    };
+    return { background: val };
+  };
 
   // Courses carousel
   const coursesScrollRef = useRef<HTMLDivElement>(null);
@@ -235,7 +277,7 @@ const TeacherDashboard: React.FC = () => {
     try {
       await teacherApi.createCourse({ ...courseForm, schedule: buildSchedule() });
       setShowCreateCourse(false);
-      setCourseForm({ courseName: '', courseCode: '', section: '', schedule: '', room: '' });
+      setCourseForm({ courseName: '', courseCode: '', section: '', schedule: '', room: '', coverColor: '#3b82f6' });
       setSelectedDays([]);
       setStartTime('09:00');
       setEndTime('10:30');
@@ -377,7 +419,7 @@ const TeacherDashboard: React.FC = () => {
                   View All <ArrowRight size={14} className="inline group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
-              {data.activeSessions?.length > 0 ? data.activeSessions.map((s: any, i: number) => (
+              {(data?.activeSessions || []).length > 0 ? (data?.activeSessions || []).map((s: any, i: number) => (
                 <div key={i} className="td-active-session-card hover:border-blue-200 transition-all shadow-sm hover:shadow-md">
                   <div className="td-as-top">
                     <div className="td-as-info">
@@ -448,7 +490,7 @@ const TeacherDashboard: React.FC = () => {
                   <MoreHorizontal size={18} />
                 </button>
               </div>
-              {data.recentSessions?.length > 0 ? data.recentSessions.slice(0, 4).map((s: any, i: number) => (
+              {(data?.recentSessions || []).length > 0 ? (data?.recentSessions || []).slice(0, 4).map((s: any, i: number) => (
                 <div
                   key={i}
                   className="td-recent-item group hover:bg-blue-50 transition-colors"
@@ -468,7 +510,7 @@ const TeacherDashboard: React.FC = () => {
                   <p>No recent sessions</p>
                 </div>
               )}
-              {data.recentSessions?.length > 0 && (
+              {(data?.recentSessions || []).length > 0 && (
                 <button className="td-full-history-btn hover:bg-gray-100 transition-colors" onClick={() => navigate('/teacher/attendance')}>
                   Full Session History
                 </button>
@@ -502,7 +544,7 @@ const TeacherDashboard: React.FC = () => {
                     <div 
                       className="td-course-cover" 
                       style={{ 
-                        background: c.coverColor ? `linear-gradient(135deg, ${c.coverColor}, ${adjustColor(c.coverColor, 30)})` : getGradient(idx),
+                        ...getCourseBg(c.coverColor, idx),
                         position: 'relative',
                         overflow: 'hidden'
                       }}
@@ -517,18 +559,6 @@ const TeacherDashboard: React.FC = () => {
                         background: 'rgba(255, 255, 255, 0.1)',
                         filter: 'blur(20px)'
                       }} />
-                      
-                      <span className="td-course-category" style={{ 
-                        background: 'rgba(255, 255, 255, 0.2)', 
-                        backdropFilter: 'blur(4px)',
-                        color: '#fff',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        fontWeight: 800,
-                        fontSize: '0.65rem',
-                        letterSpacing: '1px'
-                      }}>
-                        {getCategoryLabel(idx)}
-                      </span>
                     </div>
                     <div className="td-course-body" style={{ 
                       background: 'rgba(255, 255, 255, 0.8)', 
@@ -639,6 +669,56 @@ const TeacherDashboard: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">Room</label>
                 <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.room} onChange={e => setCourseForm({ ...courseForm, room: e.target.value })} placeholder="Room 301" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Course Cover</label>
+                <div className="cover-preview" style={getCourseBg(courseForm.coverColor || '#3b82f6', 0)}>
+                   <div style={{ zIndex: 1, textAlign: 'center' }}>
+                     <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{courseForm.courseName || 'Course Name'}</div>
+                     <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{courseForm.courseCode || 'CODE101'}</div>
+                   </div>
+                </div>
+                
+                <div className="cover-selector-tabs">
+                  <div className={`cover-tab ${coverTab === 'colors' ? 'active' : ''}`} onClick={() => setCoverTab('colors')}>Colors</div>
+                  <div className={`cover-tab ${coverTab === 'presets' ? 'active' : ''}`} onClick={() => setCoverTab('presets')}>Backgrounds</div>
+                  <div className={`cover-tab ${coverTab === 'upload' ? 'active' : ''}`} onClick={() => setCoverTab('upload')}>Custom</div>
+                </div>
+
+                {coverTab === 'colors' && (
+                  <div className="cover-options-grid">
+                    {BG_COLORS.map(color => (
+                      <div 
+                        key={color} 
+                        className={`color-option ${courseForm.coverColor === color ? 'active' : ''}`}
+                        style={{ background: color }}
+                        onClick={() => setCourseForm({ ...courseForm, coverColor: color })}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {coverTab === 'presets' && (
+                  <div className="cover-options-grid">
+                    {BG_IMAGES.map(img => (
+                      <div 
+                        key={img} 
+                        className={`image-option ${courseForm.coverColor === `/bg/${img}` ? 'active' : ''}`}
+                        style={{ backgroundImage: `url(/bg/${img})` }}
+                        onClick={() => setCourseForm({ ...courseForm, coverColor: `/bg/${img}` })}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {coverTab === 'upload' && (
+                  <div className="cover-upload-zone" onClick={() => coverInputRef.current?.click()}>
+                    <Upload size={24} style={{ marginBottom: '0.5rem', color: 'var(--text-muted)' }} />
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>Click to upload custom image</div>
+                    <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+                  </div>
+                )}
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowCreateCourse(false)}>Cancel</button>
