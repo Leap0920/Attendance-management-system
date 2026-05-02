@@ -151,7 +151,7 @@ export const fileApi = {
   downloadSubmission: (submissionId: number) =>
     api.get(`/files/submissions/${submissionId}/download`, { responseType: 'blob' }),
   getMaterialDownloadUrl: (materialId: number) =>
-    `http://${window.location.hostname}:8080/api/files/materials/${materialId}/download`,
+    `/api/files/materials/${materialId}/download`,
   getSubmissionDownloadUrl: (submissionId: number) =>
-    `http://${window.location.hostname}:8080/api/files/submissions/${submissionId}/download`,
+    `/api/files/submissions/${submissionId}/download`,
 };

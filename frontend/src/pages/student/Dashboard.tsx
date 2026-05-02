@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { BookOpen, X, Plus, Clock, FileText, Megaphone, ClipboardList } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { BookOpen, X, Plus, Clock, FileText, Megaphone, ClipboardList, Scan, RefreshCcw } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { Html5Qrcode } from 'html5-qrcode';
 import { useAuth } from '../../auth/AuthContext';
 import { studentApi } from '../../api';
 import { showAlert } from '../../utils/feedback';
@@ -17,6 +18,7 @@ const CARD_GRADIENTS = [
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,9 @@ const StudentDashboard: React.FC = () => {
   const [showJoin, setShowJoin] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joining, setJoining] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
+  const scannerRef = React.useRef<Html5Qrcode | null>(null);
 
   const load = () => {
     studentApi.getDashboard().then(res => {
@@ -35,6 +40,15 @@ const StudentDashboard: React.FC = () => {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const qId = searchParams.get('attendSessionId');
+    const qCode = searchParams.get('code');
+    if (qId && qCode) {
+      setAttendCode(qCode.toUpperCase());
+      setSelectedSession(Number(qId));
+    }
+  }, [searchParams]);
 
   // Auto-select session if only one is available
   useEffect(() => {
@@ -46,11 +60,62 @@ const StudentDashboard: React.FC = () => {
     }
   }, [data]);
 
-  const submitAttendance = async () => {
-    if (!selectedSession || !attendCode || submitting) return;
+  useEffect(() => {
+    if (showScanner) {
+      const html5QrCode = new Html5Qrcode("reader");
+      scannerRef.current = html5QrCode;
+
+      const startScanner = async () => {
+        try {
+          await html5QrCode.start(
+            { facingMode: facingMode },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (text) => {
+              if (scannerRef.current) {
+                scannerRef.current.stop().then(() => {
+                   scannerRef.current?.clear();
+                }).catch(console.error);
+              }
+              setShowScanner(false);
+              try {
+                const url = new URL(text);
+                const qId = url.searchParams.get('attendSessionId');
+                const qCode = url.searchParams.get('code');
+                if (qId && qCode) {
+                  setAttendCode(qCode.toUpperCase());
+                  setSelectedSession(Number(qId));
+                  submitAttendanceWithValues(Number(qId), qCode.toUpperCase());
+                } else {
+                  showAlert('Error', 'Invalid QR Code format', 'error');
+                }
+              } catch (e) {
+                showAlert('Error', 'Invalid QR Code URL', 'error');
+              }
+            },
+            (error) => {} // ignore
+          );
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      startScanner();
+
+      return () => {
+        if (scannerRef.current && scannerRef.current.isScanning) {
+          scannerRef.current.stop().then(() => scannerRef.current?.clear()).catch(console.error);
+        } else if (scannerRef.current) {
+          scannerRef.current.clear();
+        }
+      };
+    }
+  }, [showScanner, facingMode]);
+
+  const submitAttendanceWithValues = async (sessionId: number, code: string) => {
+    if (submitting) return;
     setSubmitting(true);
     try {
-      const res = await studentApi.submitAttendance({ sessionId: selectedSession, attendanceCode: attendCode });
+      const res = await studentApi.submitAttendance({ sessionId, attendanceCode: code });
       showAlert('Success', res.data.message || 'Attendance recorded!');
       setAttendCode('');
       setSelectedSession(null);
@@ -58,6 +123,11 @@ const StudentDashboard: React.FC = () => {
     } catch (err: any) {
       showAlert('Error', err.response?.data?.message || 'Failed to submit', 'error');
     } finally { setSubmitting(false); }
+  };
+
+  const submitAttendance = () => {
+    if (!selectedSession || !attendCode) return;
+    submitAttendanceWithValues(selectedSession, attendCode);
   };
 
   const handleJoin = async (e: React.FormEvent) => {
@@ -157,7 +227,7 @@ const StudentDashboard: React.FC = () => {
                 </div>
               ))}
 
-              <div className="sd-attend-input-row">
+              <div className="sd-attend-input-row" style={{ display: 'flex', gap: '0.5rem' }}>
                 <input
                   className="form-input sd-code-input"
                   placeholder="0 0 0 0 0 0"
@@ -165,7 +235,16 @@ const StudentDashboard: React.FC = () => {
                   onChange={e => setAttendCode(e.target.value.toUpperCase())}
                   maxLength={6}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitAttendance(); } }}
+                  style={{ flex: 1 }}
                 />
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowScanner(true)}
+                  style={{ padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title="Scan QR Code"
+                >
+                  <Scan size={20} />
+                </button>
                 <button
                   className="btn btn-primary sd-submit-btn"
                   onClick={submitAttendance}
@@ -391,6 +470,32 @@ const StudentDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── QR Scanner Modal ──────────────────────── */}
+      {showScanner && (
+        <div className="modal-overlay" onClick={() => setShowScanner(false)}>
+          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center', overflow: 'hidden' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Scan QR Code</h3>
+              <button className="modal-close hover:rotate-90 transition-transform duration-200" onClick={() => setShowScanner(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ position: 'relative', width: '100%', marginTop: '1rem', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#000', minHeight: '300px' }}>
+              <div id="reader" style={{ width: '100%', border: 'none' }}></div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setFacingMode(prev => prev === "environment" ? "user" : "environment"); }}
+                style={{ position: 'absolute', bottom: '1rem', right: '1rem', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, backdropFilter: 'blur(4px)' }}
+                title="Flip Camera"
+              >
+                <RefreshCcw size={20} />
+              </button>
+            </div>
+            <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Point your camera at the teacher's screen</p>
           </div>
         </div>
       )}

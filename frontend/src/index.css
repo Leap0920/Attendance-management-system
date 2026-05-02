@@ -541,3 +541,78 @@ code {
   background: #1e293b;
   border-color: #334155;
 }
+
+/* QR Scanner UI Overrides */
+#reader {
+  border: none !important;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#reader video {
+  border-radius: 12px !important;
+  object-fit: cover !important;
+}
+
+#reader__dashboard_section_csr span {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  color: var(--text-h);
+}
+
+#reader button {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  font-family: var(--sans) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  margin: 10px 5px !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+#reader button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+#reader button:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+#reader select {
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--bg) !important;
+  color: var(--text-h) !important;
+  font-family: var(--sans) !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  margin: 10px 5px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  appearance: auto !important;
+}
+
+#reader a {
+  display: none !important; /* Hide 'Scan an Image File' */
+}
+
+#reader img {
+  opacity: 0.7;
+  margin: 1rem auto;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+#reader__scan_region {
+  background: var(--code-bg);
+  border-radius: 8px;
+  overflow: hidden;
+}

@@ -19,8 +19,10 @@ import {
   UserCheck,
   Palette,
   Image as ImageIcon,
-  Upload
+  Upload,
+  QrCode
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
@@ -145,6 +147,7 @@ const TeacherDashboard: React.FC = () => {
   const [showAttendance, setShowAttendance] = useState(false);
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [showReopenModal, setShowReopenModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState<{ show: boolean, sessionId: number | null, code: string }>({ show: false, sessionId: null, code: '' });
 
   // Forms
   const [attendForm, setAttendForm] = useState({ courseId: '', sessionTitle: '', duration: '10', allowLate: true, lateMinutes: '15' });
@@ -462,6 +465,10 @@ const TeacherDashboard: React.FC = () => {
                     </div>
                     <div className="td-as-actions">
                       <span className="td-live-badge">LIVE NOW</span>
+                      <button className="btn btn-secondary btn-sm hover:bg-gray-200 transition-colors" onClick={() => setShowQrModal({ show: true, sessionId: s.session.id, code: s.session.attendanceCode })} style={{ width: 'auto' }}>
+                        <QrCode size={12} className="inline mr-1" />
+                        QR Code
+                      </button>
                       <button className="btn btn-danger btn-sm td-close-btn hover:bg-red-600 transition-colors" onClick={() => closeSession(s.session.id)}>
                         <X size={12} strokeWidth={2.5} />
                         Close Session
@@ -797,6 +804,36 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── QR Code Modal ─────────────────────────────────────── */}
+      {showQrModal.show && (
+        <div className="modal-overlay" onClick={() => setShowQrModal({ show: false, sessionId: null, code: '' })}>
+          <div className="modal shadow-2xl animate-in fade-in duration-200" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center' }}>
+            <div className="modal-header border-b pb-4">
+              <h3 className="modal-title">Attendance QR Code</h3>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowQrModal({ show: false, sessionId: null, code: '' })}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="mt-6 flex flex-col items-center justify-center p-4">
+              <div style={{ background: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+                <QRCodeSVG
+                  value={`${window.location.origin}/student/dashboard?attendSessionId=${showQrModal.sessionId}&code=${showQrModal.code}`}
+                  size={256}
+                  level="H"
+                  includeMargin={false}
+                />
+              </div>
+              <p className="mt-6 text-gray-600 font-medium text-sm">Students can scan this code to mark their attendance automatically.</p>
+              <div className="mt-4 p-3 bg-blue-50 text-blue-800 rounded-xl w-full">
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Manual Code</span>
+                <div className="text-3xl font-mono font-black tracking-[0.3em] mt-1">{showQrModal.code}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 };
