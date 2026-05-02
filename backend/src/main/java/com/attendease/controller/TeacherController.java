@@ -286,7 +286,10 @@ public class TeacherController {
         boolean allowLate;
         int lateMinutes;
         
-        if (body.containsKey("lateMinutes")) {
+        if (body.containsKey("allowLate")) {
+            allowLate = Boolean.parseBoolean(body.get("allowLate").toString());
+            lateMinutes = body.containsKey("lateMinutes") ? Integer.parseInt(body.get("lateMinutes").toString()) : 15;
+        } else if (body.containsKey("lateMinutes")) {
             // Per-session override provided
             lateMinutes = Integer.parseInt(body.get("lateMinutes").toString());
             allowLate = true;

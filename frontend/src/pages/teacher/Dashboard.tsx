@@ -147,7 +147,7 @@ const TeacherDashboard: React.FC = () => {
   const [showReopenModal, setShowReopenModal] = useState(false);
 
   // Forms
-  const [attendForm, setAttendForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
+  const [attendForm, setAttendForm] = useState({ courseId: '', sessionTitle: '', duration: '10', allowLate: true, lateMinutes: '15' });
   const [courseForm, setCourseForm] = useState({ courseName: '', courseCode: '', section: '', schedule: '', room: '', coverColor: '#3b82f6' });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState('09:00');
@@ -262,10 +262,11 @@ const TeacherDashboard: React.FC = () => {
         courseId: Number(attendForm.courseId),
         sessionTitle: attendForm.sessionTitle,
         duration: Number(attendForm.duration),
-        allowLate: true,
+        allowLate: attendForm.allowLate,
+        lateMinutes: Number(attendForm.lateMinutes),
       });
       setShowAttendance(false);
-      setAttendForm({ courseId: '', sessionTitle: '', duration: '10' });
+      setAttendForm({ courseId: '', sessionTitle: '', duration: '10', allowLate: true, lateMinutes: '15' });
       const code = res.data?.data?.attendanceCode || '';
       showAlert('Success', `Attendance session started! Code: ${code}`, 'success');
       loadDashboard();
@@ -648,6 +649,16 @@ const TeacherDashboard: React.FC = () => {
                 <label className="form-label">Duration (minutes)</label>
                 <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" max="120" value={attendForm.duration} onChange={e => setAttendForm({ ...attendForm, duration: e.target.value })} />
               </div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', marginBottom: attendForm.allowLate ? '0.5rem' : '1rem' }}>
+                <input type="checkbox" id="allowLate" checked={attendForm.allowLate} onChange={e => setAttendForm({ ...attendForm, allowLate: e.target.checked })} style={{ width: '1rem', height: '1rem', cursor: 'pointer' }} />
+                <label htmlFor="allowLate" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Enable Late System</label>
+              </div>
+              {attendForm.allowLate && (
+                <div className="form-group">
+                  <label className="form-label">Mark as Late after (minutes)</label>
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" value={attendForm.lateMinutes} onChange={e => setAttendForm({ ...attendForm, lateMinutes: e.target.value })} />
+                </div>
+              )}
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowAttendance(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Start Session</button>

@@ -114,7 +114,7 @@ const TeacherCourses: React.FC = () => {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:30');
   const [showNewSession, setShowNewSession] = useState(false);
-  const [sessionForm, setSessionForm] = useState({ courseId: '', sessionTitle: '', duration: '10' });
+  const [sessionForm, setSessionForm] = useState({ courseId: '', sessionTitle: '', duration: '10', allowLate: true, lateMinutes: '15' });
   const [coverTab, setCoverTab] = useState<'colors' | 'presets' | 'upload'>('colors');
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -174,9 +174,9 @@ const TeacherCourses: React.FC = () => {
   const handleNewSession = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await teacherApi.createAttendance({ courseId: Number(sessionForm.courseId), sessionTitle: sessionForm.sessionTitle, duration: Number(sessionForm.duration), allowLate: true });
+      const res = await teacherApi.createAttendance({ courseId: Number(sessionForm.courseId), sessionTitle: sessionForm.sessionTitle, duration: Number(sessionForm.duration), allowLate: sessionForm.allowLate, lateMinutes: Number(sessionForm.lateMinutes) });
       setShowNewSession(false);
-      setSessionForm({ courseId: '', sessionTitle: '', duration: '10' });
+      setSessionForm({ courseId: '', sessionTitle: '', duration: '10', allowLate: true, lateMinutes: '15' });
       const code = res.data?.data?.attendanceCode || '';
       showAlert('Success', `Session started! Code: ${code}`, 'success');
     } catch (err: any) { showApiError(err); }
@@ -444,6 +444,16 @@ const TeacherCourses: React.FC = () => {
               </div>
               <div className="form-group"><label className="form-label">Session Title (optional)</label><input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={sessionForm.sessionTitle} onChange={e => setSessionForm({ ...sessionForm, sessionTitle: e.target.value })} placeholder="e.g. Week 5 Lecture" /></div>
               <div className="form-group"><label className="form-label">Duration (minutes)</label><div className="relative"><Clock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input className="form-input pl-10 focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" max="120" value={sessionForm.duration} onChange={e => setSessionForm({ ...sessionForm, duration: e.target.value })} /></div></div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', marginBottom: sessionForm.allowLate ? '0.5rem' : '1rem' }}>
+                <input type="checkbox" id="allowLate" checked={sessionForm.allowLate} onChange={e => setSessionForm({ ...sessionForm, allowLate: e.target.checked })} style={{ width: '1rem', height: '1rem', cursor: 'pointer' }} />
+                <label htmlFor="allowLate" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Enable Late System</label>
+              </div>
+              {sessionForm.allowLate && (
+                <div className="form-group">
+                  <label className="form-label">Mark as Late after (minutes)</label>
+                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" value={sessionForm.lateMinutes} onChange={e => setSessionForm({ ...sessionForm, lateMinutes: e.target.value })} />
+                </div>
+              )}
               <div className="modal-actions border-t pt-4 mt-6">
                 <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowNewSession(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>
