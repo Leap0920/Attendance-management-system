@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, User, Mail, Lock, Phone, Calendar, Info, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import MagicRings from '../../components/MagicRings/MagicRings';
+import { AssistedPasswordConfirmation } from '../../components/ui/assisted-password-confirmation';
 import './Login.css';
 
 const Register: React.FC = () => {
@@ -22,6 +23,7 @@ const Register: React.FC = () => {
         birthday: ''
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [passwordsMatch, setPasswordsMatch] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [staticRingsFallback, setStaticRingsFallback] = useState(false);
@@ -34,7 +36,7 @@ const Register: React.FC = () => {
                 (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload' ||
                 (window.performance.navigation && window.performance.navigation.type === 1)
             );
-            
+
             if (isReload) {
                 setStep(1);
                 setError('');
@@ -43,7 +45,7 @@ const Register: React.FC = () => {
             console.error('Error checking navigation type:', e);
         }
     }, []);
-    
+
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -99,12 +101,12 @@ const Register: React.FC = () => {
     return (
         <div className={`login-page${staticRingsFallback ? ' login-page--static-rings' : ''}`}>
             <div className="login-magic-rings">
-                <MagicRings 
+                <MagicRings
                     color="#3b82f6"
                     colorTwo="#2563eb"
-                    ringCount={5} 
-                    opacity={0.45} 
-                    onInitError={() => setStaticRingsFallback(true)} 
+                    ringCount={5}
+                    opacity={0.45}
+                    onInitError={() => setStaticRingsFallback(true)}
                 />
             </div>
             <div className="login-page__scrim" />
@@ -166,10 +168,10 @@ const Register: React.FC = () => {
                                             { label: '1+ Number', met: /\d/.test(form.password) },
                                             { label: '1+ Symbol', met: /[!@#$%^&*(),.?":{}|<>]/.test(form.password) }
                                         ].map((req, i) => (
-                                            <div key={i} style={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                gap: '0.4rem', 
+                                            <div key={i} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.4rem',
                                                 fontSize: '0.72rem',
                                                 fontWeight: 600,
                                                 color: req.met ? '#10b981' : '#94a3b8',
@@ -180,6 +182,13 @@ const Register: React.FC = () => {
                                             </div>
                                         ))}
                                     </div>
+
+                                    {form.password && (
+                                        <div className="form-group animate-in" style={{ marginTop: '1.5rem' }}>
+                                            <label className="form-label">Confirm Password</label>
+                                            <AssistedPasswordConfirmation password={form.password} onMatch={setPasswordsMatch} />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Account Role</label>
@@ -219,23 +228,23 @@ const Register: React.FC = () => {
                                             display: 'flex',
                                             alignItems: 'center'
                                         }}>+63</div>
-                                        <input 
-                                            className="form-input" 
+                                        <input
+                                            className="form-input"
                                             name="phoneNumber"
                                             value={form.phoneNumber}
                                             onChange={(e) => {
                                                 let val = e.target.value.replace(/\D/g, '');
                                                 if (val.startsWith('0')) val = val.substring(1);
                                                 setForm({ ...form, phoneNumber: val.substring(0, 10) });
-                                            }} 
-                                            placeholder="912 345 6789" 
+                                            }}
+                                            placeholder="912 345 6789"
                                             maxLength={10}
-                                            style={{ 
+                                            style={{
                                                 borderRadius: '0 12px 12px 0',
                                                 borderLeft: 'none',
                                                 paddingLeft: '0.5rem',
                                                 width: '100%'
-                                            }} 
+                                            }}
                                             required
                                         />
                                     </div>
@@ -273,12 +282,12 @@ const Register: React.FC = () => {
                                 )}
                                 <div className="form-group">
                                     <label className="form-label">Short Bio</label>
-                                    <textarea 
-                                        className="form-input" 
-                                        name="bio" 
-                                        rows={3} 
-                                        placeholder="Tell us a bit about yourself..." 
-                                        value={form.bio} 
+                                    <textarea
+                                        className="form-input"
+                                        name="bio"
+                                        rows={3}
+                                        placeholder="Tell us a bit about yourself..."
+                                        value={form.bio}
                                         onChange={handleChange}
                                         style={{ resize: 'none', padding: '0.75rem' }}
                                     />
@@ -292,7 +301,7 @@ const Register: React.FC = () => {
                                     <ArrowLeft size={18} /> Back
                                 </button>
                             )}
-                            <button type="submit" className="btn btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }} disabled={loading}>
+                            <button type="submit" className="btn btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }} disabled={loading || (step === 1 && (!passwordsMatch || form.password.length < 8))}>
                                 {loading ? 'Processing...' : step === 3 ? (
                                     <>Completing <CheckCircle size={18} /></>
                                 ) : (
