@@ -108,8 +108,8 @@ const TeacherAttendance: React.FC = () => {
 
   const attendanceActions = (
     <div className="td-topbar-actions">
-      <button className="btn btn-secondary td-topbar-btn" onClick={() => setShowModal(true)}>+ Create Course</button>
-      <button className="btn btn-primary td-topbar-btn" onClick={() => setShowModal(true)}>+ New Session</button>
+      <button className="btn btn-primary td-topbar-btn" onClick={() => setShowModal(true)}>+ Create Course</button>
+      <button className="btn btn-secondary td-topbar-btn" onClick={() => setShowModal(true)}>+ New Session</button>
     </div>
   );
 

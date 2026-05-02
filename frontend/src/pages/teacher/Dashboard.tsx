@@ -278,7 +278,7 @@ const TeacherDashboard: React.FC = () => {
 
   const dashboardActions = (
     <>
-      <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowAttendance(true)}>
+      <button className="btn btn-secondary td-topbar-btn transition-all active:scale-95" onClick={() => setShowAttendance(true)}>
         <Plus size={14} strokeWidth={2.5} />
         New Session
       </button>

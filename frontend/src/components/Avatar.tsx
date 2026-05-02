@@ -29,12 +29,29 @@ const Avatar: React.FC<AvatarProps> = ({
   className = '',
 }) => {
   const [imageFailed, setImageFailed] = React.useState(false);
-  const resolvedAvatarUrl =
-    avatarUrl && avatarUrl.trim()
-      ? avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')
-        ? avatarUrl
-        : `http://${window.location.hostname}:8080${avatarUrl.startsWith('/') ? avatarUrl : `/${avatarUrl}`}`
-      : '';
+  const resolvedAvatarUrl = React.useMemo(() => {
+    if (!avatarUrl || !avatarUrl.trim()) return '';
+    
+    // If it's already a full URL, just return it
+    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      return avatarUrl;
+    }
+    
+    // Build the base URL for the backend
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const port = '8080'; // Backend port
+    
+    // Ensure we handle leading slashes correctly
+    const path = avatarUrl.startsWith('/') ? avatarUrl : `/${avatarUrl}`;
+    
+    // Check if path already includes /api (if backend serves files under /api)
+    // Most Spring Boot setups serve static content outside /api, but let's be safe
+    const base = `${protocol}//${hostname}:${port}${path}`;
+    
+    // Add a cache buster with a shorter key to ensure fresh display after update
+    return `${base}${base.includes('?') ? '&' : '?'}v=${Date.now()}`;
+  }, [avatarUrl]);
 
   const bg =
     variant === 'green'

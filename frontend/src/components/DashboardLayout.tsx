@@ -111,6 +111,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     lastName: user?.lastName || '',
     department: (user as any)?.department || '',
   });
+
+  React.useEffect(() => {
+    if (user && showProfile) {
+      setProfileForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        department: (user as any).department || '',
+      });
+    }
+  }, [user, showProfile]);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -312,13 +322,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     setProfileMsg(null);
     try {
       const res = await apiForRole.uploadAvatar(formData);
-      const updatedUser = res.data.data;
-      if (updatedUser) {
-        const nextUser = { ...user, ...updatedUser } as any;
+      const updatedData = res.data.data;
+      if (updatedData) {
+        let nextUser;
+        if (typeof updatedData === 'string') {
+          // If response is just the path
+          nextUser = { ...user, avatar: updatedData } as any;
+        } else {
+          // If response is the updated user object
+          nextUser = { ...user, ...updatedData } as any;
+        }
         setUser(nextUser);
         localStorage.setItem('user', JSON.stringify(nextUser));
       }
       setProfileMsg({ type: 'success', text: 'Profile photo updated successfully!' });
+      // Force a re-fetch of the user data to ensure everything is in sync
       await refreshUser();
     } catch (err: any) {
       setProfileMsg({ type: 'error', text: err.response?.data?.message || 'Error uploading profile photo' });
