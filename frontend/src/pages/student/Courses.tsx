@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  LayoutGrid, 
-  List, 
-  Calendar, 
-  MapPin, 
+import {
+  Plus,
+  LayoutGrid,
+  List,
+  Calendar,
+  MapPin,
   X,
   BookOpen,
   ArrowRight,
@@ -27,7 +27,10 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #DC2626 100%)',
 ];
 
+const CATEGORY_LABELS = ['ENROLLED', 'MANDATORY', 'ELECTIVE', 'CORE', 'TRACK', 'GENERAL'];
+
 const getGradient = (idx: number) => COURSE_GRADIENTS[idx % COURSE_GRADIENTS.length];
+const getCategory = (idx: number) => CATEGORY_LABELS[idx % CATEGORY_LABELS.length];
 
 function adjustColor(hex: string, amount: number): string {
   try {
@@ -43,24 +46,24 @@ function adjustColor(hex: string, amount: number): string {
 }
 
 const getCourseBg = (val: string, idx: number) => {
-    if (!val) return { background: getGradient(idx) };
-    if (val.startsWith('#')) return { 
-      background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
-      backgroundColor: val 
-    };
-    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
-      backgroundImage: `url("${val}")`,
-      backgroundSize: '100% 100%',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center'
-    };
-    if (val.includes('.') || val.includes('/') || val.includes(':')) return {
-      backgroundImage: `url("${val}")`,
-      backgroundSize: '100% 100%',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center'
-    };
-    return { background: val };
+  if (!val) return { background: getGradient(idx) };
+  if (val.startsWith('#')) return {
+    background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
+    backgroundColor: val
+  };
+  if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return {
+    backgroundImage: `url("${val}")`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center'
+  };
+  if (val.includes('.') || val.includes('/') || val.includes(':')) return {
+    backgroundImage: `url("${val}")`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center'
+  };
+  return { background: val };
 };
 
 const StudentCourses: React.FC = () => {
@@ -70,7 +73,7 @@ const StudentCourses: React.FC = () => {
   const [showJoin, setShowJoin] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState<'active' | 'dropped'>('active');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,7 +96,7 @@ const StudentCourses: React.FC = () => {
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim() || submitting) return;
-    
+
     setSubmitting(true);
     try {
       const res = await studentApi.joinCourse(joinCode.toUpperCase());
@@ -127,9 +130,9 @@ const StudentCourses: React.FC = () => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     const courseData = c.course;
-    return courseData?.courseName?.toLowerCase().includes(q) || 
-           courseData?.courseCode?.toLowerCase().includes(q) || 
-           courseData?.teacher?.lastName?.toLowerCase().includes(q);
+    return courseData?.courseName?.toLowerCase().includes(q) ||
+      courseData?.courseCode?.toLowerCase().includes(q) ||
+      courseData?.teacher?.lastName?.toLowerCase().includes(q);
   });
 
   const coursesActions = (
@@ -139,8 +142,8 @@ const StudentCourses: React.FC = () => {
   );
 
   return (
-    <DashboardLayout 
-      role="student" 
+    <DashboardLayout
+      role="student"
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
       actions={coursesActions}
@@ -178,6 +181,9 @@ const StudentCourses: React.FC = () => {
                   {viewMode === 'grid' ? (
                     <>
                       <div className="tc-card-cover overflow-hidden" style={getCourseBg(c.coverColor, idx)}>
+                        <span className="tc-category-badge glass transition-all" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)' }}>
+                          {getCategory(idx)}
+                        </span>
                         <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
                           {activeTab === 'active' && (
                             <button className="tc-action-icon hover:scale-110 transition-transform hover:bg-red-500" title="Drop Course" onClick={(e) => handleLeaveCourse(e, c.id)}>
@@ -208,11 +214,11 @@ const StudentCourses: React.FC = () => {
                   ) : (
                     /* ── List View ──────────────────────────── */
                     <>
-                      <div className="tc-list-color" style={{ 
+                      <div className="tc-list-color" style={{
                         ...getCourseBg(c.coverColor, idx),
                         backgroundSize: 'cover',
                         backgroundImage: c.coverColor?.startsWith('#') ? 'none' : getCourseBg(c.coverColor, idx).backgroundImage
-                    }}></div>
+                      }}></div>
                       <div className="tc-list-info flex-grow">
                         <h4 className="group-hover:text-blue-600 transition-colors m-0">{c.courseName}</h4>
                         <div className="flex gap-3 text-xs text-muted mt-1">
@@ -224,7 +230,7 @@ const StudentCourses: React.FC = () => {
                         </div>
                       </div>
                       <div className="tc-list-meta text-right mr-6">
-                          <span className="tc-list-code block font-semibold text-gray-700">{c.teacher ? `${c.teacher.firstName} ${c.teacher.lastName}` : 'Instructor TBA'}</span>
+                        <span className="tc-list-code block font-semibold text-gray-700">{c.teacher ? `${c.teacher.firstName} ${c.teacher.lastName}` : 'Instructor TBA'}</span>
                       </div>
                       <div className="tc-list-actions opacity-0 group-hover:opacity-100 transition-all flex gap-2">
                         {activeTab === 'active' && (
@@ -241,7 +247,7 @@ const StudentCourses: React.FC = () => {
                 </div>
               );
             })}
-            
+
             {/* ── Empty State / Add Card ────────────────── */}
             {activeTab === 'active' && viewMode === 'grid' && filtered.length > 0 && (
               <div className="tc-add-card group hover:border-blue-300 hover:bg-blue-50/30 transition-all border-dashed border-2" onClick={() => setShowJoin(true)}>
@@ -287,29 +293,29 @@ const StudentCourses: React.FC = () => {
               <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowJoin(false)}><X size={20} /></button>
             </div>
             <div className="mt-6 mb-8 text-center">
-                <p className="text-sm text-muted">
+              <p className="text-sm text-muted">
                 Enter the unique 6-character code provided by your teacher to enroll in their course.
-                </p>
+              </p>
             </div>
             <form onSubmit={handleJoin}>
               <div className="form-group">
                 <label className="form-label text-[10px] uppercase font-black tracking-widest text-centered text-blue-600 mb-2 block text-center">Instructional Join Code</label>
-                <input 
-                  className="form-input focus:ring-4 focus:ring-blue-100 transition-all border-2" 
+                <input
+                  className="form-input focus:ring-4 focus:ring-blue-100 transition-all border-2"
                   autoFocus
-                  value={joinCode} 
-                  onChange={e => setJoinCode(e.target.value.toUpperCase())} 
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value.toUpperCase())}
                   required
-                  style={{ 
-                    fontFamily: 'monospace', 
-                    fontSize: '1.75rem', 
-                    letterSpacing: '0.6rem', 
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '1.75rem',
+                    letterSpacing: '0.6rem',
                     textAlign: 'center',
                     padding: '1.25rem',
                     textTransform: 'uppercase',
                     borderRadius: '16px'
-                  }} 
-                  placeholder="EX1234" 
+                  }}
+                  placeholder="EX1234"
                   maxLength={6}
                 />
               </div>

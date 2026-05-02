@@ -68,10 +68,6 @@ const navSections: Record<string, NavSection[]> = {
       label: 'COMMUNICATION',
       items: [{ label: 'Messages', path: '/teacher/messages' }],
     },
-    {
-      label: 'PREFERENCES',
-      items: [{ label: 'Settings', path: '/teacher/settings' }],
-    },
   ],
   student: [
     {

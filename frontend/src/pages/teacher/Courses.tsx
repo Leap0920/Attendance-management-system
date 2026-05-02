@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  LayoutGrid, 
-  List, 
-  Edit2, 
-  Trash2, 
-  Calendar, 
-  MapPin, 
+import {
+  Plus,
+  LayoutGrid,
+  List,
+  Edit2,
+  Trash2,
+  Calendar,
+  MapPin,
   X,
   Archive,
   RefreshCw,
@@ -45,7 +45,10 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #DC2626 100%)',
 ];
 
+const CATEGORY_LABELS = ['ONGOING', 'SOCIAL SCIENCES', 'LEADERSHIP', 'ENGINEERING', 'COMPUTER SCIENCE', 'BUSINESS', 'EDUCATION', 'GENERAL'];
+
 const getGradient = (idx: number) => COURSE_GRADIENTS[idx % COURSE_GRADIENTS.length];
+const getCategory = (idx: number) => CATEGORY_LABELS[idx % CATEGORY_LABELS.length];
 
 function formatTime12(t: string): string {
   if (!t) return '';
@@ -78,24 +81,24 @@ const BG_IMAGES = [
 ];
 
 const getCourseBg = (val: string, idx: number) => {
-    if (!val) return { background: getGradient(idx) };
-    if (val.startsWith('#')) return { 
-      background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
-      backgroundColor: val 
-    };
-    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
-      backgroundImage: `url("${val}")`,
-      backgroundSize: '100% 100%',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center'
-    };
-    if (val.includes('.') || val.includes('/') || val.includes(':')) return {
-      backgroundImage: `url("${val}")`,
-      backgroundSize: '100% 100%',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center'
-    };
-    return { background: val };
+  if (!val) return { background: getGradient(idx) };
+  if (val.startsWith('#')) return {
+    background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
+    backgroundColor: val
+  };
+  if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return {
+    backgroundImage: `url("${val}")`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center'
+  };
+  if (val.includes('.') || val.includes('/') || val.includes(':')) return {
+    backgroundImage: `url("${val}")`,
+    backgroundSize: '100% 100%',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center'
+  };
+  return { background: val };
 };
 
 const TeacherCourses: React.FC = () => {
@@ -200,8 +203,8 @@ const TeacherCourses: React.FC = () => {
   );
 
   return (
-    <DashboardLayout 
-      role="teacher" 
+    <DashboardLayout
+      role="teacher"
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
       actions={coursesActions}
@@ -237,6 +240,9 @@ const TeacherCourses: React.FC = () => {
                 {viewMode === 'grid' ? (
                   <>
                     <div className="tc-card-cover overflow-hidden" style={getCourseBg(c.coverColor, idx)}>
+                      <span className="tc-category-badge glass transition-all" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)' }}>
+                        {getCategory(idx)}
+                      </span>
                       <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/materials?courseId=${c.id}`); }}>
                           <Edit2 size={14} color="white" />
@@ -268,9 +274,9 @@ const TeacherCourses: React.FC = () => {
                 ) : (
                   /* ── List View ──────────────────────────── */
                   <>
-                    <div className="tc-list-color" style={{ 
-                        ...getCourseBg(c.coverColor, idx),
-                        backgroundSize: '100% 100%'
+                    <div className="tc-list-color" style={{
+                      ...getCourseBg(c.coverColor, idx),
+                      backgroundSize: '100% 100%'
                     }}></div>
                     <div className="tc-list-info flex-grow">
                       <h4 className="group-hover:text-blue-600 transition-colors m-0">{c.courseName}</h4>
@@ -281,17 +287,17 @@ const TeacherCourses: React.FC = () => {
                       </div>
                     </div>
                     <div className="tc-list-meta text-right mr-6">
-                        <span className="tc-list-code block font-mono font-bold text-blue-600">{c.joinCode}</span>
-                        <span className="tc-list-students text-xs text-muted">{c.enrollmentCount || '0'} students</span>
+                      <span className="tc-list-code block font-mono font-bold text-blue-600">{c.joinCode}</span>
+                      <span className="tc-list-students text-xs text-muted">{c.enrollmentCount || '0'} students</span>
                     </div>
                     <div className="tc-list-actions opacity-0 group-hover:opacity-100 transition-all flex gap-2">
                       {activeTab === 'active' ? (
                         <button className="btn btn-secondary btn-sm transition-all hover:bg-gray-200" onClick={(e) => handleArchive(e, c.id)} style={{ width: 'auto' }}>
-                            <Archive size={14} className="mr-1" /> Archive
+                          <Archive size={14} className="mr-1" /> Archive
                         </button>
                       ) : (
                         <button className="btn btn-secondary btn-sm transition-all hover:bg-gray-100" onClick={(e) => handleUnarchive(e, c.id)} style={{ width: 'auto' }}>
-                            <RefreshCw size={14} className="mr-1" /> Unarchive
+                          <RefreshCw size={14} className="mr-1" /> Unarchive
                         </button>
                       )}
                       <button className="btn btn-danger btn-sm transition-all shadow-sm" onClick={(e) => handleDelete(e, c.id)} style={{ width: 'auto' }}>
@@ -305,7 +311,7 @@ const TeacherCourses: React.FC = () => {
                 )}
               </div>
             ))}
-            
+
             {/* ── Empty State / Add Card ────────────────── */}
             {activeTab === 'active' && viewMode === 'grid' && (
               <div className="tc-add-card group hover:border-blue-300 hover:bg-blue-50/30 transition-all border-dashed border-2" onClick={() => setShowModal(true)}>
@@ -341,8 +347,8 @@ const TeacherCourses: React.FC = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="modal-header border-b pb-4">
-                <h3 className="modal-title">Create New Course</h3>
-                <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowModal(false)}><X size={20} /></button>
+              <h3 className="modal-title">Create New Course</h3>
+              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowModal(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleCreate} className="mt-4">
               <div className="form-group"><label className="form-label">Course Name</label><input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={form.courseName} onChange={e => setForm({ ...form, courseName: e.target.value })} required placeholder="Introduction to Programming" /></div>
@@ -353,13 +359,13 @@ const TeacherCourses: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">Schedule</label>
                 <div className="day-picker flex gap-2 mb-3">
-                    {DAYS.map(d => (
-                         <div key={d.key} 
-                              className={`day-chip ${selectedDays.includes(d.key) ? 'selected' : ''}`} 
-                              onClick={() => toggleDay(d.key)}>
-                             {d.label}
-                         </div>
-                    ))}
+                  {DAYS.map(d => (
+                    <div key={d.key}
+                      className={`day-chip ${selectedDays.includes(d.key) ? 'selected' : ''}`}
+                      onClick={() => toggleDay(d.key)}>
+                      {d.label}
+                    </div>
+                  ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div><label className="form-label text-[10px] uppercase font-bold text-gray-400">Start Time</label><input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} /></div>
@@ -367,16 +373,16 @@ const TeacherCourses: React.FC = () => {
                 </div>
               </div>
               <div className="form-group"><label className="form-label">Room</label><div className="relative"><MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input className="form-input pl-10 focus:ring-2 focus:ring-blue-100 transition-all" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })} placeholder="Room 301" /></div></div>
-              
+
               <div className="form-group">
                 <label className="form-label">Course Cover</label>
                 <div className="cover-preview" style={getCourseBg(form.coverColor || '#3b82f6', 0)}>
-                   <div style={{ zIndex: 1, textAlign: 'center' }}>
-                     <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{form.courseName || 'Course Name'}</div>
-                     <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{form.courseCode || 'CODE101'}</div>
-                   </div>
+                  <div style={{ zIndex: 1, textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{form.courseName || 'Course Name'}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{form.courseCode || 'CODE101'}</div>
+                  </div>
                 </div>
-                
+
                 <div className="cover-selector-tabs">
                   <div className={`cover-tab ${coverTab === 'colors' ? 'active' : ''}`} onClick={() => setCoverTab('colors')}>Colors</div>
                   <div className={`cover-tab ${coverTab === 'presets' ? 'active' : ''}`} onClick={() => setCoverTab('presets')}>Backgrounds</div>
@@ -386,8 +392,8 @@ const TeacherCourses: React.FC = () => {
                 {coverTab === 'colors' && (
                   <div className="cover-options-grid">
                     {BG_COLORS.map(color => (
-                      <div 
-                        key={color} 
+                      <div
+                        key={color}
                         className={`color-option ${form.coverColor === color ? 'active' : ''}`}
                         style={{ background: color }}
                         onClick={() => setForm({ ...form, coverColor: color })}
@@ -399,8 +405,8 @@ const TeacherCourses: React.FC = () => {
                 {coverTab === 'presets' && (
                   <div className="cover-options-grid">
                     {BG_IMAGES.map(img => (
-                      <div 
-                        key={img} 
+                      <div
+                        key={img}
                         className={`image-option ${form.coverColor === `/bg/${img}` ? 'active' : ''}`}
                         style={{ backgroundImage: `url(/bg/${img})` }}
                         onClick={() => setForm({ ...form, coverColor: `/bg/${img}` })}
@@ -418,8 +424,8 @@ const TeacherCourses: React.FC = () => {
                 )}
               </div>
               <div className="modal-actions border-t pt-4 mt-6">
-                  <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Create Course</button>
+                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Create Course</button>
               </div>
             </form>
           </div>
@@ -441,10 +447,10 @@ const TeacherCourses: React.FC = () => {
               <div className="form-group"><label className="form-label">Session Title (optional)</label><input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={sessionForm.sessionTitle} onChange={e => setSessionForm({ ...sessionForm, sessionTitle: e.target.value })} placeholder="e.g. Week 5 Lecture" /></div>
               <div className="form-group"><label className="form-label">Duration (minutes)</label><div className="relative"><Clock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input className="form-input pl-10 focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" max="120" value={sessionForm.duration} onChange={e => setSessionForm({ ...sessionForm, duration: e.target.value })} /></div></div>
               <div className="modal-actions border-t pt-4 mt-6">
-                  <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowNewSession(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>
-                    <Plus size={16} className="mr-1" /> Start Session Now
-                  </button>
+                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowNewSession(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>
+                  <Plus size={16} className="mr-1" /> Start Session Now
+                </button>
               </div>
             </form>
           </div>

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  Clock, 
-  BookOpen, 
-  Users, 
-  CheckCircle2, 
-  Radio, 
-  MapPin, 
+import {
+  Plus,
+  Clock,
+  BookOpen,
+  Users,
+  CheckCircle2,
+  Radio,
+  MapPin,
   MoreHorizontal,
   X,
   ArrowLeft,
@@ -50,7 +50,16 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #FF8A65 100%)',
 ];
 
+const CATEGORY_COLORS = [
+  '#4285F4', '#F4A742', '#7B68EE', '#EA4335',
+  '#34A853', '#00BCD4', '#9C27B0', '#FF5722',
+];
+
 const getGradient = (index: number) => COURSE_GRADIENTS[index % COURSE_GRADIENTS.length];
+const getCategoryLabel = (index: number) => [
+  'ENGINEERING', 'SOCIAL SCIENCES', 'MANDATORY', 'COMPUTER SCIENCE',
+  'BUSINESS', 'ARTS', 'EDUCATION', 'GENERAL',
+][index % 8];
 
 
 function timeAgo(dateStr: string): string {
@@ -127,7 +136,7 @@ const SessionTimer: React.FC<{ endTime: string; onExpire: () => void }> = ({ end
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [data, setData] = useState<any>({ courses: [], activeSessions: [], recentSessions: [], totalCourses: 0, totalStudents: 0, totalSessions: 0 });
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -149,6 +158,27 @@ const TeacherDashboard: React.FC = () => {
   const [coverTab, setCoverTab] = useState<'colors' | 'presets' | 'upload'>('colors');
   const [uploadingCover, setUploadingCover] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showAlert('Error', 'Image too large. Max 2MB.', 'error');
+      return;
+    }
+    setUploadingCover(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setCourseForm({ ...courseForm, coverColor: result });
+      setUploadingCover(false);
+    };
+    reader.onerror = () => {
+      showAlert('Error', 'Failed to read file', 'error');
+      setUploadingCover(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const BG_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#475569'];
   const BG_IMAGES = [
@@ -175,11 +205,11 @@ const TeacherDashboard: React.FC = () => {
 
   const getCourseBg = (val: string, idx: number) => {
     if (!val) return { background: getGradient(idx) };
-    if (val.startsWith('#')) return { 
+    if (val.startsWith('#')) return {
       background: `linear-gradient(135deg, ${val}, ${adjustColor(val, 30)})`,
-      backgroundColor: val 
+      backgroundColor: val
     };
-    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return { 
+    if (val.startsWith('http') || val.startsWith('/bg/') || val.startsWith('data:')) return {
       backgroundImage: `url("${val}")`,
       backgroundSize: '100% 100%',
       backgroundRepeat: 'no-repeat',
@@ -213,7 +243,7 @@ const TeacherDashboard: React.FC = () => {
     loadDashboard();
     const pollInterval = setInterval(() => {
       if (data?.activeSessions?.length > 0) {
-        teacherApi.getDashboard().then(res => setData(res.data.data)).catch(() => {});
+        teacherApi.getDashboard().then(res => setData(res.data.data)).catch(() => { });
       }
     }, 5000);
     return () => clearInterval(pollInterval);
@@ -333,7 +363,7 @@ const TeacherDashboard: React.FC = () => {
 
   /* ── render ──────────────────────────────────────────────── */
   return (
-    <DashboardLayout 
+    <DashboardLayout
       role="teacher"
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
@@ -419,7 +449,7 @@ const TeacherDashboard: React.FC = () => {
                   View All <ArrowRight size={14} className="inline group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
-              {(data?.activeSessions || []).length > 0 ? (data?.activeSessions || []).map((s: any, i: number) => (
+              {data.activeSessions?.length > 0 ? data.activeSessions.map((s: any, i: number) => (
                 <div key={i} className="td-active-session-card hover:border-blue-200 transition-all shadow-sm hover:shadow-md">
                   <div className="td-as-top">
                     <div className="td-as-info">
@@ -490,7 +520,7 @@ const TeacherDashboard: React.FC = () => {
                   <MoreHorizontal size={18} />
                 </button>
               </div>
-              {(data?.recentSessions || []).length > 0 ? (data?.recentSessions || []).slice(0, 4).map((s: any, i: number) => (
+              {data.recentSessions?.length > 0 ? data.recentSessions.slice(0, 4).map((s: any, i: number) => (
                 <div
                   key={i}
                   className="td-recent-item group hover:bg-blue-50 transition-colors"
@@ -510,7 +540,7 @@ const TeacherDashboard: React.FC = () => {
                   <p>No recent sessions</p>
                 </div>
               )}
-              {(data?.recentSessions || []).length > 0 && (
+              {data.recentSessions?.length > 0 && (
                 <button className="td-full-history-btn hover:bg-gray-100 transition-colors" onClick={() => navigate('/teacher/attendance')}>
                   Full Session History
                 </button>
@@ -541,9 +571,9 @@ const TeacherDashboard: React.FC = () => {
                     style={{ animationDelay: `${idx * 0.1}s` }}
                     onClick={() => navigate(`/teacher/materials?courseId=${c.id}`)}
                   >
-                    <div 
-                      className="td-course-cover" 
-                      style={{ 
+                    <div
+                      className="td-course-cover"
+                      style={{
                         ...getCourseBg(c.coverColor, idx),
                         position: 'relative',
                         overflow: 'hidden'
@@ -559,9 +589,21 @@ const TeacherDashboard: React.FC = () => {
                         background: 'rgba(255, 255, 255, 0.1)',
                         filter: 'blur(20px)'
                       }} />
+
+                      <span className="td-course-category" style={{
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        backdropFilter: 'blur(4px)',
+                        color: '#fff',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        fontWeight: 800,
+                        fontSize: '0.65rem',
+                        letterSpacing: '1px'
+                      }}>
+                        {getCategoryLabel(idx)}
+                      </span>
                     </div>
-                    <div className="td-course-body" style={{ 
-                      background: 'rgba(255, 255, 255, 0.8)', 
+                    <div className="td-course-body" style={{
+                      background: 'rgba(255, 255, 255, 0.8)',
                       backdropFilter: 'blur(10px)'
                     }}>
                       <h4 style={{ fontWeight: 800, color: '#0f172a' }}>{c.courseName}</h4>
@@ -674,12 +716,12 @@ const TeacherDashboard: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">Course Cover</label>
                 <div className="cover-preview" style={getCourseBg(courseForm.coverColor || '#3b82f6', 0)}>
-                   <div style={{ zIndex: 1, textAlign: 'center' }}>
-                     <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{courseForm.courseName || 'Course Name'}</div>
-                     <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{courseForm.courseCode || 'CODE101'}</div>
-                   </div>
+                  <div style={{ zIndex: 1, textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{courseForm.courseName || 'Course Name'}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{courseForm.courseCode || 'CODE101'}</div>
+                  </div>
                 </div>
-                
+
                 <div className="cover-selector-tabs">
                   <div className={`cover-tab ${coverTab === 'colors' ? 'active' : ''}`} onClick={() => setCoverTab('colors')}>Colors</div>
                   <div className={`cover-tab ${coverTab === 'presets' ? 'active' : ''}`} onClick={() => setCoverTab('presets')}>Backgrounds</div>
@@ -689,8 +731,8 @@ const TeacherDashboard: React.FC = () => {
                 {coverTab === 'colors' && (
                   <div className="cover-options-grid">
                     {BG_COLORS.map(color => (
-                      <div 
-                        key={color} 
+                      <div
+                        key={color}
                         className={`color-option ${courseForm.coverColor === color ? 'active' : ''}`}
                         style={{ background: color }}
                         onClick={() => setCourseForm({ ...courseForm, coverColor: color })}
@@ -702,8 +744,8 @@ const TeacherDashboard: React.FC = () => {
                 {coverTab === 'presets' && (
                   <div className="cover-options-grid">
                     {BG_IMAGES.map(img => (
-                      <div 
-                        key={img} 
+                      <div
+                        key={img}
                         className={`image-option ${courseForm.coverColor === `/bg/${img}` ? 'active' : ''}`}
                         style={{ backgroundImage: `url(/bg/${img})` }}
                         onClick={() => setCourseForm({ ...courseForm, coverColor: `/bg/${img}` })}

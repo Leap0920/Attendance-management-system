@@ -1117,8 +1117,8 @@ public class TeacherController {
             if (lateMinutes < 1) {
                 throw new BadRequestException("Late threshold must be at least 1 minute");
             }
-            if (lateMinutes > 120) {
-                throw new BadRequestException("Late threshold cannot exceed 120 minutes (session max duration)");
+            if (lateMinutes > 1440) {
+                throw new BadRequestException("Late threshold cannot exceed 1440 minutes (24 hours)");
             }
             teacher.setAttendanceLateMinutes(lateMinutes);
         }
