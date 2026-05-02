@@ -590,17 +590,7 @@ const TeacherDashboard: React.FC = () => {
                         filter: 'blur(20px)'
                       }} />
 
-                      <span className="td-course-category" style={{
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        backdropFilter: 'blur(4px)',
-                        color: '#fff',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        fontWeight: 800,
-                        fontSize: '0.65rem',
-                        letterSpacing: '1px'
-                      }}>
-                        {getCategoryLabel(idx)}
-                      </span>
+
                     </div>
                     <div className="td-course-body" style={{
                       background: 'rgba(255, 255, 255, 0.8)',

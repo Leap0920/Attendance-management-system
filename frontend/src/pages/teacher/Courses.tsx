@@ -240,9 +240,7 @@ const TeacherCourses: React.FC = () => {
                 {viewMode === 'grid' ? (
                   <>
                     <div className="tc-card-cover overflow-hidden" style={getCourseBg(c.coverColor, idx)}>
-                      <span className="tc-category-badge glass transition-all" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(4px)' }}>
-                        {getCategory(idx)}
-                      </span>
+
                       <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/materials?courseId=${c.id}`); }}>
                           <Edit2 size={14} color="white" />
