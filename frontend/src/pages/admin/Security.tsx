@@ -116,7 +116,7 @@ const SystemConsole: React.FC = () => {
           <p className="page-subtitle">Low-level system logs and real-time command status</p>
         </div>
         <div style={{ display: 'flex', gap: '0.85rem' }}>
-          <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: '#fff', color: '#ef4444' }} 
+          <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: 'var(--bg-secondary)', color: '#ef4444', borderColor: 'var(--border-glass)' }} 
             onClick={async () => {
               try {
                 await adminApi.triggerTestEvent();
@@ -130,7 +130,7 @@ const SystemConsole: React.FC = () => {
             <Shield size={18} />
             Simulate Threat
           </button>
-          <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: '#fff' }} onClick={() => window.location.reload()}>
+          <button className="btn btn-secondary shadow-sm" style={{ width: 'auto', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-glass)' }} onClick={() => window.location.reload()}>
             <RefreshCw size={18} />
             Reboot Console
           </button>
@@ -259,7 +259,7 @@ const SystemConsole: React.FC = () => {
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Cpu size={14} /> CPU LOAD</span>
                   <span style={{ color: '#2563eb' }}>{health?.cpu?.usage ? Math.round(health.cpu.usage) : 12}%</span>
                 </div>
-                <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '6px', background: 'var(--bg-primary)', borderRadius: '3px', overflow: 'hidden', border: '1px solid var(--border-glass)' }}>
                   <div style={{ width: `${health?.cpu?.usage || 12}%`, height: '100%', background: '#2563eb' }}></div>
                 </div>
               </div>

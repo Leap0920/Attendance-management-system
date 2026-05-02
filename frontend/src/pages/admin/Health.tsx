@@ -19,10 +19,10 @@ interface SystemHealth {
 }
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
-  HEALTHY: { color: '#059669', bg: '#f0fdf4', icon: <CheckCircle size={16} />, label: 'Healthy' },
-  WARNING: { color: '#d97706', bg: '#fffbeb', icon: <AlertTriangle size={16} />, label: 'Warning' },
-  CRITICAL: { color: '#dc2626', bg: '#fef2f2', icon: <XCircle size={16} />, label: 'Critical' },
-  UNKNOWN: { color: '#6b7280', bg: '#f9fafb', icon: <Activity size={16} />, label: 'Unknown' },
+  HEALTHY: { color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: <CheckCircle size={16} />, label: 'Healthy' },
+  WARNING: { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: <AlertTriangle size={16} />, label: 'Warning' },
+  CRITICAL: { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', icon: <XCircle size={16} />, label: 'Critical' },
+  UNKNOWN: { color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', icon: <Activity size={16} />, label: 'Unknown' },
 };
 
 const AdminHealth: React.FC = () => {
@@ -97,7 +97,7 @@ const AdminHealth: React.FC = () => {
           <p className="page-subtitle">Real-time infrastructure monitoring</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <span className="adm-last-updated" style={{ background: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid #f1f5f9', fontSize: '0.8rem', fontWeight: 600 }}>
+          <span className="adm-last-updated" style={{ background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-glass)', fontSize: '0.8rem', fontWeight: 600 }}>
             <Clock size={14} style={{ color: 'var(--text-muted)' }} />
             Synced: {lastUpdated.toLocaleTimeString()}
           </span>
@@ -117,7 +117,7 @@ const AdminHealth: React.FC = () => {
       ) : health ? (
         <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
           {/* Overall Status Banner */}
-          <div className="premium-card adm-health-banner" style={{ borderLeft: `5px solid ${statusConfig.color}`, padding: '1.5rem', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)' }}>
+          <div className="premium-card adm-health-banner" style={{ borderLeft: `5px solid ${statusConfig.color}`, padding: '1.5rem', background: 'var(--bg-glass)', backdropFilter: 'blur(10px)' }}>
             <div className="adm-health-banner-icon" style={{ background: statusConfig.bg, color: statusConfig.color, width: '48px', height: '48px', borderRadius: '14px' }}>
               {statusConfig.icon}
             </div>
@@ -140,7 +140,7 @@ const AdminHealth: React.FC = () => {
             {/* CPU */}
             <div className="premium-card adm-gauge-card" style={{ padding: '1.75rem' }}>
               <div className="adm-gauge-header">
-                <div className="adm-gauge-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                <div className="adm-gauge-icon" style={{ background: 'rgba(37, 99, 235, 0.1)', color: '#3b82f6' }}>
                   <Cpu size={20} />
                 </div>
                 <span className="adm-gauge-title" style={{ fontWeight: 700 }}>Processor</span>
@@ -153,7 +153,7 @@ const AdminHealth: React.FC = () => {
               </div>
               <div className="adm-gauge-ring-container" style={{ margin: '1.5rem 0' }}>
                 <svg viewBox="0 0 120 120" className="adm-gauge-ring">
-                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0, 0, 0, 0.2)" strokeWidth="8" />
                   <circle
                     cx="60" cy="60" r="50" fill="none"
                     stroke={STATUS_CONFIG[health.cpu.status]?.color || '#10b981'}
@@ -174,7 +174,7 @@ const AdminHealth: React.FC = () => {
             {/* Memory */}
             <div className="premium-card adm-gauge-card" style={{ padding: '1.75rem' }}>
               <div className="adm-gauge-header">
-                <div className="adm-gauge-icon" style={{ background: '#f5f3ff', color: '#7c3aed' }}>
+                <div className="adm-gauge-icon" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#8b5cf6' }}>
                   <Server size={20} />
                 </div>
                 <span className="adm-gauge-title" style={{ fontWeight: 700 }}>Memory</span>
@@ -187,7 +187,7 @@ const AdminHealth: React.FC = () => {
               </div>
               <div className="adm-gauge-ring-container" style={{ margin: '1.5rem 0' }}>
                 <svg viewBox="0 0 120 120" className="adm-gauge-ring">
-                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0, 0, 0, 0.2)" strokeWidth="8" />
                   <circle
                     cx="60" cy="60" r="50" fill="none"
                     stroke={STATUS_CONFIG[health.memory.status]?.color || '#10b981'}
@@ -208,7 +208,7 @@ const AdminHealth: React.FC = () => {
             {/* Disk */}
             <div className="premium-card adm-gauge-card" style={{ padding: '1.75rem' }}>
               <div className="adm-gauge-header">
-                <div className="adm-gauge-icon" style={{ background: '#f0fdf4', color: '#059669' }}>
+                <div className="adm-gauge-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
                   <HardDrive size={20} />
                 </div>
                 <span className="adm-gauge-title" style={{ fontWeight: 700 }}>Storage</span>
@@ -221,7 +221,7 @@ const AdminHealth: React.FC = () => {
               </div>
               <div className="adm-gauge-ring-container" style={{ margin: '1.5rem 0' }}>
                 <svg viewBox="0 0 120 120" className="adm-gauge-ring">
-                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0, 0, 0, 0.2)" strokeWidth="8" />
                   <circle
                     cx="60" cy="60" r="50" fill="none"
                     stroke={STATUS_CONFIG[health.disk.status]?.color || '#10b981'}
@@ -242,7 +242,7 @@ const AdminHealth: React.FC = () => {
             {/* Database */}
             <div className="premium-card adm-gauge-card" style={{ padding: '1.75rem' }}>
               <div className="adm-gauge-header">
-                <div className="adm-gauge-icon" style={{ background: '#eef2ff', color: '#6366f1' }}>
+                <div className="adm-gauge-icon" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}>
                   <Database size={20} />
                 </div>
                 <span className="adm-gauge-title" style={{ fontWeight: 700 }}>Database</span>
@@ -252,7 +252,7 @@ const AdminHealth: React.FC = () => {
               </div>
               <div className="adm-gauge-ring-container" style={{ margin: '1.5rem 0' }}>
                 <svg viewBox="0 0 120 120" className="adm-gauge-ring">
-                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0, 0, 0, 0.2)" strokeWidth="8" />
                   <circle
                     cx="60" cy="60" r="50" fill="none"
                     stroke="#6366f1"
@@ -274,21 +274,21 @@ const AdminHealth: React.FC = () => {
           {/* Application Metrics */}
           <div className="adm-app-metrics" style={{ marginTop: '1.5rem' }}>
             <div className="premium-card adm-metric-pill" style={{ flex: 1, padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ background: '#fdf2f8', color: '#db2777', padding: '0.6rem', borderRadius: '10px' }}><Wifi size={18} /></div>
+              <div style={{ background: 'rgba(219, 39, 119, 0.1)', color: '#db2777', padding: '0.6rem', borderRadius: '10px' }}><Wifi size={18} /></div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Active Sessions</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{health.application.activeSessions}</div>
               </div>
             </div>
             <div className="premium-card adm-metric-pill" style={{ flex: 1, padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ background: '#fffbeb', color: '#d97706', padding: '0.6rem', borderRadius: '10px' }}><Activity size={18} /></div>
+              <div style={{ background: 'rgba(217, 119, 6, 0.1)', color: '#d97706', padding: '0.6rem', borderRadius: '10px' }}><Activity size={18} /></div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Avg Response Time</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{health.application.avgResponseTime}ms</div>
               </div>
             </div>
             <div className="premium-card adm-metric-pill" style={{ flex: 1, padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ background: '#f0fdf4', color: '#059669', padding: '0.6rem', borderRadius: '10px' }}><Server size={18} /></div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.6rem', borderRadius: '10px' }}><Server size={18} /></div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Service Uptime</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>99.98%</div>
@@ -305,7 +305,7 @@ const AdminHealth: React.FC = () => {
             <div style={{ marginTop: '1.5rem' }}>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={health.history}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-glass)" />
                   <XAxis dataKey="timestamp" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dy={10} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-10} domain={[0, 100]} tickFormatter={v => `${v}%`} />
                   <Tooltip content={<CustomTooltip />} />

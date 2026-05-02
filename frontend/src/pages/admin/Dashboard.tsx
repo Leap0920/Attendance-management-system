@@ -60,7 +60,7 @@ const AdminDashboard: React.FC = () => {
           <p className="page-subtitle">Welcome back, Administrator. Here's what's happening today.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.85rem' }}>
-          <button className="btn btn-secondary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto', background: '#fff' }} onClick={() => navigate('/admin/analytics')}>
+          <button className="btn btn-secondary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} onClick={() => navigate('/admin/analytics')}>
             <Activity size={18} />
             Analytics
           </button>
@@ -79,13 +79,12 @@ const AdminDashboard: React.FC = () => {
           <div className="admin-stats-grid">
             {statCards.map((card, i) => (
               <div key={i} className="premium-card" style={{ animationDelay: `${i * 0.05}s`, padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: card.bg, borderRadius: '50%', opacity: 0.5, zIndex: 0 }}></div>
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div className="admin-stat-icon" style={{ background: card.bg, color: card.color, margin: 0, width: '46px', height: '46px', borderRadius: '12px' }}>
+                    <div className="admin-stat-icon" style={{ background: 'var(--bg-primary)', color: card.color, margin: 0, width: '46px', height: '46px', borderRadius: '12px' }}>
                       {card.icon}
                     </div>
-                    {card.trend && <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.25rem 0.5rem', borderRadius: '20px', background: card.bg, color: card.color }}>{card.trend}</span>}
+                    {card.trend && <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.25rem 0.5rem', borderRadius: '20px', background: 'var(--bg-primary)', color: card.color, border: '1px solid var(--border-glass)' }}>{card.trend}</span>}
                   </div>
                   <div className="admin-stat-value" style={{ fontSize: '1.85rem', marginBottom: '0.25rem' }}>{card.value}</div>
                   <div className="admin-stat-label" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{card.label}</div>
@@ -108,8 +107,8 @@ const AdminDashboard: React.FC = () => {
                     key={i}
                     className="admin-action-card group"
                     style={{ 
-                      background: '#f8fafc', 
-                      border: '1px solid #f1f5f9',
+                      background: 'var(--bg-primary)', 
+                      border: '1px solid var(--border-glass)',
                       padding: '1.25rem',
                       borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
@@ -117,7 +116,7 @@ const AdminDashboard: React.FC = () => {
                     }}
                     onClick={() => navigate(action.path)}
                   >
-                    <div className="admin-action-icon" style={{ background: '#fff', color: action.color, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                    <div className="admin-action-icon" style={{ background: 'var(--bg-secondary)', color: action.color, boxShadow: 'var(--shadow-sm)' }}>
                       {action.icon}
                     </div>
                     <div style={{ flex: 1 }}>
@@ -183,7 +182,7 @@ const AdminDashboard: React.FC = () => {
                       <div key={i} className="animate-pulse" style={{ 
                         flex: 1, 
                         height: `${h}%`, 
-                        background: i > 8 ? '#10b981' : '#e2e8f0', 
+                        background: i > 8 ? '#10b981' : 'var(--border-glass)', 
                         borderRadius: '2px',
                         animationDelay: `${i * 0.1}s`
                       }}></div>
@@ -201,7 +200,7 @@ const AdminDashboard: React.FC = () => {
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>New Onboardings</h3>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Latest users registered on the platform</p>
               </div>
-              <button className="btn btn-sm btn-secondary" style={{ width: 'auto', background: '#f8fafc' }}
+              <button className="btn btn-sm btn-secondary" style={{ width: 'auto', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                 onClick={() => navigate('/admin/users')}>
                 View Directory <ArrowRight size={14} />
               </button>
@@ -219,7 +218,7 @@ const AdminDashboard: React.FC = () => {
                 </thead>
                 <tbody>
                   {stats.recentUsers?.map((u: any, i: number) => (
-                    <tr key={u.id} className="hover:bg-slate-50 transition-colors" style={{ animationDelay: `${i * 0.05}s` }}>
+                    <tr key={u.id} className="hover:bg-slate-800/30 transition-colors" style={{ animationDelay: `${i * 0.05}s` }}>
                       <td style={{ paddingLeft: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
                           <div className="admin-table-avatar" style={{

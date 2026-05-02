@@ -70,10 +70,10 @@ const AdminCourses: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' };
-      case 'archived': return { bg: '#fffbeb', color: '#d97706', border: '#fde68a' };
-      case 'deleted': return { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' };
-      default: return { bg: '#f3f4f6', color: '#6b7280', border: '#e5e7eb' };
+      case 'active': return { bg: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', border: 'rgba(22, 163, 74, 0.2)' };
+      case 'archived': return { bg: 'rgba(217, 119, 6, 0.1)', color: '#d97706', border: 'rgba(217, 119, 6, 0.2)' };
+      case 'deleted': return { bg: 'rgba(220, 38, 38, 0.1)', color: '#dc2626', border: 'rgba(220, 38, 38, 0.2)' };
+      default: return { bg: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'var(--border-glass)' };
     }
   };
 
@@ -97,7 +97,7 @@ const AdminCourses: React.FC = () => {
 
       {/* Filter Bar */}
       <div className="admin-filter-bar animate-fade-in" style={{ animationDelay: '0.1s', border: 'none', background: 'transparent' }}>
-        <div className="admin-filter-tabs" style={{ background: 'white', padding: '0.35rem', borderRadius: '35px', boxShadow: 'var(--shadow-premium)' }}>
+        <div className="admin-filter-tabs" style={{ padding: '0.35rem', borderRadius: '35px', boxShadow: 'var(--shadow-premium)' }}>
           {[
             { key: '', label: 'All Classrooms', count: statusStats.all },
             { key: 'active', label: 'Active', count: statusStats.active },
@@ -113,7 +113,7 @@ const AdminCourses: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ height: '42px', borderRadius: '12px', background: 'white', border: 'none', boxShadow: 'var(--shadow-premium)', minWidth: '320px' }}>
+        <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ height: '42px', borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-premium)', minWidth: '320px' }}>
           <span className="admin-search-icon"><Search size={18} /></span>
           <input type="text" placeholder="Search classrooms, codes, or instructors..."
             value={search} onChange={e => setSearch(e.target.value)}
@@ -158,7 +158,7 @@ const AdminCourses: React.FC = () => {
                         onClick={() => setExpandedId(isExpanded ? null : c.id)}
                         style={{ cursor: 'pointer', borderBottom: isExpanded ? 'none' : '1px solid #f1f5f9' }}>
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: isExpanded ? '#eff6ff' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: isExpanded ? 'var(--bg-secondary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                           <ChevronRight 
                             size={16} 
                             className={`transition-transform duration-300 ${isExpanded ? 'rotate-90 text-blue-600' : 'text-gray-400'}`} 
@@ -181,7 +181,7 @@ const AdminCourses: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td><code style={{ background: '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>{c.courseCode}</code></td>
+                      <td><code style={{ background: 'var(--bg-secondary)', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{c.courseCode}</code></td>
                       <td>
                         {c.teacher ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -219,7 +219,7 @@ const AdminCourses: React.FC = () => {
                     {isExpanded && (
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td colSpan={7} style={{ padding: '0 1rem 1rem 4rem' }}>
-                          <div className="animate-fade-in" style={{ background: '#f8fafc', borderRadius: '16px', padding: '1.5rem', border: '1px solid #f1f5f9' }}>
+                          <div className="animate-fade-in" style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border-glass)' }}>
                             <div className="admin-expanded-grid" style={{ gap: '1.5rem' }}>
                               <div className="admin-expanded-item">
                                 <span className="admin-expanded-label" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Course Description</span>
@@ -242,7 +242,7 @@ const AdminCourses: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-glass)', justifyContent: 'flex-end' }}>
                               {c.status === 'active' && (
                                 <button
                                   className="btn btn-sm btn-secondary shadow-sm"
@@ -251,7 +251,7 @@ const AdminCourses: React.FC = () => {
                                     updateCourseStatus(c, 'archive');
                                   }}
                                   disabled={updatingId === c.id}
-                                  style={{ width: 'auto', background: 'white', border: '1px solid #e2e8f0' }}
+                                  style={{ width: 'auto', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-glass)' }}
                                 >
                                   {updatingId === c.id ? 'Processing...' : 'Archive Course'}
                                 </button>

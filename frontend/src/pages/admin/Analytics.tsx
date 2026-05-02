@@ -152,12 +152,12 @@ const AdminAnalytics: React.FC = () => {
 
   const getColorMap = (color: string) => {
     const map: Record<string, { bg: string; fg: string }> = {
-      blue: { bg: '#eff6ff', fg: '#3b82f6' },
-      green: { bg: '#f0fdf4', fg: '#10b981' },
-      purple: { bg: '#f5f3ff', fg: '#8b5cf6' },
-      indigo: { bg: '#eef2ff', fg: '#6366f1' },
-      red: { bg: '#fef2f2', fg: '#ef4444' },
-      yellow: { bg: '#fffbeb', fg: '#f59e0b' },
+      blue: { bg: 'rgba(59, 130, 246, 0.1)', fg: '#3b82f6' },
+      green: { bg: 'rgba(16, 185, 129, 0.1)', fg: '#10b981' },
+      purple: { bg: 'rgba(139, 92, 246, 0.1)', fg: '#8b5cf6' },
+      indigo: { bg: 'rgba(99, 102, 241, 0.1)', fg: '#6366f1' },
+      red: { bg: 'rgba(239, 68, 68, 0.1)', fg: '#ef4444' },
+      yellow: { bg: 'rgba(245, 158, 11, 0.1)', fg: '#f59e0b' },
     };
     return map[color] || map.blue;
   };
@@ -211,7 +211,7 @@ const AdminAnalytics: React.FC = () => {
             )}
           </div>
 
-          <button className="btn btn-secondary shadow-sm hover:shadow-md transition-all" style={{ width: 'auto', background: '#fff' }} onClick={() => exportData('csv')}>
+          <button className="btn btn-secondary shadow-sm hover:shadow-md transition-all" style={{ width: 'auto', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} onClick={() => exportData('csv')}>
             <Download size={16} />
             Export CSV
           </button>
@@ -266,10 +266,10 @@ const AdminAnalytics: React.FC = () => {
                       <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-glass)" />
                   <XAxis dataKey="timestamp" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dy={10} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-10} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)', radius: 4 }} />
                   <Area
                     type="monotone" dataKey="value" name="Total Users"
                     stroke="#2563eb" strokeWidth={3}
@@ -284,10 +284,10 @@ const AdminAnalytics: React.FC = () => {
               <h3 className="adm-chart-title">Activity Metrics</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={loginActivity}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-glass)" />
                   <XAxis dataKey="timestamp" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dy={10} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-10} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)', radius: 4 }} />
                   <Bar
                     dataKey="value" name="Logins" fill="#10B981"
                     radius={[6, 6, 0, 0]} animationDuration={1200}
@@ -340,15 +340,19 @@ const AdminAnalytics: React.FC = () => {
               <h3 className="adm-chart-title">Courses by Status</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={coursesByStatus} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-glass)" />
                   <XAxis type="number" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dy={10} />
                   <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} width={80} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)', radius: 4 }} />
                   <Bar
-                    dataKey="value" name="Courses" fill="#7c3aed"
+                    dataKey="value" name="Courses"
                     radius={[0, 6, 6, 0]} animationDuration={1200}
                     barSize={30}
-                  />
+                  >
+                    {coursesByStatus.map((_entry, index) => (
+                      <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

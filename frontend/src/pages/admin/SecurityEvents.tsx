@@ -91,10 +91,10 @@ const SecurityEvents: React.FC = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          background: '#f8fafc'
+          background: 'var(--bg-secondary)'
         }}>
           <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
-            <div className="search-input-wrap" style={{ maxWidth: '400px', width: '100%' }}>
+            <div className="search-input-wrap" style={{ maxWidth: '400px', width: '100%', position: 'relative', display: 'flex', alignItems: 'center' }}>
               <Search size={18} className="search-icon" />
               <input 
                 type="text" 
@@ -115,9 +115,9 @@ const SecurityEvents: React.FC = () => {
                     borderRadius: '8px', 
                     fontSize: '0.75rem', 
                     fontWeight: 700,
-                    background: filterSeverity === s ? '#0f172a' : '#fff',
-                    color: filterSeverity === s ? '#fff' : '#64748b',
-                    border: '1px solid #e2e8f0',
+                    background: filterSeverity === s ? 'var(--accent)' : 'var(--bg-primary)',
+                    color: filterSeverity === s ? '#fff' : 'var(--text-secondary)',
+                    border: '1px solid var(--border-glass)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
                   }}
@@ -151,7 +151,7 @@ const SecurityEvents: React.FC = () => {
                     borderBottom: '1px solid #f1f5f9', 
                     display: 'flex', 
                     gap: '1.5rem',
-                    background: event.acknowledged ? '#fff' : 'rgba(239, 68, 68, 0.02)',
+                    background: event.acknowledged ? 'transparent' : 'rgba(239, 68, 68, 0.05)',
                     animation: 'fade-in 0.3s ease-out forwards',
                     animationDelay: `${i * 0.05}s`,
                     position: 'relative'
@@ -184,7 +184,7 @@ const SecurityEvents: React.FC = () => {
                         }}>
                           {event.severity}
                         </span>
-                        <h4 style={{ fontWeight: 700, fontSize: '0.95rem', color: event.acknowledged ? '#64748b' : '#0f172a' }}>
+                        <h4 style={{ fontWeight: 700, fontSize: '0.95rem', color: event.acknowledged ? 'var(--text-muted)' : 'var(--text-primary)' }}>
                           {event.description}
                         </h4>
                       </div>

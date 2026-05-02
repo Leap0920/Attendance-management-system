@@ -6087,3 +6087,202 @@ textarea.form-input { resize: vertical; }
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
+
+/* -- Dark Mode Implementation --------------------------------- */
+html.dark {
+  /* Main Tokens */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-glass: rgba(15, 23, 42, 0.8);
+  --border-glass: rgba(51, 65, 85, 0.5);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --sidebar-bg: #1e293b; /* Slightly lighter sidebar */
+  --sidebar-text: #94a3b8;
+  --sidebar-border: #334155;
+  --sidebar-active: rgba(59, 130, 246, 0.15);
+  --shadow-premium: 0 0 0 1px rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.2), 0 12px 24px rgba(0,0,0,0.3);
+
+  /* Compatibility with DashboardLayout variables */
+  --bg: #0f172a;
+  --border: #1e293b;
+  --code-bg: #1e293b;
+  --text: #94a3b8;
+  --text-h: #f1f5f9;
+  --accent: #3b82f6;
+  --accent-bg: rgba(59, 130, 246, 0.1);
+  --accent-border: rgba(59, 130, 246, 0.3);
+}
+
+html.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+html.dark .auth-card,
+html.dark .glass-card,
+html.dark .premium-card,
+html.dark .modal,
+html.dark .stat-card,
+html.dark .stream-item {
+  background-color: var(--bg-card);
+  border-color: var(--border-glass);
+}
+
+html.dark .form-input,
+html.dark .search-input {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #fff;
+}
+
+html.dark .top-navbar {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+html.dark .btn-secondary {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+html.dark .btn-secondary:hover {
+  background: #334155;
+}
+
+html.dark .sidebar-link:hover {
+  background-color: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+html.dark .data-table th {
+  background-color: #1e293b;
+  color: var(--text-secondary);
+}
+
+html.dark .data-table td {
+  border-bottom-color: #1e293b;
+}
+
+html.dark .data-table tr:hover td {
+  background-color: #0f172a;
+}
+
+html.dark .stat-icon.blue { background: rgba(59, 130, 246, 0.1); }
+html.dark .stat-icon.green { background: rgba(16, 185, 129, 0.1); }
+html.dark .stat-icon.purple { background: rgba(139, 92, 246, 0.1); }
+html.dark .stat-icon.yellow { background: rgba(245, 158, 11, 0.1); }
+html.dark .stat-icon.red { background: rgba(239, 68, 68, 0.1); }
+html.dark .stat-icon.cyan { background: rgba(6, 182, 212, 0.1); }
+
+html.dark .admin-health-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+html.dark .admin-health-dot { background: #10b981; shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+html.dark .admin-action-card:hover { background: #1e293b !important; border-color: #3b82f6; }
+html.dark .admin-action-icon { background: #0f172a !important; }
+
+html.dark .admin-health-item { background: #0f172a !important; border-color: #334155 !important; }
+html.dark .admin-health-item:hover { background: #1e293b !important; border-color: #3b82f6 !important; }
+html.dark .admin-health-bar-container { background: rgba(255,255,255,0.05); }
+html.dark .admin-health-label span:last-child { color: #fff !important; }
+
+/* -- Admin Pages Dark Mode Overrides ------------------------- */
+html.dark .admin-filter-tabs,
+html.dark .admin-search-box,
+html.dark .admin-search-wrapper,
+html.dark .adm-dropdown-btn {
+  background: #1e293b !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+html.dark .admin-filter-tab { color: #94a3b8; }
+html.dark .admin-filter-tab.active { background: #3b82f6 !important; color: #fff !important; }
+html.dark .admin-filter-count { background: rgba(255,255,255,0.1) !important; color: #94a3b8; }
+html.dark .admin-filter-tab.active .admin-filter-count { color: #fff; }
+
+html.dark .admin-search-input,
+html.dark .form-input {
+  color: #f1f5f9 !important;
+}
+
+html.dark .audit-entry { border-bottom-color: #1e293b !important; }
+html.dark .audit-main:hover { background: rgba(255,255,255,0.02) !important; }
+html.dark .audit-details { background: #0f172a !important; border-color: #1e293b !important; }
+html.dark .audit-metadata-box { background: #000 !important; border-color: #334155 !important; }
+
+html.dark .adm-chart-tooltip {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: var(--shadow-premium) !important;
+  padding: 12px !important;
+  border-radius: 12px !important;
+}
+html.dark .adm-chart-tooltip-label { color: #f1f5f9 !important; font-weight: 700 !important; }
+
+html.dark .adm-dropdown-menu {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+html.dark .adm-dropdown-item { color: #94a3b8; }
+html.dark .adm-dropdown-item:hover { background: #334155; color: #fff; }
+html.dark .adm-dropdown-item.active { background: #3b82f6; color: #fff; }
+
+html.dark .admin-pagination { border-top-color: #1e293b !important; }
+html.dark .admin-pagination .btn-secondary { background: #1e293b !important; color: #f1f5f9 !important; }
+
+html.dark .admin-toast { background: #1e293b !important; color: #f1f5f9 !important; border: 1px solid #334155 !important; }
+
+html.dark .audit-entry, html.dark .admin-audit-entry { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .audit-entry:hover, html.dark .admin-audit-entry:hover { background: #334155 !important; border-color: #3b82f6 !important; }
+html.dark .audit-main { color: #f1f5f9 !important; }
+html.dark .audit-icon-wrapper { background: rgba(255,255,255,0.05) !important; }
+
+html.dark .adm-icon-btn { background: #1e293b !important; border-color: #334155 !important; color: #94a3b8 !important; }
+html.dark .adm-icon-btn:hover { background: #334155 !important; color: #fff !important; }
+html.dark .adm-dropdown-item { color: #f1f5f9 !important; }
+html.dark .adm-dropdown-item:hover { background: #3b82f6 !important; color: #fff !important; }
+
+/* Analytics Dropdown Z-Index Fix */
+.page-header { position: relative; z-index: 100 !important; }
+.adm-dropdown-menu { z-index: 9999 !important; }
+.adm-dropdown-wrap { position: relative; z-index: 101 !important; }
+
+/* Profile Dropdown Dark Mode */
+html.dark .profile-dropdown { background: #1e293b !important; border-color: #334155 !important; box-shadow: var(--shadow-premium) !important; }
+html.dark .dropdown-header { border-bottom-color: #334155 !important; }
+html.dark .dropdown-divider { border-top: 1px solid #334155 !important; }
+html.dark .dropdown-item { color: #94a3b8 !important; }
+html.dark .dropdown-item:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
+html.dark .dropdown-item.logout:hover { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; }
+html.dark .profile-name { color: #f1f5f9 !important; }
+html.dark .profile-role { color: #94a3b8 !important; }
+
+/* Fix Top Navbar Z-Index for Dropdowns */
+.top-navbar { z-index: 2000 !important; }
+.profile-dropdown { z-index: 2100 !important; }
+.modal-overlay { z-index: 10000 !important; }
+
+/* Profile Button Hover Dark Mode */
+html.dark .top-navbar-profile:hover { background: rgba(255,255,255,0.05) !important; }
+
+/* Theme Toggle Button Dark Mode */
+html.dark .theme-toggle-btn { background: #1e293b !important; border-color: #334155 !important; color: #94a3b8 !important; }
+html.dark .theme-toggle-btn:hover { background: #334155 !important; color: #fff !important; }
+
+/* Audit Log Dark Mode Fixes */
+html.dark .audit-detail-item, html.dark .admin-audit-detail-col { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .audit-metadata-box { background: #0f172a !important; border-color: #334155 !important; color: #cbd5e1 !important; }
+html.dark .audit-entry:hover { background: rgba(255,255,255,0.02) !important; }
+html.dark .admin-pagination { border-top-color: #334155 !important; }
+html.dark .admin-audit-separator { background: #334155 !important; }
+
+/* Global Modal Fixes */
+html.dark .modal-header { border-bottom-color: #334155 !important; }
+html.dark .modal-title { color: #f1f5f9 !important; }
+html.dark .modal-close { color: #94a3b8 !important; }
+html.dark .modal-close:hover { color: #fff !important; }
+
+/* Fix Native Select Dropdowns in Dark Mode */
+html.dark select, html.dark option { color-scheme: dark !important; background-color: #1e293b !important; color: #f1f5f9 !important; }

@@ -15,8 +15,10 @@ const TopNavbar: React.FC<TopNavbarProps> = ({ searchQuery, onSearchChange, acti
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = async () => {
+    setShowLogoutModal(false);
     await logout();
     navigate('/login');
   };
@@ -77,13 +79,49 @@ const TopNavbar: React.FC<TopNavbarProps> = ({ searchQuery, onSearchChange, acti
                 <Settings size={16} /> Settings
               </button>
               <div className="dropdown-divider" />
-              <button className="dropdown-item logout" onClick={handleLogout}>
+              <button className="dropdown-item logout" onClick={() => {
+                setShowDropdown(false);
+                setShowLogoutModal(true);
+              }}>
                 <LogOut size={16} /> Sign Out
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="modal-overlay animate-fade-in" style={{ zIndex: 10000 }}>
+          <div className="premium-card modal animate-scale-in" style={{ maxWidth: '400px', padding: '2.5rem', textAlign: 'center' }}>
+            <div className="logout-icon-circle" style={{ 
+              width: '64px', 
+              height: '64px', 
+              borderRadius: '50%', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              color: '#ef4444', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              margin: '0 auto 1.5rem' 
+            }}>
+              <LogOut size={32} />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Confirm Sign Out</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              Are you sure you want to log out? Any unsaved changes may be lost.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn btn-secondary" onClick={() => setShowLogoutModal(false)} style={{ flex: 1 }}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={handleLogout} style={{ flex: 1, background: '#ef4444' }}>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

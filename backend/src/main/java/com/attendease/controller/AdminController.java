@@ -68,33 +68,25 @@ public class AdminController {
 
     @GetMapping("/analytics/users")
     public ResponseEntity<ApiResponse<List<AnalyticsDataDto>>> getUserAnalytics(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.OffsetDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.OffsetDateTime endDate) {
         
-        if (startDate == null) {
-            startDate = LocalDateTime.now().minusDays(30);
-        }
-        if (endDate == null) {
-            endDate = LocalDateTime.now();
-        }
+        LocalDateTime start = startDate != null ? startDate.toLocalDateTime() : LocalDateTime.now().minusDays(30);
+        LocalDateTime end = endDate != null ? endDate.toLocalDateTime() : LocalDateTime.now();
         
-        List<AnalyticsDataDto> data = analyticsService.getUserGrowthData(startDate, endDate);
+        List<AnalyticsDataDto> data = analyticsService.getUserGrowthData(start, end);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/analytics/logins")
     public ResponseEntity<ApiResponse<List<AnalyticsDataDto>>> getLoginAnalytics(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.OffsetDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.OffsetDateTime endDate) {
         
-        if (startDate == null) {
-            startDate = LocalDateTime.now().minusDays(7);
-        }
-        if (endDate == null) {
-            endDate = LocalDateTime.now();
-        }
+        LocalDateTime start = startDate != null ? startDate.toLocalDateTime() : LocalDateTime.now().minusDays(7);
+        LocalDateTime end = endDate != null ? endDate.toLocalDateTime() : LocalDateTime.now();
         
-        List<AnalyticsDataDto> data = analyticsService.getLoginActivityData(startDate, endDate);
+        List<AnalyticsDataDto> data = analyticsService.getLoginActivityData(start, end);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 

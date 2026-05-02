@@ -531,9 +531,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Profile Edit Modal */}
       {showProfile && (
         <div className="modal-overlay" onClick={() => setShowProfile(false)}>
-          <div className="modal-window-responsive animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <div className="modal-header" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9' }}>
-              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Edit Profile</h3>
+          <div className="premium-card modal animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-glass)' }}>
+              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>Edit Profile</h3>
               <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowProfile(false)}><X size={20} /></button>
             </div>
 
@@ -545,7 +545,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   avatarUrl={user?.avatar} 
                   size={80} 
                   className="shadow-md"
-                  style={{ marginBottom: '1rem', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  style={{ marginBottom: '1rem', border: '3px solid var(--bg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                 />
 
                 {(role === 'student' || role === 'teacher') && (
@@ -619,7 +619,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   </div>
                   <div className="form-group">
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Email Address</label>
-                    <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6, borderRadius: 12, background: '#f8fafc' }} />
+                    <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6, borderRadius: 12, background: 'var(--code-bg)' }} />
                   </div>
                   <div className="form-group">
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>Department</label>
@@ -647,7 +647,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               )}
             </div>
 
-            <div className="modal-footer" style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+            <div className="modal-footer" style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid var(--border-glass)', background: 'var(--bg-secondary)', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setShowProfile(false)} style={{ width: 'auto', borderRadius: 12, fontWeight: 700 }}>Cancel</button>
               <button 
                 type="submit" 

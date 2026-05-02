@@ -154,7 +154,7 @@ const AdminUsers: React.FC = () => {
 
       {/* Role Filter Tabs */}
       <div className="admin-filter-bar animate-fade-in" style={{ animationDelay: '0.1s', border: 'none', background: 'transparent' }}>
-        <div className="admin-filter-tabs" style={{ background: 'white', padding: '0.35rem', borderRadius: '35px', boxShadow: 'var(--shadow-premium)' }}>
+        <div className="admin-filter-tabs" style={{ padding: '0.35rem', borderRadius: '35px', boxShadow: 'var(--shadow-premium)' }}>
           {[
             { key: '', label: 'All Users', count: roleStats.all },
             { key: 'admin', label: 'Admins', count: roleStats.admin },
@@ -181,7 +181,7 @@ const AdminUsers: React.FC = () => {
             <option value="active">Active Only</option>
             <option value="suspended">Suspended</option>
           </select>
-          <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ height: '42px', borderRadius: '12px', background: 'white', border: 'none', boxShadow: 'var(--shadow-premium)', minWidth: '300px' }}>
+          <div className="admin-search-box focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ height: '42px', borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-premium)', minWidth: '300px' }}>
             <span className="admin-search-icon"><Search size={18} /></span>
             <input
               type="text"
@@ -224,7 +224,7 @@ const AdminUsers: React.FC = () => {
                   </div>
                 </td></tr>
               ) : filteredUsers.map(u => (
-                <tr key={u.id} className="hover:bg-slate-50 transition-all duration-200" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={u.id} className="hover:bg-slate-50 transition-all duration-200" style={{ borderBottom: '1px solid var(--border-glass)' }}>
                   <td style={{ paddingLeft: '2rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div className="admin-table-avatar shadow-sm" style={{
@@ -266,10 +266,10 @@ const AdminUsers: React.FC = () => {
                   </td>
                   <td style={{ paddingRight: '2rem' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      <button className="admin-action-btn edit" onClick={() => openEdit(u)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb' }}>
+                      <button className="admin-action-btn edit" onClick={() => openEdit(u)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--bg-secondary)', color: '#2563eb' }}>
                         <Edit2 size={16} />
                       </button>
-                      <button className="admin-action-btn delete" onClick={() => setShowDeleteConfirm(u.id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef2f2', color: '#ef4444' }}>
+                      <button className="admin-action-btn delete" onClick={() => setShowDeleteConfirm(u.id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -287,7 +287,7 @@ const AdminUsers: React.FC = () => {
       {/* Create User Modal */}
       {showCreateModal && (
         <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowCreateModal(false)}>
-          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', padding: '2rem' }}>
+          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
             <div className="modal-header">
               <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Onboard Personnel</h3>
               <button className="modal-close" onClick={() => setShowCreateModal(false)}>
@@ -298,25 +298,25 @@ const AdminUsers: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>First Name</label>
-                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.firstName} onChange={e => setCreateForm({ ...createForm, firstName: e.target.value })} required />
+                  <input className="form-input" style={{ padding: '0.75rem' }} value={createForm.firstName} onChange={e => setCreateForm({ ...createForm, firstName: e.target.value })} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>Last Name</label>
-                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.lastName} onChange={e => setCreateForm({ ...createForm, lastName: e.target.value })} required />
+                  <input className="form-input" style={{ padding: '0.75rem' }} value={createForm.lastName} onChange={e => setCreateForm({ ...createForm, lastName: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 700 }}>Email Address</label>
-                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="email" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 700 }}>Access Password</label>
-                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="password" value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} required placeholder="Min 6 characters" />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <input className="form-input" style={{ padding: '0.75rem' }} type="email" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} required />
+                </div>
                 <div className="form-group">
-                  <label className="form-label" style={{ fontWeight: 700 }}>System Role</label>
-                  <select className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Access Password</label>
+                  <input className="form-input" style={{ padding: '0.75rem' }} type="password" value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} required placeholder="Min 6 characters" />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700 }}>System Role</label>
+                    <select className="form-input" style={{ padding: '0.75rem' }} value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
                     <option value="admin">Administrator</option>
@@ -324,7 +324,7 @@ const AdminUsers: React.FC = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>Department</label>
-                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={createForm.department} onChange={e => setCreateForm({ ...createForm, department: e.target.value })} placeholder="e.g. CS, Physics" />
+                  <input className="form-input" style={{ padding: '0.75rem' }} value={createForm.department} onChange={e => setCreateForm({ ...createForm, department: e.target.value })} placeholder="e.g. CS, Physics" />
                 </div>
               </div>
               <div className="modal-actions" style={{ marginTop: '2rem' }}>
@@ -341,14 +341,14 @@ const AdminUsers: React.FC = () => {
       {/* Edit User Modal */}
       {showEditModal && editingUser && (
         <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowEditModal(false)}>
-          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', padding: '2rem' }}>
+          <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
             <div className="modal-header">
               <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Profile Configuration</h3>
               <button className="modal-close" onClick={() => setShowEditModal(false)}>
                 <X size={24} />
               </button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0', padding: '1.25rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0', padding: '1.25rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-glass)' }}>
               <div className="admin-table-avatar shadow-sm" style={{
                 background: editingUser.role === 'teacher' ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' :
                   editingUser.role === 'admin' ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' :
@@ -366,21 +366,21 @@ const AdminUsers: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>First Name</label>
-                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} required />
+                  <input className="form-input" style={{ padding: '0.75rem' }} value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>Last Name</label>
-                  <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} required />
+                  <input className="form-input" style={{ padding: '0.75rem' }} value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} required />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 700 }}>Email Address</label>
-                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} required />
+                <input className="form-input" style={{ padding: '0.75rem' }} type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} required />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>System Role</label>
-                  <select className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
+                  <select className="form-input" style={{ padding: '0.75rem' }} value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })}>
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
                     <option value="admin">Administrator</option>
@@ -388,7 +388,7 @@ const AdminUsers: React.FC = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700 }}>Activity Status</label>
-                  <select className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
+                  <select className="form-input" style={{ padding: '0.75rem' }} value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })}>
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
                   </select>
@@ -396,11 +396,11 @@ const AdminUsers: React.FC = () => {
               </div>
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 700 }}>Change Department</label>
-                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} />
+                <input className="form-input" style={{ padding: '0.75rem' }} value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 700 }}>Reset Password <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(Optional)</span></label>
-                <input className="form-input" style={{ background: '#f8fafc', padding: '0.75rem' }} type="password" value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="New password..." />
+                <input className="form-input" style={{ padding: '0.75rem' }} type="password" value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} placeholder="New password..." />
               </div>
               <div className="modal-actions" style={{ marginTop: '2rem' }}>
                 <button type="button" className="btn btn-secondary" style={{ width: 'auto', background: 'transparent', border: 'none' }} onClick={() => setShowEditModal(false)}>Cancel</button>
@@ -425,7 +425,7 @@ const AdminUsers: React.FC = () => {
               }}>
                 <Trash2 size={36} />
               </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: '#0f172a' }}>Delete Account?</h3>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Delete Account?</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
                 This is a destructive action. All associated academic records and system logs for this user will be <strong>permanently purged</strong>.
               </p>

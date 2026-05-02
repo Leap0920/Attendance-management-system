@@ -109,8 +109,8 @@ const AuditLog: React.FC = () => {
       </div>
 
       <div className="premium-card animate-fade-in" style={{ animationDelay: '0.1s', padding: '1.5rem' }}>
-        <form onSubmit={handleSearch} className="admin-search-bar" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-          <div className="admin-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ borderRadius: '12px', background: 'white', border: 'none' }}>
+        <form onSubmit={handleSearch} className="admin-search-bar" style={{ marginBottom: '2rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '16px', border: '1px solid var(--border-glass)' }}>
+          <div className="admin-search-wrapper focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm" style={{ borderRadius: '12px', border: 'none' }}>
             <span className="admin-search-icon"><Search size={18} /></span>
             <input 
               className="admin-search-input" 
@@ -119,7 +119,7 @@ const AuditLog: React.FC = () => {
               onChange={e => setSearch(e.target.value)}
               style={{ fontWeight: 500 }}
             />
-            {search && <button type="button" className="admin-search-clear hover:bg-gray-100 transition-colors" onClick={() => { setSearch(''); setPage(0); loadLogs(0, ''); }}><X size={16} /></button>}
+            {search && <button type="button" className="admin-search-clear hover:bg-slate-700 transition-colors" onClick={() => { setSearch(''); setPage(0); loadLogs(0, ''); }}><X size={16} /></button>}
           </div>
           <button type="submit" className="btn btn-primary shadow-lg hover:shadow-xl transition-all active:scale-95" style={{ width: 'auto', padding: '0.75rem 1.75rem', borderRadius: '12px' }} disabled={loading}>
             <Activity size={18} /> Execute Search
@@ -144,18 +144,18 @@ const AuditLog: React.FC = () => {
                   className={`audit-entry ${isExpanded ? 'expanded' : ''} animate-slide-up`} 
                   style={{ 
                     animationDelay: `${i * 0.05}s`, 
-                    borderBottom: '1px solid #f1f5f9',
+                    borderBottom: '1px solid var(--border-glass)',
                     opacity: 0 // Will be set to 1 by animation
                   }}
                 >
-                  <div className="audit-main hover:bg-slate-50 transition-colors" style={{ padding: '1.25rem 1rem', cursor: 'pointer' }} onClick={() => setExpandedId(isExpanded ? null : log.id)}>
+                  <div className="audit-main hover:bg-slate-800/50 transition-colors" style={{ padding: '1.25rem 1rem', cursor: 'pointer', background: 'transparent' }} onClick={() => setExpandedId(isExpanded ? null : log.id)}>
                     <div className="audit-icon-wrapper shadow-sm" style={{ background: `${info.color}15`, color: info.color, width: '40px', height: '40px', borderRadius: '12px' }}>
                       {info.icon}
                     </div>
                     <div className="audit-content">
                       <div className="audit-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span className="audit-action" style={{ color: info.color, fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
-                        <span className="admin-audit-separator" style={{ background: '#e2e8f0' }}></span>
+                        <span className="admin-audit-separator" style={{ background: 'var(--border-glass)' }}></span>
                         <span className="audit-user" style={{ fontWeight: 700, fontSize: '0.95rem' }}>{log.userEmail || 'System Process'}</span>
                       </div>
                       <div className="audit-secondary" style={{ marginTop: '0.25rem' }}>
@@ -169,8 +169,8 @@ const AuditLog: React.FC = () => {
                             second: '2-digit'
                           }) : 'Date Unknown'}
                         </span>
-                        <span className="admin-audit-separator" style={{ background: '#e2e8f0' }}></span>
-                        <span className="audit-ip" style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>📍 {log.ipAddress}</span>
+                        <span className="admin-audit-separator" style={{ background: 'var(--border-glass)' }}></span>
+                        <span className="audit-ip" style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.8rem' }}>📍 {log.ipAddress}</span>
                       </div>
                     </div>
                     <div className={`audit-chevron transition-transform duration-300 ${isExpanded ? 'rotate-180 text-blue-600' : 'text-gray-300'}`}>
@@ -178,7 +178,7 @@ const AuditLog: React.FC = () => {
                     </div>
                   </div>
                   {isExpanded && (
-                    <div className="audit-details animate-fade-in" style={{ background: '#f8fafc', margin: '0 1rem 1.25rem', borderRadius: '14px', border: '1px solid #f1f5f9', padding: '1.5rem' }}>
+                    <div className="audit-details animate-fade-in" style={{ background: 'var(--bg-primary)', margin: '0 1rem 1.25rem', borderRadius: '14px', border: '1px solid var(--border-glass)', padding: '1.5rem' }}>
                       <div className="audit-details-grid" style={{ gap: '1.5rem' }}>
                         <div className="audit-detail-item">
                           <label style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Actor Identity</label>
@@ -189,7 +189,7 @@ const AuditLog: React.FC = () => {
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, lineHeight: 1.5 }}>{log.userAgent}</div>
                         </div>
                         <div className="audit-detail-item" style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Event Payload / Details</label>
+                          <label style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Event Payload / Details</label>
                           <pre className="audit-metadata-box" style={{ background: '#0f172a', color: '#94a3b8', padding: '1rem', borderRadius: '10px', fontSize: '0.8rem', overflowX: 'auto', border: '1px solid #1e293b' }}>
                             {JSON.stringify(JSON.parse(log.details || '{}'), null, 2)}
                           </pre>
@@ -208,7 +208,7 @@ const AuditLog: React.FC = () => {
             className="btn btn-secondary shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-30" 
             disabled={page === 0 || loading} 
             onClick={() => setPage(p => p - 1)}
-            style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '10px', background: 'white' }}
+            style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
           >
             <ArrowLeft size={16} /> Previous
           </button>
@@ -219,7 +219,7 @@ const AuditLog: React.FC = () => {
             className="btn btn-secondary shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-30" 
             disabled={page >= totalPages - 1 || loading} 
             onClick={() => setPage(p => p + 1)}
-            style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '10px', background: 'white' }}
+            style={{ width: 'auto', padding: '0.5rem 1rem', borderRadius: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
           >
             Next <ArrowRight size={16} />
           </button>

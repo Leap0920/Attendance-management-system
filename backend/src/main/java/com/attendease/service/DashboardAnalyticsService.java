@@ -146,7 +146,9 @@ public class DashboardAnalyticsService {
         LocalDateTime current = startDate;
         while (current.isBefore(endDate)) {
             LocalDateTime next = getNextInterval(current, granularity);
-            long count = userRepository.countByCreatedAtBefore(current);
+            // If this is the last interval, use endDate as the ceiling
+            LocalDateTime ceiling = next.isAfter(endDate) ? endDate : next;
+            long count = userRepository.countByCreatedAtBefore(ceiling);
             
             AnalyticsDataDto point = new AnalyticsDataDto();
             point.setMetricName("user_growth");
@@ -168,7 +170,9 @@ public class DashboardAnalyticsService {
         LocalDateTime current = startDate;
         while (current.isBefore(endDate)) {
             LocalDateTime next = getNextInterval(current, granularity);
-            long count = loginAttemptRepository.countBySuccessAndAttemptedAtBetween(true, current, next);
+            // If this is the last interval, cap it at endDate
+            LocalDateTime ceiling = next.isAfter(endDate) ? endDate : next;
+            long count = loginAttemptRepository.countBySuccessAndAttemptedAtBetween(true, current, ceiling);
             
             AnalyticsDataDto point = new AnalyticsDataDto();
             point.setMetricName("login_activity");
