@@ -195,18 +195,18 @@ const StudentDashboard: React.FC = () => {
 
   return (
     <DashboardLayout role="student" actions={studentActions}>
-      <div className="sd-welcome-header">
-        <h1 className="sd-header-title">Welcome back, {user?.firstName || 'Student'}!</h1>
-        <p className="sd-header-subtitle">Here's your learning overview.</p>
+      <div className="sd-welcome-header" style={{ marginBottom: '1.5rem' }}>
+        <h1 className="sd-header-title" style={{ color: 'var(--text-primary)' }}>Welcome back, {user?.firstName || 'Student'}!</h1>
+        <p className="sd-header-subtitle" style={{ color: 'var(--text-secondary)' }}>Here's your learning overview.</p>
       </div>
       {loading ? <div className="loading-screen"><div className="spinner"></div></div> : data && (
         <>
           {/* ── Active Sessions — Submit Attendance ── */}
           {data.activeSessions?.filter((s: any) => !s.alreadySubmitted).length > 0 && (
-            <div className="sd-active-session-banner">
+            <div className="sd-active-session-banner" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-blue)' }}>
               <div className="sd-active-dot-row">
                 <div className="live-dot" />
-                <h3 className="sd-active-title">Active Attendance Session</h3>
+                <h3 className="sd-active-title" style={{ color: 'var(--text-primary)' }}>Active Attendance Session</h3>
               </div>
 
               {data.activeSessions.filter((s: any) => !s.alreadySubmitted).map((s: any) => (
@@ -290,7 +290,7 @@ const StudentDashboard: React.FC = () => {
 
             {/* Today's Schedule panel */}
             <div className="sd-schedule-panel">
-              <h3 className="sd-panel-title">Today's Schedule</h3>
+              <h3 className="sd-panel-title" style={{ color: 'var(--text-primary)' }}>Today's Schedule</h3>
               {todaysSchedule.length > 0 ? todaysSchedule.map((item, i) => (
                 <div key={i} className={`sd-schedule-item ${i === 0 ? 'highlight' : ''}`}>
                   <div className="sd-schedule-time">{item.time}</div>
@@ -309,7 +309,7 @@ const StudentDashboard: React.FC = () => {
           <div className="sd-bottom-grid">
             <div className="sd-courses-section">
               <div className="sd-section-header">
-                <h3 className="sd-section-title">My Courses</h3>
+                <h3 className="sd-section-title" style={{ color: 'var(--text-primary)' }}>My Courses</h3>
                 <div className="sd-section-actions">
                   <button className="sd-link-btn" onClick={() => navigate('/student/courses')}>Open All</button>
                   <button className="sd-link-btn" onClick={() => load()}>Refresh</button>
@@ -364,9 +364,8 @@ const StudentDashboard: React.FC = () => {
                     </div>
 
                     <div className="sd-course-card-bottom" style={{ 
-                      background: 'rgba(255, 255, 255, 0.8)', 
                       backdropFilter: 'blur(10px)',
-                      borderTop: '1px solid rgba(0, 0, 0, 0.03)'
+                      borderTop: '1px solid var(--border-glass)'
                     }}>
                       <div className="sd-attendance-row">
                         <span className="sd-attendance-label" style={{ fontWeight: 700, fontSize: '0.75rem', opacity: 0.7 }}>ATTENDANCE</span>
@@ -390,7 +389,7 @@ const StudentDashboard: React.FC = () => {
                           }}
                         />
                       </div>
-                      <div className="sd-course-meta-row" style={{ marginTop: '1rem', fontSize: '0.7rem', fontWeight: 700, color: '#64748b' }}>
+                      <div className="sd-course-meta-row" style={{ marginTop: '1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                         {cd.course.teacher && <span>👨‍🏫 {cd.course.teacher.firstName}</span>}
                         {cd.course.schedule && <span>🕒 {cd.course.schedule}</span>}
                       </div>
@@ -414,7 +413,7 @@ const StudentDashboard: React.FC = () => {
 
             {/* Recent Activity panel */}
             <div className="sd-activity-panel">
-              <h3 className="sd-panel-title">Recent Activity</h3>
+              <h3 className="sd-panel-title" style={{ color: 'var(--text-primary)' }}>Recent Activity</h3>
               {recentActivity.length > 0 ? recentActivity.map((act, i) => (
                 <div key={i} className="sd-activity-item">
                   <div className={`sd-activity-icon ${act.icon}`}>

@@ -417,7 +417,7 @@ const StudentMessages: React.FC = () => {
               <div className="messages-search-wrap">
                 <Search size={16} />
                 <input
-                  className="messages-search"
+                  className="messages-search messages-search-input"
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -629,7 +629,7 @@ const StudentMessages: React.FC = () => {
                   })}
 
                   {messages.length === 0 && (
-                    <div className="messages-empty">
+                    <div className="messages-empty messages-empty-placeholder">
                       <MessageSquare size={56} />
                       <h3>Start the conversation</h3>
                       <p>Say hello and keep your class community active.</p>
@@ -670,7 +670,7 @@ const StudentMessages: React.FC = () => {
                 </form>
               </>
             ) : (
-              <div className="messages-empty">
+              <div className="messages-empty messages-empty-placeholder">
                 <MessageSquare size={64} />
                 <h3>Select a conversation</h3>
                 <p>Choose a course group or a direct message to start chatting.</p>

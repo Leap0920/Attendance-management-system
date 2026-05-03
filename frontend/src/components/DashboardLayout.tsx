@@ -6,13 +6,15 @@ import {
   Shield, 
   X, 
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { studentApi, teacherApi } from '../api';
 import Modal from './Modal';
 import Avatar from './Avatar';
 import TopNavbar from './TopNavbar';
+import { useTheme } from '../contexts/ThemeContext';
 import { AnimatedThemeToggle } from './AnimatedThemeToggle';
 
 interface DashboardLayoutProps {
@@ -98,6 +100,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   actions
 }) => {
   const { user, logout, setUser, refreshUser } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogout, setShowLogout] = useState(false);
@@ -158,12 +161,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         confirmLabel: e.detail.confirmLabel,
       });
     };
-
+    const handleLogoutTrigger = () => setShowLogout(true);
     window.addEventListener('ff-alert', handleAlert);
     window.addEventListener('ff-confirm', handleConfirm);
+    window.addEventListener('ff-logout', handleLogoutTrigger);
     return () => {
       window.removeEventListener('ff-alert', handleAlert);
       window.removeEventListener('ff-confirm', handleConfirm);
+      window.removeEventListener('ff-logout', handleLogoutTrigger);
     };
   }, []);
 
@@ -441,7 +446,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           width: 'calc(100% + 2rem)'
         }}>
           <img 
-            src="/logo.png" 
+            src={theme === 'dark' ? "/WHITEMODE.png" : "/logo.png"} 
             alt="System Logo" 
             style={{ 
               width: '140px', 
@@ -486,6 +491,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           onSearchChange={onSearchChange} 
           actions={actions} 
           onProfileClick={() => setShowProfile(true)}
+          onLogoutClick={() => setShowLogout(true)}
         />
         <main className="main-content">{children}</main>
       </div>
@@ -493,35 +499,43 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Logout Confirmation Modal */}
       {showLogout && (
-        <div className="modal-overlay" onClick={() => setShowLogout(false)}>
-          <div className="modal shadow-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
-            <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: '50%', background: '#fef2f2',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '1rem', fontSize: '1.25rem', color: '#ef4444',
-              }}>
-                <AlertCircle size={24} />
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>Confirm Logout</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                Are you sure you want to log out of your account?
-              </p>
+        <div className="modal-overlay animate-fade-in" style={{ 
+          zIndex: 20000, 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          background: 'rgba(15, 23, 42, 0.4)', 
+          backdropFilter: 'blur(8px)' 
+        }} onClick={() => setShowLogout(false)}>
+          <div className="premium-card modal animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', padding: '2.5rem', textAlign: 'center' }}>
+            <div className="logout-icon-circle" style={{ 
+              width: '64px', 
+              height: '64px', 
+              borderRadius: '50%', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              color: '#ef4444', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              margin: '0 auto 1.5rem' 
+            }}>
+              <LogOut size={32} />
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button
-                className="btn btn-secondary transition-colors"
-                style={{ flex: 1 }}
-                onClick={() => setShowLogout(false)}
-              >
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Confirm Sign Out</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              Are you sure you want to log out? Any unsaved changes may be lost.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn btn-secondary" onClick={() => setShowLogout(false)} style={{ flex: 1, borderRadius: '12px', fontWeight: 700 }}>
                 Cancel
               </button>
-              <button
-                className="btn btn-danger transition-colors shadow-sm hover:shadow-md"
-                style={{ flex: 1 }}
-                onClick={handleLogout}
-              >
-                Logout
+              <button className="btn btn-primary" onClick={handleLogout} style={{ flex: 1, borderRadius: '12px', fontWeight: 800, background: '#ef4444', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }}>
+                Sign Out
               </button>
             </div>
           </div>
@@ -530,7 +544,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Profile Edit Modal */}
       {showProfile && (
-        <div className="modal-overlay" onClick={() => setShowProfile(false)}>
+        <div className="modal-overlay" style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          zIndex: 10000 
+        }} onClick={() => setShowProfile(false)}>
           <div className="premium-card modal animate-scale-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden' }}>
             <div className="modal-header" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-glass)' }}>
               <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>Edit Profile</h3>

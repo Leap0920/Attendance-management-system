@@ -524,14 +524,14 @@ const TeacherDashboard: React.FC = () => {
             <div className="td-sessions-panel td-sessions-recent">
               <div className="td-sessions-header">
                 <h3>Recently Closed</h3>
-                <button className="td-more-btn transition-colors hover:bg-gray-100" title="More">
+                <button className="td-more-btn transition-colors theme-hover-secondary" title="More">
                   <MoreHorizontal size={18} />
                 </button>
               </div>
               {data.recentSessions?.length > 0 ? data.recentSessions.slice(0, 4).map((s: any, i: number) => (
                 <div
                   key={i}
-                  className="td-recent-item group hover:bg-blue-50 transition-colors"
+                  className="td-recent-item group theme-hover-secondary transition-colors"
                   onClick={() => openReopenModal(s.session.id, s.session.sessionTitle || 'Regular Session')}
                   title="Click to reopen"
                 >
@@ -549,7 +549,7 @@ const TeacherDashboard: React.FC = () => {
                 </div>
               )}
               {data.recentSessions?.length > 0 && (
-                <button className="td-full-history-btn hover:bg-gray-100 transition-colors" onClick={() => navigate('/teacher/attendance')}>
+                <button className="td-full-history-btn theme-hover-secondary transition-colors" onClick={() => navigate('/teacher/attendance')}>
                   Full Session History
                 </button>
               )}
@@ -561,10 +561,10 @@ const TeacherDashboard: React.FC = () => {
             <div className="td-courses-header">
               <h3>My Courses</h3>
               <div className="td-courses-nav">
-                <button className="td-nav-arrow hover:bg-blue-100 transition-colors" onClick={() => scrollCourses(-1)} aria-label="Scroll left">
+                <button className="td-nav-arrow theme-hover-secondary transition-colors" onClick={() => scrollCourses(-1)} aria-label="Scroll left">
                   <ArrowLeft size={16} strokeWidth={2.5} />
                 </button>
-                <button className="td-nav-arrow hover:bg-blue-100 transition-colors" onClick={() => scrollCourses(1)} aria-label="Scroll right">
+                <button className="td-nav-arrow theme-hover-secondary transition-colors" onClick={() => scrollCourses(1)} aria-label="Scroll right">
                   <ArrowRight size={16} strokeWidth={2.5} />
                 </button>
               </div>
@@ -600,15 +600,12 @@ const TeacherDashboard: React.FC = () => {
 
 
                     </div>
-                    <div className="td-course-body" style={{
-                      background: 'rgba(255, 255, 255, 0.8)',
-                      backdropFilter: 'blur(10px)'
-                    }}>
-                      <h4 style={{ fontWeight: 800, color: '#0f172a' }}>{c.courseName}</h4>
-                      <p className="td-course-desc" style={{ fontWeight: 600, color: '#64748b' }}>
+                    <div className="td-course-body">
+                      <h4>{c.courseName}</h4>
+                      <p className="td-course-desc">
                         {c.courseCode} · {c.section || 'General'}
                       </p>
-                      <div className="td-course-meta" style={{ marginTop: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem' }}>
+                      <div className="td-course-meta">
                         <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>
                           <Calendar size={12} className="inline mr-1 text-blue-500" />
                           {c.schedule?.split(' ')[0] || 'No schedule'}
@@ -635,40 +632,40 @@ const TeacherDashboard: React.FC = () => {
       {/* ── Start Attendance Modal ───────────────────────────── */}
       {showAttendance && (
         <div className="modal-overlay" onClick={() => setShowAttendance(false)}>
-          <div className="modal shadow-lg" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Start Attendance Session</h3>
-              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowAttendance(false)}><X size={20} /></button>
+          <div className="theme-card" style={{ width: '100%', maxWidth: '500px', borderRadius: '24px', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)' }}>
+              <h3 className="modal-title" style={{ margin: 0, fontWeight: 900, color: 'var(--text-primary)' }}>Start Attendance Session</h3>
+              <button className="theme-btn-secondary" style={{ border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowAttendance(false)}><X size={20} /></button>
             </div>
-            <form onSubmit={startSession}>
+            <form onSubmit={startSession} style={{ padding: '1.5rem' }}>
               <div className="form-group">
-                <label className="form-label">Course</label>
-                <select className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={attendForm.courseId} onChange={e => setAttendForm({ ...attendForm, courseId: e.target.value })} required>
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Course</label>
+                <select className="form-input" value={attendForm.courseId} onChange={e => setAttendForm({ ...attendForm, courseId: e.target.value })} required>
                   <option value="">Select course...</option>
                   {data?.courses?.map((c: any) => <option key={c.id} value={c.id}>{c.courseCode} {c.section ? `- ${c.section}` : ''}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Session Title (optional)</label>
-                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={attendForm.sessionTitle} onChange={e => setAttendForm({ ...attendForm, sessionTitle: e.target.value })} placeholder="e.g. Week 5" />
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Session Title (optional)</label>
+                <input className="form-input" value={attendForm.sessionTitle} onChange={e => setAttendForm({ ...attendForm, sessionTitle: e.target.value })} placeholder="e.g. Week 5" />
               </div>
               <div className="form-group">
-                <label className="form-label">Duration (minutes)</label>
-                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" max="120" value={attendForm.duration} onChange={e => setAttendForm({ ...attendForm, duration: e.target.value })} />
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Duration (minutes)</label>
+                <input className="form-input" type="number" min="1" max="120" value={attendForm.duration} onChange={e => setAttendForm({ ...attendForm, duration: e.target.value })} />
               </div>
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', marginBottom: attendForm.allowLate ? '0.5rem' : '1rem' }}>
                 <input type="checkbox" id="allowLate" checked={attendForm.allowLate} onChange={e => setAttendForm({ ...attendForm, allowLate: e.target.checked })} style={{ width: '1rem', height: '1rem', cursor: 'pointer' }} />
-                <label htmlFor="allowLate" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>Enable Late System</label>
+                <label htmlFor="allowLate" className="form-label" style={{ marginBottom: 0, cursor: 'pointer', color: 'var(--text-primary)' }}>Enable Late System</label>
               </div>
               {attendForm.allowLate && (
                 <div className="form-group">
-                  <label className="form-label">Mark as Late after (minutes)</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="number" min="1" value={attendForm.lateMinutes} onChange={e => setAttendForm({ ...attendForm, lateMinutes: e.target.value })} />
+                  <label className="form-label" style={{ color: 'var(--text-muted)' }}>Mark as Late after (minutes)</label>
+                  <input className="form-input" type="number" min="1" value={attendForm.lateMinutes} onChange={e => setAttendForm({ ...attendForm, lateMinutes: e.target.value })} />
                 </div>
               )}
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowAttendance(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Start Session</button>
+              <div className="modal-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAttendance(false)} style={{ width: 'auto' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Start Session</button>
               </div>
             </form>
           </div>
@@ -678,28 +675,28 @@ const TeacherDashboard: React.FC = () => {
       {/* ── Create Course Modal ──────────────────────────────── */}
       {showCreateCourse && (
         <div className="modal-overlay" onClick={() => setShowCreateCourse(false)}>
-          <div className="modal shadow-lg" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Create New Course</h3>
-              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowCreateCourse(false)}><X size={20} /></button>
+          <div className="theme-card" style={{ width: '100%', maxWidth: '600px', borderRadius: '24px', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)' }}>
+              <h3 className="modal-title" style={{ margin: 0, fontWeight: 900, color: 'var(--text-primary)' }}>Create New Course</h3>
+              <button className="theme-btn-secondary" style={{ border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowCreateCourse(false)}><X size={20} /></button>
             </div>
-            <form onSubmit={createCourse}>
+            <form onSubmit={createCourse} style={{ padding: '1.5rem', maxHeight: '80vh', overflowY: 'auto' }} className="modal-scroll-area">
               <div className="form-group">
-                <label className="form-label">Course Name</label>
-                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.courseName} onChange={e => setCourseForm({ ...courseForm, courseName: e.target.value })} required placeholder="Introduction to Programming" />
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Course Name</label>
+                <input className="form-input" value={courseForm.courseName} onChange={e => setCourseForm({ ...courseForm, courseName: e.target.value })} required placeholder="Introduction to Programming" />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Course Code</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.courseCode} onChange={e => setCourseForm({ ...courseForm, courseCode: e.target.value })} required placeholder="CS101" />
+                  <label className="form-label" style={{ color: 'var(--text-muted)' }}>Course Code</label>
+                  <input className="form-input" value={courseForm.courseCode} onChange={e => setCourseForm({ ...courseForm, courseCode: e.target.value })} required placeholder="CS101" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Section</label>
-                  <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.section} onChange={e => setCourseForm({ ...courseForm, section: e.target.value })} placeholder="Section A" />
+                  <label className="form-label" style={{ color: 'var(--text-muted)' }}>Section</label>
+                  <input className="form-input" value={courseForm.section} onChange={e => setCourseForm({ ...courseForm, section: e.target.value })} placeholder="Section A" />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Schedule</label>
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Schedule</label>
                 <div className="day-picker" style={{ marginBottom: '0.75rem' }}>
                   {DAYS.map(d => (
                     <div key={d.key} className={`day-chip ${selectedDays.includes(d.key) ? 'selected' : ''}`} onClick={() => toggleDay(d.key)}>{d.label}</div>
@@ -707,26 +704,26 @@ const TeacherDashboard: React.FC = () => {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <div>
-                    <label className="form-label" style={{ fontSize: '0.78rem' }}>Start Time</label>
-                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                    <label className="form-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Start Time</label>
+                    <input className="form-input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
                   </div>
                   <div>
-                    <label className="form-label" style={{ fontSize: '0.78rem' }}>End Time</label>
-                    <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                    <label className="form-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>End Time</label>
+                    <input className="form-input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
                   </div>
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Room</label>
-                <input className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={courseForm.room} onChange={e => setCourseForm({ ...courseForm, room: e.target.value })} placeholder="Room 301" />
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Room</label>
+                <input className="form-input" value={courseForm.room} onChange={e => setCourseForm({ ...courseForm, room: e.target.value })} placeholder="Room 301" />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Course Cover</label>
                 <div className="cover-preview" style={getCourseBg(courseForm.coverColor || '#3b82f6', 0)}>
                   <div style={{ zIndex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>{courseForm.courseName || 'Course Name'}</div>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{courseForm.courseCode || 'CODE101'}</div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#fff' }}>{courseForm.courseName || 'Course Name'}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8, color: '#fff' }}>{courseForm.courseCode || 'CODE101'}</div>
                   </div>
                 </div>
 
@@ -782,22 +779,22 @@ const TeacherDashboard: React.FC = () => {
       {/* ── Reopen Session Modal ─────────────────────────────── */}
       {showReopenModal && (
         <div className="modal-overlay" onClick={() => setShowReopenModal(false)}>
-          <div className="modal shadow-lg" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Reopen Session</h3>
-              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowReopenModal(false)}><X size={20} /></button>
+          <div className="theme-card" style={{ width: '100%', maxWidth: '450px', borderRadius: '24px', padding: '2rem' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: '1.5rem', border: 'none', padding: 0, background: 'transparent' }}>
+              <h3 className="modal-title" style={{ margin: 0, fontWeight: 900, color: 'var(--text-primary)' }}>Reopen Session</h3>
+              <button className="theme-btn-secondary" style={{ border: 'none', width: 32, height: 32, borderRadius: '50%', position: 'absolute', top: '1.5rem', right: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowReopenModal(false)}><X size={20} /></button>
             </div>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Reopening: <strong>{targetReopenSession?.title}</strong>.
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Reopening: <strong style={{ color: 'var(--accent-blue)' }}>{targetReopenSession?.title}</strong>.
               <br />This will clear "absent" records, allowing late students to submit.
             </p>
-            <div className="form-group">
-              <label className="form-label">Extended Duration (minutes)</label>
-              <input type="number" className="form-input focus:ring-2 focus:ring-blue-100 transition-all" value={reopenDuration} onChange={e => setReopenDuration(e.target.value)} min="1" max="120" />
+            <div className="form-group" style={{ marginBottom: '2rem' }}>
+              <label className="form-label" style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Extended Duration (minutes)</label>
+              <input type="number" className="form-input" value={reopenDuration} onChange={e => setReopenDuration(e.target.value)} min="1" max="120" />
             </div>
-            <div className="modal-actions">
-              <button className="btn btn-secondary transition-colors" onClick={() => setShowReopenModal(false)}>Cancel</button>
-              <button className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }} onClick={confirmReopen} disabled={reopeningId !== null}>
+            <div className="modal-actions" style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn btn-secondary" onClick={() => setShowReopenModal(false)} style={{ flex: 1 }}>Cancel</button>
+              <button className="btn btn-primary" onClick={confirmReopen} disabled={reopeningId !== null} style={{ flex: 1 }}>
                 {reopeningId !== null ? 'Reopening...' : 'Confirm Reopen'}
               </button>
             </div>
@@ -808,26 +805,27 @@ const TeacherDashboard: React.FC = () => {
       {/* ── QR Code Modal ─────────────────────────────────────── */}
       {showQrModal.show && (
         <div className="modal-overlay" onClick={() => setShowQrModal({ show: false, sessionId: null, code: '' })}>
-          <div className="modal shadow-2xl animate-in fade-in duration-200" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center' }}>
-            <div className="modal-header border-b pb-4">
-              <h3 className="modal-title">Attendance QR Code</h3>
-              <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowQrModal({ show: false, sessionId: null, code: '' })}>
+          <div className="theme-card" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '420px', textAlign: 'center', borderRadius: '24px', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="modal-title" style={{ margin: 0, fontWeight: 900, color: 'var(--text-primary)' }}>Attendance QR Code</h3>
+              <button className="theme-btn-secondary" style={{ border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowQrModal({ show: false, sessionId: null, code: '' })}>
                 <X size={20} />
               </button>
             </div>
-            <div className="mt-6 flex flex-col items-center justify-center p-4">
-              <div style={{ background: 'white', padding: '1rem', borderRadius: '1rem', display: 'inline-block', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+            <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '2rem', display: 'inline-block', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
                 <QRCodeSVG
                   value={`${window.location.origin}/student/dashboard?attendSessionId=${showQrModal.sessionId}&code=${showQrModal.code}`}
-                  size={256}
+                  size={240}
                   level="H"
                   includeMargin={false}
                 />
               </div>
-              <p className="mt-6 text-gray-600 font-medium text-sm">Students can scan this code to mark their attendance automatically.</p>
-              <div className="mt-4 p-3 bg-blue-50 text-blue-800 rounded-xl w-full">
-                <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Manual Code</span>
-                <div className="text-3xl font-mono font-black tracking-[0.3em] mt-1">{showQrModal.code}</div>
+              <p style={{ marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 500 }}>Students can scan this code to mark their attendance automatically.</p>
+              
+              <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(59,130,246,0.1)', borderRadius: '20px', width: '100%' }}>
+                <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.1em', color: 'var(--accent-blue)', opacity: 0.8 }}>Manual Join Code</span>
+                <div style={{ fontSize: '2.5rem', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.2em', marginTop: '0.25rem', color: 'var(--text-primary)' }}>{showQrModal.code}</div>
               </div>
             </div>
           </div>

@@ -405,7 +405,7 @@ const TeacherMessages: React.FC = () => {
               <div className="messages-search-wrap">
                 <Search size={16} />
                 <input
-                  className="messages-search"
+                  className="messages-search messages-search-input"
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -617,10 +617,10 @@ const TeacherMessages: React.FC = () => {
                   })}
 
                   {messages.length === 0 && (
-                    <div className="messages-empty">
+                    <div className="messages-empty messages-empty-placeholder">
                       <MessageSquare size={56} />
                       <h3>Start the conversation</h3>
-                      <p>Send your first message and keep your class connected.</p>
+                      <p>Say hello and keep your class community active.</p>
                     </div>
                   )}
                 </div>
@@ -658,7 +658,7 @@ const TeacherMessages: React.FC = () => {
                 </form>
               </>
             ) : (
-              <div className="messages-empty">
+              <div className="messages-empty messages-empty-placeholder">
                 <MessageSquare size={64} />
                 <h3>Select a conversation</h3>
                 <p>Choose a course group or a direct message to start chatting.</p>
@@ -735,13 +735,13 @@ const TeacherMessages: React.FC = () => {
 
       {showNewDM && (
         <div className="modal-overlay" onClick={() => setShowNewDM(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
-            <div className="modal-header">
-              <h3 className="modal-title">New Message</h3>
-              <button className="modal-close" onClick={() => setShowNewDM(false)}><X size={20} /></button>
+          <div className="theme-card" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '460px', borderRadius: 24, overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="modal-title" style={{ margin: 0, fontWeight: 900, color: 'var(--text-primary)' }}>New Message</h3>
+              <button className="theme-btn-secondary" onClick={() => setShowNewDM(false)} style={{ border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} /></button>
             </div>
 
-            <form onSubmit={sendNewDM}>
+            <form onSubmit={sendNewDM} style={{ padding: '1.5rem' }}>
               <div className="form-group">
                 <label className="form-label">To</label>
                 <select
@@ -771,8 +771,8 @@ const TeacherMessages: React.FC = () => {
                 />
               </div>
 
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowNewDM(false)}>
+              <div className="modal-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowNewDM(false)} style={{ width: 'auto' }}>
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>

@@ -295,7 +295,7 @@ a:hover { color: var(--accent-purple); }
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   background: #fff;
 }
-.form-input::placeholder { color: var(--text-muted); }
+.form-input::placeholder { color: var(--text-muted); opacity: 0.5; }
 select.form-input { cursor: pointer; }
 select.form-input option { background: #fff; color: var(--text-primary); }
 textarea.form-input { resize: vertical; }
@@ -1045,7 +1045,7 @@ textarea.form-input { resize: vertical; }
   font-weight: 800;
   color: #2563eb;
   text-transform: uppercase; letter-spacing: 0.08em;
-  padding: 0.45rem 0.8rem 0.35rem;
+  padding: 0.75rem 0.8rem 0.35rem;
 }
 
 .messages-sidebar-empty {
@@ -1084,8 +1084,8 @@ textarea.form-input { resize: vertical; }
 }
 
 .message-channel.active {
-  background: linear-gradient(135deg, #eff6ff, #f8fafc);
-  box-shadow: inset 0 0 0 1px #2563eb;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
+  box-shadow: inset 0 0 0 2px var(--accent-blue);
 }
 
 .message-channel.active .channel-name {
@@ -3250,6 +3250,9 @@ textarea.form-input { resize: vertical; }
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-glass);
 }
 .td-course-meta span {
   display: flex;
@@ -4095,7 +4098,7 @@ textarea.form-input { resize: vertical; }
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 1.15rem;
-  background: var(--text-primary);
+  background: var(--accent-blue);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
@@ -4990,7 +4993,7 @@ textarea.form-input { resize: vertical; }
   justify-content: center;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-glass);
-  background: white;
+  background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
   transition: var(--transition);
@@ -5105,7 +5108,7 @@ textarea.form-input { resize: vertical; }
 }
 
 .adm-chart-tooltip {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
@@ -5130,7 +5133,7 @@ textarea.form-input { resize: vertical; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.85rem;
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
@@ -5150,7 +5153,7 @@ textarea.form-input { resize: vertical; }
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -5193,7 +5196,7 @@ textarea.form-input { resize: vertical; }
 }
 
 .adm-sec-card {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
@@ -5313,7 +5316,7 @@ textarea.form-input { resize: vertical; }
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-glass);
   font-size: 0.85rem;
-  background: white;
+  background: var(--bg-card);
   outline: none;
 }
 
@@ -5453,7 +5456,7 @@ textarea.form-input { resize: vertical; }
   height: 32px;
   border-radius: 50%;
   border: 1px solid var(--border-glass);
-  background: white;
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5507,7 +5510,7 @@ textarea.form-input { resize: vertical; }
 
 /* System Health Page */
 .adm-health-banner {
-  background: white;
+  background: var(--bg-card);
   border-left: 5px solid;
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
@@ -5551,7 +5554,7 @@ textarea.form-input { resize: vertical; }
 }
 
 .adm-gauge-card {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
@@ -5637,7 +5640,7 @@ textarea.form-input { resize: vertical; }
 }
 
 .adm-metric-pill {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: 30px;
   padding: 0.5rem 1rem;
@@ -5703,7 +5706,7 @@ textarea.form-input { resize: vertical; }
   max-width: 650px !important;
   margin: auto !important;
   border-radius: 1.5rem !important;
-  background: #fff;
+  background: var(--bg-card);
   box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
   overflow: hidden;
 }
@@ -5793,7 +5796,7 @@ textarea.form-input { resize: vertical; }
 }
 
 .search-input:focus {
-  background: #fff;
+  background: var(--bg-card);
   border-color: var(--accent-blue);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
@@ -5857,7 +5860,7 @@ textarea.form-input { resize: vertical; }
   top: calc(100% + 10px);
   right: 0;
   width: 240px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 16px;
   border: 1px solid var(--sidebar-border);
   box-shadow: var(--shadow-xl);
@@ -6117,8 +6120,42 @@ html.dark {
 }
 
 html.dark body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Force Light Mode for Auth Pages */
+html.dark .light-theme-only .form-input,
+html.dark .light-theme-only .form-label,
+html.dark .light-theme-only .login-card,
+html.dark .light-theme-only .register-card,
+.light-theme-only .form-input,
+.light-theme-only .form-label,
+.light-theme-only .login-card,
+.light-theme-only .register-card {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.dark .light-theme-only .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important; color: #fff !important; }
+html.dark .light-theme-only .btn-google-shortcut { background: #ffffff !important; color: #475569 !important; border-color: #e2e8f0 !important; }
+html.dark .light-theme-only .login-hero__title,
+html.dark .light-theme-only .login-hero__lead,
+html.dark .light-theme-only .login-hero__badge {
+  background-color: transparent !important;
+}
+
+html.dark .light-theme-only .login-hero__title-accent { color: #2563eb !important; }
+
+.light-theme-only .form-input::placeholder { color: #94a3b8 !important; }
+.light-theme-only .form-label { color: #64748b !important; }
+
+/* Force light theme focus for auth pages */
+html.dark .light-theme-only .form-input:focus {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #3b82f6 !important;
 }
 
 html.dark .auth-card,
@@ -6179,7 +6216,7 @@ html.dark .stat-icon.red { background: rgba(239, 68, 68, 0.1); }
 html.dark .stat-icon.cyan { background: rgba(6, 182, 212, 0.1); }
 
 html.dark .admin-health-badge { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-html.dark .admin-health-dot { background: #10b981; shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+html.dark .admin-health-dot { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
 html.dark .admin-action-card:hover { background: #1e293b !important; border-color: #3b82f6; }
 html.dark .admin-action-icon { background: #0f172a !important; }
 
@@ -6198,7 +6235,98 @@ html.dark .adm-dropdown-btn {
 }
 
 html.dark .admin-filter-tab { color: #94a3b8; }
+html.dark .admin-filter-tab.active { background: #0f172a; color: #3b82f6; }
+
+/* -- Teacher Dashboard Dark Mode Overrides ------------------- */
+html.dark .td-stat-icon-blue { background: rgba(59, 130, 246, 0.1); }
+html.dark .td-stat-icon-green { background: rgba(16, 185, 129, 0.1); }
+html.dark .td-stat-icon-purple { background: rgba(139, 92, 246, 0.1); }
+html.dark .td-stat-icon-orange { background: rgba(249, 115, 22, 0.1); }
+
+html.dark .td-active-session-card {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+html.dark .td-recent-item:hover {
+  background: #0f172a;
+}
+
+html.dark .td-recent-icon {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+html.dark .day-chip {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+html.dark .day-chip:hover {
+  background: #0f172a;
+  border-color: #3b82f6;
+}
+
+html.dark .attendance-code-display {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.dark .cover-options-grid,
+html.dark .cover-upload-zone {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+html.dark .ta-stat-card,
+html.dark .ta-active-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark .ta-stat-icon-box {
+  background: #0f172a;
+}
+
+html.dark .ta-table-code,
+html.dark .ta-code-value {
+  background: #0f172a;
+  border-color: #334155;
+  color: #3b82f6;
+}
+
+html.dark .ta-page-btn,
+html.dark .ta-page-num {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+html.dark .ta-page-num.active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+html.dark .td-mini-avatar-more {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+html.dark .td-full-history-btn:hover,
+html.dark .td-nav-arrow:hover {
+  background: #0f172a;
+}
+
+html.dark .tc-tabs { background: #0f172a; }
+html.dark .tc-tab.active { background: #1e293b; box-shadow: var(--shadow-sm); }
+html.dark .tc-view-btn.active { background: #1e293b; color: var(--accent-blue); box-shadow: var(--shadow-sm); }
+html.dark .tc-list-item:hover { background: #0f172a; }
+html.dark .tc-add-card:hover { background: rgba(59, 130, 246, 0.05); }
+html.dark .tc-add-icon { background: #0f172a; border-color: #334155; }
+
 html.dark .admin-filter-tab.active { background: #3b82f6 !important; color: #fff !important; }
+
 html.dark .admin-filter-count { background: rgba(255,255,255,0.1) !important; color: #94a3b8; }
 html.dark .admin-filter-tab.active .admin-filter-count { color: #fff; }
 
@@ -6256,7 +6384,7 @@ html.dark .dropdown-divider { border-top: 1px solid #334155 !important; }
 html.dark .dropdown-item { color: #94a3b8 !important; }
 html.dark .dropdown-item:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
 html.dark .dropdown-item.logout:hover { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; }
-html.dark .profile-name { color: #f1f5f9 !important; }
+html.dark .profile-name { color: #fff !important; }
 html.dark .profile-role { color: #94a3b8 !important; }
 
 /* Fix Top Navbar Z-Index for Dropdowns */
@@ -6286,3 +6414,262 @@ html.dark .modal-close:hover { color: #fff !important; }
 
 /* Fix Native Select Dropdowns in Dark Mode */
 html.dark select, html.dark option { color-scheme: dark !important; background-color: #1e293b !important; color: #f1f5f9 !important; }
+
+/* Theme-Aware Utility Classes */
+.theme-card { background: var(--bg-card); border: 1px solid var(--border-glass); color: var(--text-primary); }
+.theme-secondary-card { background: var(--bg-secondary); border: 1px solid var(--border-glass); color: var(--text-primary); }
+.theme-bg-secondary { background: var(--bg-secondary); }
+.theme-text-primary { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+.theme-border { border-color: var(--border-glass); }
+
+html.dark .tm-join-badge, 
+html.dark .tm-filter-chip { background: #1e293b; border-color: #334155; color: #94a3b8; }
+html.dark .tm-filter-chip.active { background: #3b82f6; color: #fff; }
+
+html.dark .messages-sidebar { background: #0f172a; border-color: #1e293b; }
+html.dark .messages-main { background: #0f172a; }
+html.dark .messages-sidebar-header h3 { color: #fff !important; }
+html.dark .messages-sidebar-header { background: #0f172a; border-bottom-color: #1e293b; padding-top: 0.75rem; }
+html.dark .messages-sidebar-title-row { margin-bottom: 0.5rem; }
+html.dark .messages-search { background: #1e293b; color: #fff; border-color: #334155; }
+html.dark .chat-header { background: #0f172a; border-bottom-color: #1e293b; }
+html.dark .chat-input { background: #0f172a; border-top-color: #1e293b; }
+html.dark .message-channel:hover { background: #1e293b; }
+html.dark .message-channel.active { background: #1e293b; }
+html.dark .channel-name { color: #fff; }
+html.dark .channel-meta { color: #94a3b8; }
+html.dark .messages-sidebar-label { color: #64748b; }
+html.dark .chat-bubble.theirs { background: #1e293b; color: #fff; }
+html.dark .bubble-content { color: inherit; }
+html.dark .messages-empty h3 { color: #fff; }
+
+/* Consolidated modal dark mode - see end of file */
+html.dark .form-label { color: #94a3b8 !important; }
+html.dark .form-input { background: #1e293b !important; border-color: #334155 !important; color: #fff !important; }
+html.dark .form-input:focus { border-color: #3b82f6 !important; background: #0f172a !important; }
+
+
+html.dark .tm-type-chip { background: #1e293b; border-color: #334155; }
+html.dark .tm-type-chip.active { background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
+
+/* Dashboard and Attendance Stat Icons Dark Mode */
+html.dark .td-stat-icon { background: rgba(255, 255, 255, 0.05) !important; color: #fff !important; }
+html.dark .ta-stat-icon-box { background: #1e293b !important; border: 1px solid #334155 !important; color: #f1f5f9 !important; }
+html.dark .ta-stat-icon-gray { background: rgba(148, 163, 184, 0.1) !important; color: #94a3b8 !important; }
+html.dark .ta-stat-icon-yellow { background: rgba(234, 179, 8, 0.1) !important; color: #eab308 !important; }
+html.dark .ta-stat-icon-green { background: rgba(34, 197, 94, 0.1) !important; color: #22c95e !important; }
+
+/* Empty States Dark Mode */
+html.dark .empty-state-card { background: #0f172a !important; border-color: #1e293b !important; }
+html.dark .empty-state-icon { background: #1e293b !important; color: #64748b !important; }
+
+/* Chat Area Dark Mode Fixes */
+html.dark .chat-messages { background: #0f172a !important; }
+html.dark .chat-bubble.mine { background: #3b82f6 !important; color: #fff !important; }
+html.dark .chat-bubble.theirs { background: #1e293b !important; color: #f1f5f9 !important; border-color: #334155 !important; }
+html.dark .messenger-reply-bubble { background: rgba(255,255,255,0.05) !important; color: #94a3b8 !important; }
+
+/* Attendance Search Input Dark Mode */
+html.dark .td-search-input, html.dark .messages-search { background: #1e293b !important; border-color: #334155 !important; color: #fff !important; }
+html.dark .td-search-wrapper { background: #1e293b !important; border-color: #334155 !important; }
+
+/* Table Pagination Dark Mode */
+html.dark .ta-page-btn, html.dark .ta-page-num { background: #1e293b !important; border-color: #334155 !important; color: #94a3b8 !important; }
+html.dark .ta-page-num.active { background: #3b82f6 !important; color: #fff !important; border-color: #3b82f6 !important; }
+html.dark .ta-page-btn:disabled { opacity: 0.3 !important; }
+
+/* Course Create Preview & Toggles */
+html.dark .course-preview-box { border: 2px solid #1e293b !important; }
+html.dark .tc-tabs { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .tc-tab.active { background: #334155 !important; color: #fff !important; }
+html.dark .tc-tab { color: #94a3b8 !important; }
+html.dark .tc-view-toggle { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .tc-view-btn.active { background: #334155 !important; color: #3b82f6 !important; }
+html.dark .tc-view-btn { color: #64748b !important; }
+
+/* Attendance Actions Dark Mode */
+html.dark .ta-reopen-btn { background: #1e293b !important; color: #3b82f6 !important; border: 1px solid #334155 !important; }
+html.dark .ta-reopen-btn:hover { background: #334155 !important; border-color: #3b82f6 !important; }
+html.dark .ta-action-btn { background: #1e293b !important; color: #94a3b8 !important; border: 1px solid #334155 !important; }
+html.dark .ta-action-btn:hover { color: #fff !important; background: #334155 !important; }
+
+/* Checkbox Dark Mode Fix */
+html.dark input[type="checkbox"] { filter: invert(0.9) hue-rotate(180deg) brightness(1.2); }
+html.dark .checkbox-label { color: #cbd5e1 !important; }
+
+/* Messages Sidebar & Empty States */
+html.dark .messages-empty-placeholder { background: #1e293b !important; border: 1px solid #334155 !important; color: #94a3b8 !important; }
+
+/* Student Dashboard Specifics */
+html.dark .sd-stat-card { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .sd-stat-icon-wrap { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
+html.dark .sd-schedule-panel, html.dark .sd-activity-panel { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .sd-course-card-bottom { background: #1e293b !important; border-top-color: #334155 !important; }
+html.dark .sd-attendance-bar-track { background: #0f172a !important; }
+html.dark .sd-course-meta-row { color: #94a3b8 !important; }
+html.dark .sd-link-btn { background: #1e293b !important; border: 1px solid #334155 !important; color: #94a3b8 !important; }
+html.dark .sd-link-btn:hover { background: #334155 !important; color: #fff !important; }
+
+/* Student Materials & Assignments */
+html.dark .sm-material-card, html.dark .sa-assignment-card { background: #1e293b !important; border: 1px solid #334155 !important; color: #fff !important; }
+html.dark .sm-sidebar-card, html.dark .sa-sidebar-card { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .sm-filter-chip, html.dark .sa-filter-chip { background: #1e293b !important; border: 1px solid #334155 !important; color: #94a3b8 !important; }
+html.dark .sm-filter-chip.active, html.dark .sa-filter-chip.active { background: #3b82f6 !important; color: #fff !important; }
+
+/* Student Assignment Details */
+html.dark .sad-main-card { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .sad-instruction-box { background: #0f172a !important; border: 1px solid #334155 !important; }
+html.dark .sad-sidebar-tabs { background: #1e293b !important; border-bottom-color: #334155 !important; }
+html.dark .sad-tab.active { color: #3b82f6 !important; border-bottom-color: #3b82f6 !important; }
+html.dark .sad-tab { color: #94a3b8 !important; }
+html.dark .sad-submission-area { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .sad-file-upload { background: #0f172a !important; border: 2px dashed #334155 !important; }
+
+/* Theme-Aware Hover States */
+.theme-hover-secondary:hover { background: var(--bg-secondary) !important; }
+html.dark .theme-hover-secondary:hover { background: rgba(255,255,255,0.05) !important; }
+
+/* Messages Search & Empty States */
+html.dark .messages-search-wrap { background: #1e293b !important; border: 1px solid #334155 !important; }
+html.dark .messages-search-input { background: transparent !important; border: none !important; color: #fff !important; }
+html.dark .messages-sidebar-empty { background: #1e293b !important; border: 1px solid #334155 !important; color: #94a3b8 !important; padding: 1.5rem; border-radius: 12px; margin: 1rem; text-align: center; }
+html.dark .messages-empty-placeholder { background: #0f172a !important; border-color: #1e293b !important; color: #64748b !important; }
+
+/* Student Join Button Fix */
+html.dark .sd-join-btn { background: var(--accent-blue) !important; color: #fff !important; }
+html.dark .sd-join-btn:hover { background: #2563eb !important; }
+
+/* Navbar Search Fix */
+html.dark .top-navbar-search { background: rgba(255, 255, 255, 0.05) !important; border: 1px solid #334155 !important; }
+html.dark .search-input { color: #fff !important; }
+html.dark .search-icon { color: #94a3b8 !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   COMPREHENSIVE DARK MODE FIX — Unified Modal & Component Overrides
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Modal: Unified background consistency ─────────────────── */
+html.dark .modal {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-glass) !important;
+  color: var(--text-primary) !important;
+}
+html.dark .modal-header {
+  background: var(--bg-card) !important;
+  border-bottom-color: #334155 !important;
+}
+html.dark .modal-footer,
+html.dark .modal-actions {
+  background: var(--bg-card) !important;
+  border-top-color: #334155 !important;
+}
+html.dark .modal-scroll-area {
+  background: var(--bg-card) !important;
+}
+html.dark .modal-title {
+  color: #f1f5f9 !important;
+}
+html.dark .modal-close {
+  color: #94a3b8 !important;
+}
+html.dark .modal-close:hover {
+  color: #fff !important;
+}
+
+/* ── Cover Selector Dark Mode ──────────────────────────────── */
+html.dark .cover-options-grid {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+html.dark .cover-upload-zone {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+html.dark .cover-upload-zone:hover {
+  background: #1e293b !important;
+  border-color: #3b82f6 !important;
+}
+html.dark .cover-selector-tabs {
+  border-bottom-color: #334155 !important;
+}
+html.dark .cover-tab {
+  color: #64748b !important;
+}
+html.dark .cover-tab.active {
+  color: #3b82f6 !important;
+  border-bottom-color: #3b82f6 !important;
+}
+html.dark .cover-preview {
+  border-color: #334155 !important;
+}
+
+/* ── Day Chips Dark Mode ───────────────────────────────────── */
+html.dark .day-chip {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+html.dark .day-chip:hover {
+  background: #0f172a !important;
+  border-color: #3b82f6 !important;
+  color: #fff !important;
+}
+html.dark .day-chip.selected {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: #fff !important;
+}
+
+/* ── Forward/Grading Modal inline bg overrides ─────────────── */
+html.dark .modal-window-responsive {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Teacher Materials: course dropdown ─────────────────────── */
+html.dark .tm-course-dropdown,
+html.dark [style*="background: '#fff'"] {
+  background: var(--bg-card) !important;
+}
+
+/* ── Assignment cards in Teacher Materials ──────────────────── */
+html.dark .theme-card h3,
+html.dark .theme-card h4 {
+  color: var(--text-primary) !important;
+}
+
+/* ── Admin Delete Confirmation Icon ────────────────────────── */
+html.dark .premium-card .shadow-lg[style*="background: '#fef2f2'"] {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* ── Table hover states in dark mode ───────────────────────── */
+html.dark tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* ── Fix hardcoded light backgrounds in expanded panels ────── */
+html.dark .theme-card [style*="background: '#f8fafc'"],
+html.dark .theme-card [style*="background: '#fff'"] {
+  background: var(--bg-secondary) !important;
+}
+
+/* ── Student attendance bar track ──────────────────────────── */
+html.dark .sd-attendance-bar-track {
+  background: #0f172a !important;
+}
+
+/* ── Feedback/warning boxes ────────────────────────────────── */
+html.dark [style*="background: '#fffbeb'"] {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
+/* ── Progress bars ─────────────────────────────────────────── */
+html.dark [style*="background: '#f1f5f9'"] {
+  background: #0f172a !important;
+}

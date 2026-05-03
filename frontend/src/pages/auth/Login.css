@@ -19,7 +19,21 @@
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  background: #ffffff;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Force light mode variables for the login page */
+.login-page * {
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --bg: #ffffff;
+  --border: #e2e8f0;
+  --login-text: #0f172a;
+  --login-text-muted: #64748b;
+  --login-blue: #2563eb;
+  --login-blue-soft: #3b82f6;
+  --login-blue-muted: #93c5fd;
 }
 
 /* Static fallback when WebGL fails or motion reduced — still reads “rings”, no animation */
@@ -91,24 +105,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.78) 0%,
-    rgba(255, 255, 255, 0.58) 40%,
-    rgba(255, 255, 255, 0.42) 100%
-  );
-}
-
-@media (min-width: 900px) {
-  .login-page__scrim {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.38) 0%,
-      rgba(255, 255, 255, 0.72) 44%,
-      rgba(255, 255, 255, 0.9) 58%,
-      rgba(255, 255, 255, 0.96) 100%
-    );
-  }
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 100%);
 }
 
 .login-page__inner {
@@ -268,9 +265,17 @@
 }
 
 .login-card .form-input {
-  background: #f8fafc;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  caret-color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 12px;
-  border-color: #e2e8f0;
+  -webkit-text-fill-color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+.login-card .form-input::placeholder {
+  color: #94a3b8 !important;
 }
 
 .login-card .form-input:focus {

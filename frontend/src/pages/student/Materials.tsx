@@ -75,19 +75,18 @@ const VideoPreview = ({ url }: { url: string }) => {
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
+        className="theme-hover-secondary"
         style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
-            background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', cursor: 'pointer',
+            background: 'var(--bg-secondary)', borderRadius: 14, border: '1px solid var(--border-glass)', cursor: 'pointer',
             transition: 'all .15s', marginBottom: '0.5rem'
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
     >
         <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FileText size={18} color="#3b82f6" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
+            <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
                 {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'} · Click to download
             </div>
@@ -301,11 +300,11 @@ const StudentMaterials: React.FC = () => {
                     {isMenuOpen && (
                         <div style={{
                             position: 'absolute', top: '100%', right: 0, marginTop: '10px',
-                            background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16,
+                            background: 'var(--bg-card)', border: '1px solid var(--border-glass)', borderRadius: 16,
                             boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px',
                             zIndex: 100
                         }}>
-                            <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
+                            <div className="sd-course-meta-row" style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
                             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                 {courses.map(c => (
                                     <div 
@@ -314,14 +313,13 @@ const StudentMaterials: React.FC = () => {
                                         style={{
                                             padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
                                             background: selectedCourse === c.id ? '#eff6ff' : 'transparent',
-                                            color: selectedCourse === c.id ? '#3b82f6' : '#334155',
+                                            color: selectedCourse === c.id ? '#3b82f6' : 'var(--text-primary)',
                                             display: 'flex', flexDirection: 'column', gap: '2px'
                                         }}
-                                        onMouseEnter={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = '#f8fafc'; }}
-                                        onMouseLeave={e => { if(selectedCourse !== c.id) e.currentTarget.style.background = 'transparent'; }}
+                                        className="theme-hover-secondary"
                                     >
                                         <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
-                                        <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{c.courseCode} · {c.section}</div>
                                     </div>
                                 ))}
                             </div>
@@ -347,19 +345,19 @@ const StudentMaterials: React.FC = () => {
                     {/* ── LEFT COLUMN ── */}
                     <div>
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || 'this course'}</strong>.</p>
+                                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || 'this course'}</strong>.</p>
                                 {activeCourseData?.joinCode && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-secondary)', padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border-glass)', cursor: 'pointer' }}
                                         onClick={() => {
                                             navigator.clipboard.writeText(activeCourseData.joinCode);
                                             showAlert('Copied', 'Join code copied to clipboard!');
                                         }}
                                         title="Click to copy join code"
                                     >
-                                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Code:</span>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#0f172a', fontFamily: 'monospace' }}>{activeCourseData.joinCode}</span>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Code:</span>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{activeCourseData.joinCode}</span>
                                         <Share size={12} color="#94a3b8" />
                                     </div>
                                 )}
@@ -374,12 +372,9 @@ const StudentMaterials: React.FC = () => {
                                 { v: 'file', l: 'Reading PDFs' },
                                 { v: 'link', l: 'Interactive Links' },
                             ].map(f => (
-                                <button key={f.v} onClick={() => setTypeFilter(f.v)} style={{
+                                <button key={f.v} onClick={() => setTypeFilter(f.v)} className={`sm-filter-chip ${typeFilter === f.v ? 'active' : ''}`} style={{
                                     padding: '0.5rem 1.25rem', borderRadius: 999, fontSize: '0.85rem', fontWeight: 700,
                                     border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                                    background: typeFilter === f.v ? '#3b82f6' : '#f1f5f9',
-                                    color: typeFilter === f.v ? '#fff' : '#64748b',
-                                    boxShadow: typeFilter === f.v ? '0 4px 12px rgba(59,130,246,.25)' : 'none',
                                 }}>{f.l}</button>
                             ))}
                         </div>
@@ -393,21 +388,18 @@ const StudentMaterials: React.FC = () => {
                                 const ytId = rt === 'video' && mLink ? getYouTubeId(mLink) : null;
                                 const isExpanded = expandedId === m.id;
                                 return (
-                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#93c5fd' : '#f1f5f9'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
+                                    <div key={m.id} className="sm-material-card" style={{ borderRadius: 18, border: `1px solid ${isExpanded ? 'var(--accent-blue)' : 'var(--border-glass)'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
                                         {/* Row */}
-                                        <div onClick={() => toggleExpand(m)} style={{
+                                        <div onClick={() => toggleExpand(m)} className="theme-hover-secondary" style={{
                                             display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
-                                            background: isExpanded ? '#f8fafc' : '#fff', cursor: 'pointer', transition: 'all .2s',
-                                        }}
-                                            onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#fafbfc'; }}
-                                            onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = '#fff'; }}
-                                        >
+                                            background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all .2s',
+                                        }}>
                                             <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg }}>{tc.icon}</div>
                                             {ytId && (
-                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '1px solid #e2e8f0' }} />
+                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '1px solid var(--border-glass)' }} />
                                             )}
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
+                                                <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{m.title}</h3>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                                                     <span style={{ color: tc.color }}>{getDynamicLabel(m)}</span>
                                                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
@@ -420,19 +412,19 @@ const StudentMaterials: React.FC = () => {
                                         </div>
                                         {/* Expand panel */}
                                         {isExpanded && (
-                                            <div style={{ borderTop: '1px solid #e2e8f0', padding: '1.5rem', background: '#fff' }}>
-                                                {m.description && <div style={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.25rem' }}>{m.description}</div>}
+                                            <div style={{ borderTop: '1px solid var(--border-glass)', padding: '1.5rem', background: 'var(--bg-card)' }}>
+                                                {m.description && <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.25rem' }}>{m.description}</div>}
                                                 {mLink && (
                                                     <div style={{ marginBottom: '1.25rem' }}>
                                                         <VideoPreview url={mLink} />
-                                                        <a href={mLink} target="_blank" rel="noopener noreferrer" style={{
-                                                            display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.25rem',
-                                                            background: '#f8fafc', borderRadius: 14, color: '#3b82f6', fontWeight: 700,
-                                                            textDecoration: 'none', border: '1px solid #e2e8f0', fontSize: '0.88rem',
-                                                            transition: 'all .2s'
-                                                        }}
-                                                            onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
-                                                            onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                                        <a href={mLink} target="_blank" rel="noopener noreferrer" 
+                                                            className="theme-hover-secondary"
+                                                            style={{
+                                                                display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.25rem',
+                                                                background: 'var(--bg-secondary)', borderRadius: 14, color: 'var(--accent-blue)', fontWeight: 700,
+                                                                textDecoration: 'none', border: '1px solid var(--border-glass)', fontSize: '0.88rem',
+                                                                transition: 'all .2s'
+                                                            }}
                                                         >
                                                             <LinkIcon size={18} /> {getYouTubeId(mLink) ? 'Watch on YouTube' : 'Open External Link'} <ArrowUpRight size={16} />
                                                         </a>
@@ -441,20 +433,20 @@ const StudentMaterials: React.FC = () => {
                                                 {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
 
                                                 {/* Comments section */}
-                                                <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
-                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>Class Comments ({comments.filter(c => !c.isPrivate).length})</h4>
+                                                <div style={{ borderTop: '1px solid var(--border-glass)', marginTop: '1.5rem', paddingTop: '1.5rem' }}>
+                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>Class Comments ({comments.filter(c => !c.isPrivate).length})</h4>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
                                                         {comments.filter(c => !c.isPrivate).map((c: any) => {
                                                             const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                                             return (
                                                                 <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
                                                                     <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={32} variant={isTeacher ? 'blue' : 'green'} />
-                                                                    <div style={{ flex: 1, background: isTeacher ? '#f5f3ff' : '#f8fafc', padding: '0.75rem 1rem', borderRadius: '0 12px 12px 12px', border: `1px solid ${isTeacher ? '#ede9fe' : '#f1f5f9'}` }}>
+                                                                    <div style={{ flex: 1, background: isTeacher ? 'rgba(59,130,246,0.08)' : 'var(--bg-secondary)', padding: '0.75rem 1rem', borderRadius: '0 12px 12px 12px', border: `1px solid var(--border-glass)` }}>
                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                                                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName} {isTeacher && ' (Professor)'}</span>
+                                                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>{c.user?.firstName} {c.user?.lastName} {isTeacher && ' (Professor)'}</span>
                                                                             <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                                                                         </div>
-                                                                        <div style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
+                                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{c.content}</div>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -463,7 +455,7 @@ const StudentMaterials: React.FC = () => {
                                                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                         <Avatar firstName={user?.firstName} lastName={user?.lastName} avatarUrl={user?.avatar} size={32} />
                                                         <div style={{ flex: 1, position: 'relative' }}>
-                                                            <input style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 99, padding: '0.5rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#f8fafc' }}
+                                                            <input style={{ width: '100%', border: '1px solid var(--border-glass)', borderRadius: 99, padding: '0.5rem 1rem', fontSize: '0.85rem', outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                                                                 placeholder="Add a class comment..." value={newComment} onChange={e => setNewComment(e.target.value)}
                                                                 onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
                                                             <button onClick={handleAddComment} style={{ position: 'absolute', right: 4, top: 4, bottom: 4, border: 'none', background: '#3b82f6', color: '#fff', borderRadius: 99, padding: '0 1rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>Post</button>
@@ -479,20 +471,19 @@ const StudentMaterials: React.FC = () => {
                             {!showAll && filtered.filter(m => m.type !== 'assignment').length > 5 && (
                                 <button 
                                     onClick={() => setShowAll(true)}
+                                    className="theme-hover-secondary"
                                     style={{
-                                        width: '100%', padding: '1rem', background: '#fff', borderRadius: 18, 
-                                        border: '1px solid #f1f5f9', color: '#3b82f6', fontWeight: 800, fontSize: '0.88rem',
+                                        width: '100%', padding: '1rem', background: 'var(--bg-card)', borderRadius: 18, 
+                                        border: '1px solid var(--border-glass)', color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.88rem',
                                         cursor: 'pointer', transition: 'all 0.2s', marginTop: '0.5rem'
                                     }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#3b82f6'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#f1f5f9'; }}
                                 >
                                     See {filtered.filter(m => m.type !== 'assignment').length - 5} More Materials
                                 </button>
                             )}
 
                             {filtered.filter(m => m.type !== 'assignment').length === 0 && (
-                                <div style={{ textAlign: 'center', padding: '3rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
+                                <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 18, border: '2px dashed var(--border-glass)' }}>
                                     <BookOpen size={32} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
                                     <p style={{ color: '#94a3b8', fontWeight: 600 }}>No materials available in this category.</p>
                                 </div>
@@ -500,12 +491,12 @@ const StudentMaterials: React.FC = () => {
                         </div>
 
                         {/* ── Divider ── */}
-                        <div style={{ borderTop: '1px solid #f1f5f9', marginBottom: '2rem' }} />
+                        <div style={{ borderTop: '1px solid var(--border-glass)', marginBottom: '2rem' }} />
 
                         {/* ── Active Assignments ── */}
                         <div id="assignments-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
-                            <span onClick={() => navigate(`/student/assignments?courseId=${selectedCourse}`)} style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer' }}>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Active Assignments</h2>
+                            <span onClick={() => navigate(`/student/assignments?courseId=${selectedCourse}`)} style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-blue)', cursor: 'pointer' }}>
                                 View All ({materials.filter(m => m.type === 'assignment').length})
                             </span>
                         </div>
@@ -518,8 +509,8 @@ const StudentMaterials: React.FC = () => {
                                 const ytId = mLink ? getYouTubeId(mLink) : null;
 
                                 return (
-                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#3b82f6' : '#f1f5f9'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
-                                        <div onClick={() => toggleExpand(m)} style={{ padding: '1.25rem', background: isExpanded ? '#f8fafc' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#3b82f6' : 'var(--border-glass)'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
+                                        <div onClick={() => toggleExpand(m)} style={{ padding: '1.25rem', background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                             <div style={{ width: 48, height: 48, borderRadius: 12, background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                 <BookOpen size={20} color={isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'} />
                                             </div>
@@ -532,35 +523,35 @@ const StudentMaterials: React.FC = () => {
                                                     )}
                                                     <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>{m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
                                                 </div>
-                                                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>{m.title}</h4>
+                                                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{m.title}</h4>
                                             </div>
                                             <ChevronDown size={20} color="#94a3b8" style={{ transition: 'transform .2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }} />
                                         </div>
                                         {isExpanded && (
-                                            <div style={{ borderTop: '1px solid #f1f5f9', background: '#fff', display: 'grid', gridTemplateColumns: '1fr 320px' }}>
+                                            <div style={{ borderTop: '1px solid var(--border-glass)', background: 'var(--bg-card)', display: 'grid', gridTemplateColumns: '1fr 320px' }}>
                                                 {/* Left: Instructions */}
-                                                <div style={{ padding: '1.5rem', borderRight: '1px solid #f1f5f9' }}>
-                                                    <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #f1f5f9', marginBottom: '1.5rem' }}>
+                                                <div style={{ padding: '1.5rem', borderRight: '1px solid var(--border-glass)' }}>
+                                                    <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border-glass)', marginBottom: '1.5rem' }}>
                                                         <button onClick={() => setDetailTab('instructions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'instructions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'instructions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>Instructions</button>
                                                         <button onClick={() => setDetailTab('submissions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'submissions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'submissions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>My Submission</button>
                                                     </div>
 
                                                     {detailTab === 'instructions' ? (
                                                         <div style={{ animation: 'fadeIn .2s' }}>
-                                                            {m.description && <p style={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{m.description}</p>}
+                                                            {m.description && <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{m.description}</p>}
                                                             {ytId && <VideoPreview url={mLink} />}
                                                             {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
                                                         </div>
                                                     ) : (
                                                         <div style={{ animation: 'fadeIn .2s' }}>
                                                             {mySubmission ? (
-                                                                <div style={{ background: '#f8fafc', borderRadius: 16, padding: '1.25rem', border: '1px solid #e2e8f0' }}>
+                                                                <div style={{ background: 'var(--bg-secondary)', borderRadius: 16, padding: '1.25rem', border: '1px solid var(--border-glass)' }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                                                                         <span style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', padding: '3px 8px', borderRadius: 6, background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff', color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6' }}>{mySubmission.status}</span>
-                                                                        {mySubmission.grade !== null && <span style={{ fontWeight: 900, color: '#1e293b' }}>{mySubmission.grade}/100</span>}
+                                                                        {mySubmission.grade !== null && <span style={{ fontWeight: 900, color: 'var(--text-primary)' }}>{mySubmission.grade}/100</span>}
                                                                     </div>
                                                                     {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />}
-                                                                    {mySubmission.content && <p style={{ fontSize: '0.88rem', color: '#475569', background: '#fff', padding: '0.75rem', borderRadius: 8, border: '1px solid #f1f5f9' }}>{mySubmission.content}</p>}
+                                                                    {mySubmission.content && <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '0.75rem', borderRadius: 8, border: '1px solid var(--border-glass)' }}>{mySubmission.content}</p>}
                                                                     {mySubmission.feedback && (
                                                                         <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: 8, background: '#fffbeb', border: '1px solid #fef3c7' }}>
                                                                             <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#92400e', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Feedback</span>
@@ -569,11 +560,11 @@ const StudentMaterials: React.FC = () => {
                                                                     )}
                                                                 </div>
                                                             ) : (
-                                                                <div style={{ background: '#f8fafc', borderRadius: 16, padding: '1.25rem', border: '2px dashed #e2e8f0' }}>
-                                                                    <textarea style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem', fontSize: '0.85rem', minHeight: 100, marginBottom: '1rem', outline: 'none' }} placeholder="Write your submission content..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} />
+                                                                <div style={{ background: 'var(--bg-secondary)', borderRadius: 16, padding: '1.25rem', border: '2px dashed var(--border-glass)' }}>
+                                                                    <textarea style={{ width: '100%', border: '1px solid var(--border-glass)', borderRadius: 12, padding: '0.75rem', fontSize: '0.85rem', minHeight: 100, marginBottom: '1rem', outline: 'none', background: 'var(--bg-card)', color: 'var(--text-primary)' }} placeholder="Write your submission content..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} />
                                                                     <div style={{ marginBottom: '1rem' }}>
                                                                         {submitFile ? (
-                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem', background: 'var(--bg-card)', borderRadius: 8, border: '1px solid var(--border-glass)' }}>
                                                                                 <FileText size={16} color="#3b82f6" />
                                                                                 <span style={{ fontSize: '0.8rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{submitFile.name}</span>
                                                                                 <X size={14} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => setSubmitFile(null)} />
@@ -592,17 +583,17 @@ const StudentMaterials: React.FC = () => {
                                                     )}
                                                 </div>
                                                 {/* Right: Private Comments */}
-                                                <div style={{ padding: '1.5rem', background: '#fafbfc' }}>
-                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '1rem' }}>Private Comments</h4>
+                                                <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)' }}>
+                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem' }}>Private Comments</h4>
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: 250, overflowY: 'auto', marginBottom: '1rem' }}>
                                                         {comments.filter(c => c.isPrivate).map((c: any) => {
                                                             const isTeacher = (c.user?.role || '').toLowerCase().includes('teacher');
                                                             return (
                                                                 <div key={c.id} style={{ display: 'flex', gap: '0.6rem' }}>
                                                                     <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} avatarUrl={c.user?.avatarUrl || c.user?.avatar} size={24} variant={isTeacher ? 'blue' : 'green'} />
-                                                                    <div style={{ flex: 1, background: isTeacher ? '#fffbeb' : '#fff', padding: '0.5rem 0.75rem', borderRadius: '0 10px 10px 10px', border: '1px solid #e2e8f0' }}>
-                                                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: 2 }}>{c.user?.firstName}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: '#475569' }}>{c.content}</div>
+                                                                    <div style={{ flex: 1, background: isTeacher ? 'rgba(245,158,11,0.1)' : 'var(--bg-card)', padding: '0.5rem 0.75rem', borderRadius: '0 10px 10px 10px', border: '1px solid var(--border-glass)' }}>
+                                                                        <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: 2, color: 'var(--text-primary)' }}>{c.user?.firstName}</div>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{c.content}</div>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -610,7 +601,7 @@ const StudentMaterials: React.FC = () => {
                                                         {comments.filter(c => c.isPrivate).length === 0 && <p style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No private messages yet.</p>}
                                                     </div>
                                                     <div style={{ display: 'flex', gap: 6 }}>
-                                                        <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.4rem 0.75rem', fontSize: '0.8rem', outline: 'none' }} placeholder="Ask professor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
+                                                        <input style={{ flex: 1, border: '1px solid var(--border-glass)', borderRadius: 20, padding: '0.4rem 0.75rem', fontSize: '0.8rem', outline: 'none' }} placeholder="Ask professor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
                                                         <button onClick={handlePrivateComment} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Play size={14} fill="#fff" /></button>
                                                     </div>
                                                 </div>
@@ -620,7 +611,7 @@ const StudentMaterials: React.FC = () => {
                                 );
                             })}
                             {materials.filter(m => m.type === 'assignment').length === 0 && (
-                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', background: 'var(--bg-secondary)', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
                                     <p style={{ color: '#94a3b8', fontWeight: 600 }}>No active assignments at the moment.</p>
                                 </div>
                             )}
@@ -630,8 +621,8 @@ const StudentMaterials: React.FC = () => {
                     {/* ── RIGHT SIDEBAR ── */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         {/* Library Insights */}
-                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
-                            <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', marginBottom: '1.5rem' }}>Library Insights</h3>
+                        <div className="sm-sidebar-card" style={{ borderRadius: 22, padding: '1.5rem' }}>
+                            <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Library Insights</h3>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.65rem' }}>
                                 <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#64748b' }}>Total Resources</span>
                                 <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#3b82f6' }}>{materials.length}</span>
@@ -649,10 +640,10 @@ const StudentMaterials: React.FC = () => {
                         </div>
 
                         {/* Enrolled Students */}
-                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="sm-sidebar-card" style={{ borderRadius: 22, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0 }}>Enrolled Students</h3>
-                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: 6 }}>{enrollments.length} Total</span>
+                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>Enrolled Students</h3>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-blue)', background: 'rgba(59,130,246,0.1)', padding: '2px 8px', borderRadius: 6 }}>{enrollments.length} Total</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.5rem' }}>
                                 {enrollments.length === 0 ? (
@@ -662,7 +653,7 @@ const StudentMaterials: React.FC = () => {
                                         <div key={en.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                             <Avatar firstName={en.student?.firstName} lastName={en.student?.lastName} avatarUrl={en.student?.avatarUrl} size={32} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {en.student?.firstName} {en.student?.lastName}
                                                 </div>
                                                 <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{en.student?.studentId || 'No ID'}</div>

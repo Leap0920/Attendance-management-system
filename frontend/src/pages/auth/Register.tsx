@@ -99,7 +99,7 @@ const Register: React.FC = () => {
     );
 
     return (
-        <div className={`login-page${staticRingsFallback ? ' login-page--static-rings' : ''}`}>
+        <div className={`login-page light-theme-only${staticRingsFallback ? ' login-page--static-rings' : ''}`}>
             <div className="login-magic-rings">
                 <MagicRings
                     color="#3b82f6"

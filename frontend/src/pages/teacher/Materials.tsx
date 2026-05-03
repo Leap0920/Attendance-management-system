@@ -82,24 +82,23 @@ const VideoPreview = ({ url }: { url: string }) => {
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
+        className="theme-card"
         style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
-            background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', cursor: 'pointer',
+            borderRadius: 14, cursor: 'pointer',
             transition: 'all .15s', marginBottom: '0.5rem'
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
     >
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <FileText size={18} color="#3b82f6" />
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <FileText size={18} color="var(--accent-blue)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
                 {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'}
             </div>
         </div>
-        <Download size={18} color="#94a3b8" />
+        <Download size={18} color="var(--text-muted)" />
     </div>
 );
 
@@ -398,33 +397,31 @@ const TeacherMaterials: React.FC = () => {
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                    <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
+                                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
                                     {activeCourseData?.joinCode && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                                        <div className="tm-join-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-secondary)', padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border-glass)', cursor: 'pointer' }}
                                             onClick={() => {
                                                 navigator.clipboard.writeText(activeCourseData.joinCode);
                                                 showAlert('Copied', 'Join code copied to clipboard!');
                                             }}
                                             title="Click to copy join code"
                                         >
-                                            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Code:</span>
-                                            <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#0f172a', fontFamily: 'monospace' }}>{activeCourseData.joinCode}</span>
-                                            <Share size={12} color="#94a3b8" />
+                                            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Join Code:</span>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--text-primary)', fontFamily: 'monospace' }}>{activeCourseData.joinCode}</span>
+                                            <Share size={12} color="var(--text-muted)" />
                                         </div>
                                     )}
                                 </div>
                             </div>
-                            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} style={{
+                            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} className="btn btn-primary" style={{
                                 display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.5rem',
-                                background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.88rem',
+                                fontWeight: 700, fontSize: '0.88rem',
                                 borderRadius: 14, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                                 boxShadow: '0 4px 12px rgba(59,130,246,.25)', transition: 'all .15s',
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.background = '#2563eb'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = '#3b82f6'; }}
-                            >
+                                width: 'auto'
+                            }}>
                                 <Plus size={18} /> New Material
                             </button>
                         </div>
@@ -437,12 +434,9 @@ const TeacherMaterials: React.FC = () => {
                                 { v: 'file', l: 'Reading PDFs' },
                                 { v: 'link', l: 'Interactive Links' },
                             ].map(f => (
-                                <button key={f.v} onClick={() => setTypeFilter(f.v)} style={{
+                                <button key={f.v} onClick={() => setTypeFilter(f.v)} className={`tm-filter-chip ${typeFilter === f.v ? 'active shadow-md' : ''}`} style={{
                                     padding: '0.5rem 1.25rem', borderRadius: 999, fontSize: '0.85rem', fontWeight: 700,
-                                    border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s',
-                                    background: typeFilter === f.v ? '#3b82f6' : '#f1f5f9',
-                                    color: typeFilter === f.v ? '#fff' : '#64748b',
-                                    boxShadow: typeFilter === f.v ? '0 4px 12px rgba(59,130,246,.25)' : 'none',
+                                    border: '1px solid transparent', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s'
                                 }}>{f.l}</button>
                             ))}
                         </div>
@@ -456,47 +450,48 @@ const TeacherMaterials: React.FC = () => {
                                 const ytId = rt === 'video' && mLink ? getYouTubeId(mLink) : null;
                                 const isExpanded = expandedId === m.id;
                                 return (
-                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#93c5fd' : '#f1f5f9'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
+                                    <div key={m.id} className="theme-card" style={{ borderRadius: 18, border: `1px solid ${isExpanded ? 'var(--accent-blue)' : 'var(--border-glass)'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? 'var(--shadow-lg)' : 'var(--shadow-sm)' }}>
                                         {/* Row */}
                                         <div onClick={() => toggleExpand(m)} style={{
                                             display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
-                                            background: isExpanded ? '#f8fafc' : '#fff', cursor: 'pointer', transition: 'all .2s',
+                                            background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all .2s',
                                         }}
-                                            onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#fafbfc'; }}
-                                            onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = '#fff'; }}
                                         >
                                             <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: tc.bg }}>{tc.icon}</div>
                                             {ytId && (
-                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '1px solid #e2e8f0' }} />
+                                                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 10, flexShrink: 0, border: '1px solid var(--border-glass)' }} />
                                             )}
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0f172a' }}>{m.title}</h3>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{m.title}</h3>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                                                     <span style={{ color: tc.color }}>{getDynamicLabel(m)}</span>
-                                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
+                                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--border-glass)' }} />
                                                     <span>Resource</span>
-                                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#cbd5e1' }} />
+                                                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--border-glass)' }} />
                                                     <span>{new Date(m.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(m.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                             </div>
-                                            <ChevronDown size={20} color="#94a3b8" style={{ transition: 'transform .2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }} />
+                                            <ChevronDown size={20} color="var(--text-muted)" style={{ transition: 'transform .2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }} />
                                         </div>
                                         {/* Expand panel */}
                                         {isExpanded && (
-                                            <div style={{ borderTop: '1px solid #e2e8f0', padding: '1.5rem', background: '#fff' }}>
+                                            <div style={{ borderTop: '1px solid var(--border-glass)', padding: '1.5rem', background: 'var(--bg-card)' }}>
                                                 {/* Action buttons */}
                                                 <div style={{ display: 'flex', gap: 6, marginBottom: '1rem' }}>
                                                     <button title="Forward" onClick={() => { setFwdId(m.id); setFwdCourses([]); setShowForward(true); }}
-                                                        style={{ padding: '0.4rem 0.8rem', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: '#3b82f6', fontWeight: 600, fontSize: '0.78rem', fontFamily: 'inherit' }}>
+                                                        className="btn btn-secondary"
+                                                        style={{ padding: '0.4rem 0.8rem', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.78rem', fontFamily: 'inherit', width: 'auto' }}>
                                                         <Share size={13} /> Forward
                                                     </button>
                                                     <button title="Delete" onClick={() => handleDelete(m.id)}
-                                                        style={{ padding: '0.4rem 0.8rem', borderRadius: 8, border: '1px solid #fecaca', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: '#ef4444', fontWeight: 600, fontSize: '0.78rem', fontFamily: 'inherit' }}>
+                                                        className="btn btn-danger"
+                                                        style={{ padding: '0.4rem 0.8rem', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600, fontSize: '0.78rem', fontFamily: 'inherit', width: 'auto' }}>
                                                         <Trash2 size={13} /> Delete
                                                     </button>
                                                     {m.type === 'link' && mLink && (
                                                         <a href={mLink} target="_blank" rel="noopener noreferrer"
-                                                            style={{ padding: '0.4rem 0.8rem', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', display: 'flex', alignItems: 'center', gap: 5, color: '#10b981', fontWeight: 600, fontSize: '0.78rem', textDecoration: 'none', fontFamily: 'inherit' }}>
+                                                            className="btn btn-secondary"
+                                                            style={{ padding: '0.4rem 0.8rem', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 5, color: '#10b981', fontWeight: 600, fontSize: '0.78rem', textDecoration: 'none', fontFamily: 'inherit', width: 'auto' }}>
                                                             <ArrowUpRight size={13} /> Open Link
                                                         </a>
                                                     )}
@@ -507,42 +502,42 @@ const TeacherMaterials: React.FC = () => {
                                                         <VideoPreview url={mLink} />
                                                         <a href={mLink} target="_blank" rel="noopener noreferrer" style={{
                                                             display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.85rem 1.25rem',
-                                                            background: '#f8fafc', borderRadius: 14, color: '#3b82f6', fontWeight: 700,
-                                                            textDecoration: 'none', border: '1px solid #e2e8f0', fontSize: '0.88rem',
+                                                            background: 'var(--bg-secondary)', borderRadius: 14, color: 'var(--accent-blue)', fontWeight: 700,
+                                                            textDecoration: 'none', border: '1px solid var(--border-glass)', fontSize: '0.88rem',
                                                             transition: 'all .2s'
                                                         }}
-                                                            onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
-                                                            onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.1)'; e.currentTarget.style.borderColor = 'var(--accent-blue)'; }}
+                                                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.borderColor = 'var(--border-glass)'; }}
                                                         >
                                                             <LinkIcon size={18} /> {getYouTubeId(mLink) ? 'Watch on YouTube' : 'Open External Link'} <ArrowUpRight size={16} />
                                                         </a>
                                                     </div>
                                                 )}
                                                 {/* Description */}
-                                                {m.description && <div style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>{m.description}</div>}
+                                                {m.description && <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>{m.description}</div>}
                                                 {/* File download */}
                                                 {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
                                                 {/* Comments */}
-                                                <div style={{ marginTop: '1rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
-                                                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>Class Comments ({comments.length})</h4>
-                                                    {comments.length === 0 && <p style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic' }}>No comments yet</p>}
+                                                <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1rem' }}>
+                                                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>Class Comments ({comments.length})</h4>
+                                                    {comments.length === 0 && <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No comments yet</p>}
                                                     {comments.map((c: any) => (
                                                         <div key={c.id} style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.85rem' }}>
                                                             <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={28} />
                                                             <div>
-                                                                <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>{c.user?.firstName} {c.user?.lastName}
-                                                                    <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: 8, fontSize: '0.7rem' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                                                                <div style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-primary)' }}>{c.user?.firstName} {c.user?.lastName}
+                                                                    <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: 8, fontSize: '0.7rem' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                                                                 </div>
-                                                                <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: 2 }}>{c.content}</div>
+                                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 2 }}>{c.content}</div>
                                                             </div>
                                                         </div>
                                                     ))}
                                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
                                                         <Avatar firstName={user?.firstName} lastName={user?.lastName} size={28} />
-                                                        <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 20, padding: '0.45rem 0.85rem', fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit' }}
+                                                        <input style={{ flex: 1, border: '1px solid var(--border-glass)', borderRadius: 20, padding: '0.45rem 0.85rem', fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                                                             value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Add a class comment…"
                                                             onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
-                                                        <button style={{ padding: '0.42rem 1rem', borderRadius: 20, background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: newComment.trim() ? 1 : 0.5 }}
+                                                        <button style={{ padding: '0.42rem 1rem', borderRadius: 20, background: 'var(--accent-blue)', color: '#fff', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: newComment.trim() ? 1 : 0.5 }}
                                                             disabled={!newComment.trim()} onClick={handleAddComment}>Post</button>
                                                     </div>
                                                 </div>
@@ -552,24 +547,21 @@ const TeacherMaterials: React.FC = () => {
                                 );
                             })}
                             {nonAssignments.length > 5 && (
-                                <button onClick={() => setShowAll(!showAll)} style={{ padding: '0.65rem', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', color: '#3b82f6', fontFamily: 'inherit', transition: 'all .15s' }}>
+                                <button onClick={() => setShowAll(!showAll)} className="theme-btn-secondary" style={{ padding: '0.65rem', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-blue)', fontFamily: 'inherit', transition: 'all .15s' }}>
                                     {showAll ? 'Show Less' : `See All ${nonAssignments.length} Materials`}
                                 </button>
                             )}
                         </div>
                         <div id="assignments-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', marginTop: '0.5rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Active Assignments</h2>
-                                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.1rem 0 0', fontWeight: 500 }}>Manage student submissions</p>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Active Assignments</h2>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.1rem 0 0', fontWeight: 500 }}>Manage student submissions</p>
                             </div>
-                            <button onClick={() => navigate(`/teacher/assignments?courseId=${selectedCourse}`)} style={{
-                                padding: '0.45rem 1rem', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff',
-                                fontSize: '0.8rem', fontWeight: 700, color: '#3b82f6', cursor: 'pointer', transition: 'all .2s',
+                            <button onClick={() => navigate(`/teacher/assignments?courseId=${selectedCourse}`)} className="theme-btn-secondary" style={{
+                                padding: '0.45rem 1rem', borderRadius: 10,
+                                fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-blue)', cursor: 'pointer', transition: 'all .2s',
                                 display: 'flex', alignItems: 'center', gap: '0.4rem'
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#3b82f6'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                            >
+                            }}>
                                 View All
                                 <ArrowUpRight size={14} />
                             </button>
@@ -686,9 +678,9 @@ const TeacherMaterials: React.FC = () => {
                                                                     </div>
                                                                 ))}
                                                                 {comments.length === 0 && (
-                                                                    <div style={{ textAlign: 'center', padding: '2rem', background: '#fafbfc', borderRadius: 16, border: '1px dashed #e2e8f0' }}>
-                                                                        <MessageSquare size={24} color="#cbd5e1" style={{ marginBottom: '0.5rem' }} />
-                                                                        <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>No comments yet. Start the conversation!</p>
+                                                                    <div className="empty-state-card" style={{ textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: 16, border: '1px dashed var(--border-glass)' }}>
+                                                                        <MessageSquare size={24} color="var(--text-muted)" className="empty-state-icon" style={{ marginBottom: '0.5rem' }} />
+                                                                        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>No comments yet. Start the conversation!</p>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -764,8 +756,8 @@ const TeacherMaterials: React.FC = () => {
                                 );
                             })}
                             {materials.filter(m => m.type === 'assignment').length === 0 && (
-                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', background: '#fafbfc', borderRadius: 18, border: '2px dashed #e2e8f0' }}>
-                                    <p style={{ color: '#94a3b8', fontWeight: 600 }}>No active assignments at the moment.</p>
+                                <div className="empty-state-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', background: 'var(--bg-secondary)', borderRadius: 18, border: '2px dashed var(--border-glass)' }}>
+                                    <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>No active assignments at the moment.</p>
                                 </div>
                             )}
                         </div>
@@ -773,43 +765,27 @@ const TeacherMaterials: React.FC = () => {
 
                     {/* ── RIGHT SIDEBAR ── */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                        {/* Library Insights */}
-                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
-                            <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', marginBottom: '1.5rem' }}>Library Insights</h3>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.65rem' }}>
-                                <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#64748b' }}>Total Resources</span>
-                                <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#3b82f6' }}>{materials.length}</span>
-                            </div>
-                            <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden', marginBottom: '0.85rem', background: '#f1f5f9' }}>
-                                <div style={{ background: '#3b82f6', width: `${(materials.filter(m => figureOutType(m) === 'video').length / (materials.length || 1)) * 100}%`, transition: 'width .5s' }} />
-                                <div style={{ background: '#94a3b8', width: `${(materials.filter(m => figureOutType(m) === 'file').length / (materials.length || 1)) * 100}%`, transition: 'width .5s' }} />
-                                <div style={{ background: '#10b981', width: `${(materials.filter(m => m.type === 'link').length / (materials.length || 1)) * 100}%`, transition: 'width .5s' }} />
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                <span>VIDEO ({materials.filter(m => figureOutType(m) === 'video').length})</span>
-                                <span>READING ({materials.filter(m => figureOutType(m) === 'file').length})</span>
-                                <span>LINKS ({materials.filter(m => m.type === 'link').length})</span>
-                            </div>
-                        </div>
-
-                        {/* Enrolled Students */}
-                        <div style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0 }}>Enrolled Students</h3>
-                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: 6 }}>{enrollments.length} Total</span>
+                        
+                        {/* Course Stats Sidebar */}
+                        <div id="course-sidebar" className="theme-card shadow-sm" style={{ borderRadius: 22, padding: '1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>Course Members</h3>
+                                <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Users size={16} color="var(--accent-blue)" />
+                                </div>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.5rem' }}>
                                 {enrollments.length === 0 ? (
-                                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', margin: '1rem 0' }}>No students enrolled yet.</p>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', margin: '1rem 0' }}>No students enrolled yet.</p>
                                 ) : (
                                     enrollments.map((en: any) => (
                                         <div key={en.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                             <Avatar firstName={en.student?.firstName} lastName={en.student?.lastName} size={32} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {en.student?.firstName} {en.student?.lastName}
                                                 </div>
-                                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{en.student?.studentId || 'No ID'}</div>
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{en.student?.studentId || 'No ID'}</div>
                                             </div>
                                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} title="Active" />
                                         </div>
@@ -819,24 +795,23 @@ const TeacherMaterials: React.FC = () => {
                         </div>
 
                         {/* Assignments Summary */}
-                        <div id="assignments-sidebar" style={{ background: '#fff', borderRadius: 22, padding: '1.5rem', border: '1px solid #f1f5f9' }}>
+                        <div id="assignments-sidebar" className="theme-card shadow-sm" style={{ borderRadius: 22, padding: '1.5rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', margin: 0 }}>Active Assignments</h3>
-                                <div style={{ width: 32, height: 32, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <FileText size={16} color="#3b82f6" />
+                                <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>Active Assignments</h3>
+                                <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <FileText size={16} color="var(--accent-blue)" />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {assignments.slice(0, 3).map(a => (
-                                    <div key={a.id} onClick={() => { toggleExpand(a); document.getElementById('assignments-section')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ padding: '0.75rem', borderRadius: 12, border: '1px solid #f8fafc', background: '#f8fafc', cursor: 'pointer' }}>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.2rem' }}>{a.title}</div>
-                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{a.dueDate ? `Due ${new Date(a.dueDate).toLocaleDateString()}` : 'No due date'}</div>
+                                    <div key={a.id} onClick={() => { toggleExpand(a); document.getElementById('assignments-section')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ padding: '0.75rem', borderRadius: 12, border: '1px solid var(--border-glass)', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{a.title}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{a.dueDate ? `Due ${new Date(a.dueDate).toLocaleDateString()}` : 'No due date'}</div>
                                     </div>
                                 ))}
-                                {assignments.length === 0 && <p style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>No active assignments</p>}
+                                {assignments.length === 0 && <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>No active assignments</p>}
                             </div>
                         </div>
-
                     </div>
                 </div>
             )}
@@ -844,22 +819,22 @@ const TeacherMaterials: React.FC = () => {
             {/* Create Modal */}
             {showModal && (
                 <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowModal(false)}>
-                    <div style={{ position: 'relative', background: '#fff', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
+                    <div className="theme-card" style={{ position: 'relative', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
                         
                         {/* Header */}
-                        <div style={{ padding: '1.5rem 2rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                        <div className="modal-header" style={{ padding: '1.5rem 2rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                             <div>
-                                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Create New Material</h3>
-                                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>Share resources and assignments with your students</p>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Create New Material</h3>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>Share resources and assignments with your students</p>
                             </div>
-                            <button onClick={() => setShowModal(false)} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: '#fff', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,.05)' }}><X size={20} /></button>
+                            <button onClick={() => setShowModal(false)} className="theme-btn-secondary" style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,.05)' }}><X size={20} /></button>
                         </div>
 
                         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                             <div className="modal-scroll-area" style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
                                 {/* Type Selection Chips */}
                                 <div style={{ marginBottom: '2rem' }}>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>What are you posting?</label>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>What are you posting?</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
                                         {[
                                             { id: 'file', label: 'Document', icon: <FileText size={18} />, color: '#ef4444' },
@@ -867,23 +842,25 @@ const TeacherMaterials: React.FC = () => {
                                             { id: 'announcement', label: 'Notice', icon: <Bell size={18} />, color: '#f59e0b' },
                                             { id: 'assignment', label: 'Assignment', icon: <BookOpen size={18} />, color: '#3b82f6' },
                                         ].map(t => (
-                                            <div key={t.id} onClick={() => { setForm({ ...form, type: t.id }); setFile(null); }} style={{
-                                                padding: '1rem', borderRadius: 16, border: `2px solid ${form.type === t.id ? t.color : '#f1f5f9'}`,
-                                                background: form.type === t.id ? `${t.color}08` : '#fff', cursor: 'pointer', transition: 'all .2s',
-                                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center'
-                                            }}>
-                                                <div style={{ color: form.type === t.id ? t.color : '#94a3b8' }}>{t.icon}</div>
-                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: form.type === t.id ? t.color : '#64748b' }}>{t.label}</span>
+                                            <div key={t.id} onClick={() => { setForm({ ...form, type: t.id }); setFile(null); }} 
+                                                className={`tm-type-chip ${form.type === t.id ? 'active' : ''}`}
+                                                style={{
+                                                    padding: '1rem', borderRadius: 16, border: `2px solid ${form.type === t.id ? t.color : 'var(--border-glass)'}`,
+                                                    background: form.type === t.id ? `${t.color}15` : 'var(--bg-secondary)', cursor: 'pointer', transition: 'all .2s',
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textAlign: 'center'
+                                                }}>
+                                                <div style={{ color: form.type === t.id ? t.color : 'var(--text-muted)' }}>{t.icon}</div>
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: form.type === t.id ? t.color : 'var(--text-secondary)' }}>{t.label}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label" style={{ fontWeight: 800, color: '#64748b', marginBottom: 12, display: 'block', textTransform: 'uppercase', fontSize: '0.7rem' }}>Target Classrooms</label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', maxHeight: '150px', overflowY: 'auto', padding: '1rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                                    <label className="form-label" style={{ fontWeight: 800, color: 'var(--text-muted)', marginBottom: 12, display: 'block', textTransform: 'uppercase', fontSize: '0.7rem' }}>Target Classrooms</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', maxHeight: '150px', overflowY: 'auto', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border-glass)', marginBottom: '1.5rem' }}>
                                         {courses.map(c => (
-                                            <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: targetCourses.includes(c.id) ? '#eff6ff' : 'transparent' }}>
+                                            <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: targetCourses.includes(c.id) ? 'rgba(59,130,246,0.1)' : 'transparent' }}>
                                                 <input
                                                     type="checkbox"
                                                     checked={targetCourses.includes(c.id)}
@@ -893,7 +870,7 @@ const TeacherMaterials: React.FC = () => {
                                                     }}
                                                     style={{ width: 18, height: 18, cursor: 'pointer' }}
                                                 />
-                                                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: targetCourses.includes(c.id) ? '#3b82f6' : '#334155' }}>
+                                                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: targetCourses.includes(c.id) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
                                                     {c.courseCode} <span style={{ fontWeight: 500, opacity: 0.6 }}>· {c.section}</span>
                                                 </div>
                                             </label>
@@ -905,16 +882,14 @@ const TeacherMaterials: React.FC = () => {
                                 {/* Content Inputs */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Title & Details</label>
+                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Title & Details</label>
                                         <div style={{ position: 'relative' }}>
                                             <textarea
+                                                className="form-input"
                                                 style={{
-                                                    width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '1rem', fontSize: '0.9rem',
+                                                    width: '100%', borderRadius: 16, padding: '1rem', fontSize: '0.9rem',
                                                     resize: 'vertical', minHeight: 120, fontFamily: 'inherit', outline: 'none', transition: 'all .2s',
-                                                    background: '#f8fafc'
                                                 }}
-                                                onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
-                                                onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; }}
                                                 placeholder={"Material Title (First line)\nDescription and instructions (Rest of lines)"}
                                                 value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
                                             />
@@ -923,16 +898,15 @@ const TeacherMaterials: React.FC = () => {
 
                                     {form.type === 'link' && (
                                         <div style={{ animation: 'fadeIn .2s ease-out' }}>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>External URL</label>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>External URL</label>
                                             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                                <div style={{ position: 'absolute', left: '1rem', color: '#94a3b8' }}><LinkIcon size={18} /></div>
+                                                <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }}><LinkIcon size={18} /></div>
                                                 <input
+                                                    className="form-input"
                                                     style={{
-                                                        width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem 0.85rem 2.75rem',
-                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc', transition: 'all .2s'
+                                                        width: '100%', borderRadius: 16, padding: '0.85rem 1rem 0.85rem 2.75rem',
+                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', transition: 'all .2s'
                                                     }}
-                                                    onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
-                                                    onBlur={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.background = '#f8fafc'; }}
                                                     value={form.externalLink} onChange={e => setForm({ ...form, externalLink: e.target.value })}
                                                     placeholder="https://youtube.com/watch?v=..."
                                                 />
@@ -942,21 +916,19 @@ const TeacherMaterials: React.FC = () => {
 
                                     {(form.type === 'file' || form.type === 'assignment') && (
                                         <div style={{ animation: 'fadeIn .2s ease-out' }}>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Attachment</label>
+                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Attachment</label>
                                             <label style={{
                                                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '2rem',
-                                                border: '2px dashed #e2e8f0', borderRadius: 20, cursor: 'pointer', transition: 'all .2s',
-                                                background: file ? '#f0f9ff' : '#fafbfc', color: file ? '#0284c7' : '#94a3b8'
+                                                border: '2px dashed var(--border-glass)', borderRadius: 20, cursor: 'pointer', transition: 'all .2s',
+                                                background: file ? 'rgba(59,130,246,0.1)' : 'var(--bg-secondary)', color: file ? 'var(--accent-blue)' : 'var(--text-muted)'
                                             }}
-                                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#f8fafc'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = file ? '#f0f9ff' : '#fafbfc'; }}
                                             >
                                                 <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
-                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? '#e0f2fe' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? 'rgba(59,130,246,0.2)' : 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     <Upload size={20} />
                                                 </div>
                                                 <div style={{ textAlign: 'center' }}>
-                                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: file ? '#0369a1' : '#475569' }}>{file ? file.name : 'Select a file to upload'}</div>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: file ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>{file ? file.name : 'Select a file to upload'}</div>
                                                     <div style={{ fontSize: '0.75rem', marginTop: 4 }}>PDF, DOCX, ZIP or Images (Max 10MB)</div>
                                                 </div>
                                             </label>
@@ -966,21 +938,23 @@ const TeacherMaterials: React.FC = () => {
                                     {form.type === 'assignment' && (
                                         <div className="responsive-modal-grid" style={{ animation: 'fadeIn .2s ease-out' }}>
                                             <div>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Due Date</label>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Due Date</label>
                                                 <input type="datetime-local"
+                                                    className="form-input"
                                                     style={{
-                                                        width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem',
-                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc'
+                                                        width: '100%', borderRadius: 16, padding: '0.85rem 1rem',
+                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit'
                                                     }}
                                                     value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })}
                                                 />
                                             </div>
                                             <div>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Points</label>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Points</label>
                                                 <input type="number" defaultValue="100"
+                                                    className="form-input"
                                                     style={{
-                                                        width: '100%', border: '2px solid #f1f5f9', borderRadius: 16, padding: '0.85rem 1rem',
-                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: '#f8fafc'
+                                                        width: '100%', borderRadius: 16, padding: '0.85rem 1rem',
+                                                        fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit'
                                                     }}
                                                 />
                                             </div>
@@ -989,17 +963,16 @@ const TeacherMaterials: React.FC = () => {
                                 </div>
 
                             </div>
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1.5rem 2rem', background: '#f8fafc', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
+                            <div className="modal-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1.5rem 2rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-glass)', flexShrink: 0 }}>
                                 <button type="button" onClick={() => setShowModal(false)} disabled={submitting}
-                                    style={{ padding: '0.85rem 1.75rem', borderRadius: 16, border: 'none', background: '#f1f5f9', color: '#64748b', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit' }}>Discard</button>
+                                    className="btn btn-secondary" style={{ width: 'auto', borderRadius: 16 }}>Discard</button>
                                 <button type="submit" disabled={submitting}
+                                    className="btn btn-primary"
                                     style={{
-                                        padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', background: '#3b82f6', color: '#fff',
+                                        padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none',
                                         fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
-                                        boxShadow: '0 8px 20px rgba(59,130,246,0.3)', transition: 'all .2s'
+                                        boxShadow: '0 8px 20px rgba(59,130,246,0.3)', transition: 'all .2s', width: 'auto'
                                     }}
-                                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                                 >{submitting ? 'Publishing...' : 'Publish Material'}</button>
                             </div>
                         </form>

@@ -222,10 +222,10 @@ const TeacherCourses: React.FC = () => {
           <button className={`tc-tab ${activeTab === 'archived' ? 'active shadow-sm' : ''} transition-all`} onClick={() => setActiveTab('archived')}>Archived</button>
         </div>
         <div className="tc-view-toggle">
-          <button className={`tc-view-btn ${viewMode === 'grid' ? 'active bg-white shadow-sm' : ''} transition-all`} onClick={() => setViewMode('grid')} title="Grid view">
+          <button className={`tc-view-btn ${viewMode === 'grid' ? 'active' : ''} transition-all`} onClick={() => setViewMode('grid')} title="Grid view">
             <LayoutGrid size={18} />
           </button>
-          <button className={`tc-view-btn ${viewMode === 'list' ? 'active bg-white shadow-sm' : ''} transition-all`} onClick={() => setViewMode('list')} title="List view">
+          <button className={`tc-view-btn ${viewMode === 'list' ? 'active' : ''} transition-all`} onClick={() => setViewMode('list')} title="List view">
             <List size={18} />
           </button>
         </div>

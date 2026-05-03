@@ -286,7 +286,19 @@ const AdminUsers: React.FC = () => {
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay" style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          zIndex: 10000,
+          background: 'rgba(15, 23, 42, 0.4)', 
+          backdropFilter: 'blur(8px)' 
+        }} onClick={() => setShowCreateModal(false)}>
           <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
             <div className="modal-header">
               <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Onboard Personnel</h3>
@@ -340,7 +352,19 @@ const AdminUsers: React.FC = () => {
 
       {/* Edit User Modal */}
       {showEditModal && editingUser && (
-        <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} onClick={() => setShowEditModal(false)}>
+        <div className="modal-overlay" style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          zIndex: 10000,
+          background: 'rgba(15, 23, 42, 0.4)', 
+          backdropFilter: 'blur(8px)' 
+        }} onClick={() => setShowEditModal(false)}>
           <div className="premium-card modal animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
             <div className="modal-header">
               <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Profile Configuration</h3>

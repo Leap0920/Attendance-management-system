@@ -310,7 +310,13 @@ const TeacherAttendance: React.FC = () => {
               <div className="form-group"><label className="form-label">Duration (minutes)</label><input className="form-input" type="number" min="1" max="120" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} /></div>
               
               {/* Late Threshold Settings */}
-              <div className="form-group" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div className="form-group" style={{ 
+                marginTop: '1rem', 
+                padding: '1rem', 
+                background: 'var(--bg-secondary)', 
+                borderRadius: '8px', 
+                border: '1px solid var(--border-glass)' 
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <input 
                     type="checkbox" 

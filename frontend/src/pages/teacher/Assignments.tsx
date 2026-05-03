@@ -11,24 +11,23 @@ import { FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users,
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
+        className="theme-card"
         style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
-            background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', cursor: 'pointer',
+            borderRadius: 14, cursor: 'pointer',
             transition: 'all .15s', marginBottom: '0.5rem'
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
     >
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <FileText size={18} color="#3b82f6" />
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <FileText size={18} color="var(--accent-blue)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
+            <div style={{ fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{fileName}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
                 {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'}
             </div>
         </div>
-        <Download size={18} color="#94a3b8" />
+        <Download size={18} color="var(--text-muted)" />
     </div>
 );
 
@@ -237,16 +236,16 @@ const TeacherAssignments: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center', marginRight: '1rem' }}>
                 <div style={{ position: 'relative' }} ref={menuRef}>
-                    <div style={{ color: isMenuOpen ? '#3b82f6' : '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', background: isMenuOpen ? '#eff6ff' : 'transparent', padding: '6px 12px', borderRadius: '10px', transition: 'all 0.2s', border: '1px solid', borderColor: isMenuOpen ? '#3b82f6' : 'transparent' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                    <div style={{ color: isMenuOpen ? 'var(--accent-blue)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', background: isMenuOpen ? 'rgba(59,130,246,0.1)' : 'transparent', padding: '6px 12px', borderRadius: '10px', transition: 'all 0.2s', border: '1px solid', borderColor: isMenuOpen ? 'var(--accent-blue)' : 'transparent' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
                         <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeCourseData?.courseCode || 'Select Course'}</span>
                         <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
                     </div>
                     {isMenuOpen && (
-                        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '10px', background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px', zIndex: 100 }}>
-                            <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
+                        <div className="theme-card" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '10px', borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px', zIndex: 100 }}>
+                            <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
                             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                 {courses.map(c => (
-                                    <div key={c.id} onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }} style={{ padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: selectedCourse === c.id ? '#eff6ff' : 'transparent', color: selectedCourse === c.id ? '#3b82f6' : '#334155', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <div key={c.id} onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }} style={{ padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: selectedCourse === c.id ? 'rgba(59,130,246,0.1)' : 'transparent', color: selectedCourse === c.id ? 'var(--accent-blue)' : 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                         <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
                                         <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
                                     </div>
@@ -256,7 +255,7 @@ const TeacherAssignments: React.FC = () => {
                     )}
                 </div>
             </nav>
-            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit', width: 'auto' }}>
                 <Plus size={16} /> New Assignment
             </button>
         </div>
@@ -276,10 +275,10 @@ const TeacherAssignments: React.FC = () => {
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Assignments</h2>
-                                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 1.25rem 0' }}>Review and grade work for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode}</strong>.</p>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Assignments</h2>
+                                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0 0 1.25rem 0' }}>Review and grade work for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode}</strong>.</p>
                                 
-                                <div style={{ display: 'flex', gap: '0.5rem', background: '#f1f5f9', padding: '0.4rem', borderRadius: 14, width: 'fit-content' }}>
+                                <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.4rem', borderRadius: 14, width: 'fit-content' }}>
                                     {[
                                         { id: 'all', label: 'All', icon: <History size={14} /> },
                                         { id: 'urgent', label: 'Urgent', icon: <Clock size={14} /> },
@@ -294,8 +293,8 @@ const TeacherAssignments: React.FC = () => {
                                                 padding: '0.5rem 1rem', borderRadius: 10, border: 'none',
                                                 fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
                                                 transition: 'all .2s',
-                                                background: statusFilter === f.id ? '#fff' : 'transparent',
-                                                color: statusFilter === f.id ? '#3b82f6' : '#64748b',
+                                                background: statusFilter === f.id ? 'var(--bg-card)' : 'transparent',
+                                                color: statusFilter === f.id ? 'var(--accent-blue)' : 'var(--text-muted)',
                                                 boxShadow: statusFilter === f.id ? '0 2px 6px rgba(0,0,0,0.05)' : 'none'
                                             }}
                                         >
@@ -308,10 +307,10 @@ const TeacherAssignments: React.FC = () => {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {filtered.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '5rem', background: '#fafbfc', borderRadius: 24, border: '2px dashed #e2e8f0' }}>
-                                    <Filter size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
-                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>No assignments found</h3>
-                                    <p style={{ color: '#64748b' }}>Try changing your filter or classroom.</p>
+                                <div className="empty-state-card" style={{ textAlign: 'center', padding: '5rem', background: 'var(--bg-secondary)', borderRadius: 24, border: '2px dashed var(--border-glass)' }}>
+                                    <Filter size={48} color="var(--text-muted)" className="empty-state-icon" style={{ marginBottom: '1rem' }} />
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No assignments found</h3>
+                                    <p style={{ color: 'var(--text-muted)' }}>Try changing your filter or classroom.</p>
                                 </div>
                             ) : (
                                 filtered.map(m => {
@@ -320,28 +319,28 @@ const TeacherAssignments: React.FC = () => {
                                     const isDone = enrollments.length > 0 && (m.submissionCount || 0) >= enrollments.length;
                                     
                                     return (
-                                        <div key={m.id} style={{ borderRadius: 16, border: '1px solid #f1f5f9', overflow: 'hidden', background: '#fff', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'slideUp 0.4s ease-out forwards' }}>
+                                        <div key={m.id} className="theme-card" style={{ borderRadius: 16, overflow: 'hidden', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'slideUp 0.4s ease-out forwards' }}>
                                             <div onClick={() => handleViewAssignment(m)} 
                                                 onMouseEnter={e => { e.currentTarget.parentElement!.style.transform = 'translateY(-2px)'; e.currentTarget.parentElement!.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
                                                 onMouseLeave={e => { e.currentTarget.parentElement!.style.transform = 'translateY(0)'; e.currentTarget.parentElement!.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
-                                                style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem', background: '#fff', cursor: 'pointer', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}` }}>
+                                                style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem', background: 'transparent', cursor: 'pointer', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : 'var(--accent-blue)'}` }}>
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
                                                         {(isDone || isPast || isUrgent) && (
-                                                            <span style={{ fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : '#2563eb' }}>
+                                                            <span style={{ fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : 'rgba(59,130,246,0.1)', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : 'var(--accent-blue)' }}>
                                                                 {isDone ? 'COMPLETED' : isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : ''}
                                                             </span>
                                                         )}
-                                                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
+                                                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
                                                     </div>
-                                                    <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: '#0f172a' }}>{m.title}</h3>
+                                                    <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: 'var(--text-primary)' }}>{m.title}</h3>
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                     <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Submissions</div>
-                                                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e293b' }}>{m.submissionCount || 0} / {enrollments.length}</div>
+                                                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Submissions</div>
+                                                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>{m.submissionCount || 0} / {enrollments.length}</div>
                                                     </div>
-                                                    <ChevronRight size={18} color="#cbd5e1" />
+                                                    <ChevronRight size={18} color="var(--text-muted)" />
                                                 </div>
                                             </div>
                                         </div>
@@ -352,22 +351,22 @@ const TeacherAssignments: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div style={{ background: '#fff', borderRadius: 24, padding: '1.75rem', border: '1px solid #f1f5f9' }}>
+                        <div className="theme-card shadow-sm" style={{ borderRadius: 24, padding: '1.75rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                                <Users size={18} color="#3b82f6" />
-                                <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f172a', margin: 0 }}>Class Overview</h3>
+                                <Users size={18} color="var(--accent-blue)" />
+                                <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)', margin: 0 }}>Class Overview</h3>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>Total Students</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{enrollments.length}</span>
+                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Students</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>{enrollments.length}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>Active Assignments</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{assignments.length}</span>
+                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Active Assignments</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>{assignments.length}</span>
                                 </div>
-                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
-                                    <button onClick={() => navigate(`/teacher/reports?courseId=${selectedCourse}`)} style={{ width: '100%', padding: '0.85rem', borderRadius: 14, border: '1px solid #3b82f6', color: '#3b82f6', background: '#fff', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
+                                    <button onClick={() => navigate(`/teacher/reports?courseId=${selectedCourse}`)} className="btn btn-secondary" style={{ width: '100%', padding: '0.85rem', borderRadius: 14, fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                                         <ArrowUpRight size={16} /> View Full Report
                                     </button>
                                 </div>
@@ -379,15 +378,15 @@ const TeacherAssignments: React.FC = () => {
 
             {showModal && (
                 <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowModal(false)}>
-                    <div style={{ position: 'relative', background: '#fff', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
+                    <div className="theme-card" style={{ position: 'relative', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
                         
                         {/* Header */}
-                        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                        <div className="modal-header" style={{ padding: '1.5rem 2rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                             <div>
-                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>New Assignment</h3>
-                                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748b' }}>Post instructions and materials to your sections</p>
+                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>New Assignment</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Post instructions and materials to your sections</p>
                             </div>
-                            <button onClick={() => setShowModal(false)} style={{ border: 'none', background: '#f8fafc', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = '#f8fafc'}><X size={20} color="#64748b" /></button>
+                            <button onClick={() => setShowModal(false)} className="theme-btn-secondary" style={{ borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', border: 'none' }}><X size={20} color="var(--text-muted)" /></button>
                         </div>
 
                         <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -395,12 +394,11 @@ const TeacherAssignments: React.FC = () => {
                             <div style={{ flex: 1, overflowY: 'auto', padding: '2rem' }} className="modal-scroll-area">
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Title & Instructions</label>
+                                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Title & Instructions</label>
                                         <textarea 
                                             required 
-                                            style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '1.25rem', fontSize: '0.95rem', minHeight: 150, outline: 'none', transition: 'all 0.2s', fontFamily: 'inherit', background: '#f8fafc' }} 
-                                            onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.background = '#fff'; }}
-                                            onBlur={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
+                                            className="form-input"
+                                            style={{ width: '100%', borderRadius: 16, padding: '1.25rem', fontSize: '0.95rem', minHeight: 150, outline: 'none', transition: 'all 0.2s', fontFamily: 'inherit' }} 
                                             placeholder="Assignment title (first line)&#10;Detailed instructions..." 
                                             value={form.content} 
                                             onChange={e => setForm({ ...form, content: e.target.value })} 
@@ -410,20 +408,21 @@ const TeacherAssignments: React.FC = () => {
                                     <div className="responsive-modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '2rem' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                             <div>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Due Date</label>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Due Date</label>
                                                 <input 
                                                     type="datetime-local" 
-                                                    style={{ width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '0.85rem 1.25rem', fontSize: '0.9rem', outline: 'none', background: '#f8fafc' }} 
+                                                    className="form-input"
+                                                    style={{ width: '100%', borderRadius: 16, padding: '0.85rem 1.25rem', fontSize: '0.9rem', outline: 'none' }} 
                                                     value={form.dueDate} 
                                                     onChange={e => setForm({ ...form, dueDate: e.target.value })} 
                                                 />
                                             </div>
                                             
                                             <div>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Target Sections</label>
-                                                <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '1rem', background: '#f8fafc', borderRadius: 16, border: '1.5px solid #e2e8f0' }}>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Target Sections</label>
+                                                <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border-glass)' }}>
                                                     {courses.map(c => (
-                                                        <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: targetCourses.includes(c.id) ? '#eff6ff' : 'transparent', marginBottom: '4px' }}>
+                                                        <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: targetCourses.includes(c.id) ? 'rgba(59,130,246,0.1)' : 'transparent', marginBottom: '4px' }}>
                                                             <input
                                                                 type="checkbox"
                                                                 checked={targetCourses.includes(c.id)}
@@ -433,7 +432,7 @@ const TeacherAssignments: React.FC = () => {
                                                                 }}
                                                                 style={{ width: 18, height: 18, cursor: 'pointer' }}
                                                             />
-                                                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: targetCourses.includes(c.id) ? '#3b82f6' : '#334155' }}>
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: targetCourses.includes(c.id) ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
                                                                 {c.courseCode} <span style={{ fontWeight: 500, opacity: 0.6 }}>· {c.section}</span>
                                                             </div>
                                                         </label>
@@ -444,17 +443,15 @@ const TeacherAssignments: React.FC = () => {
                                         </div>
 
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Attachment</label>
-                                            <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', border: '2px dashed #e2e8f0', borderRadius: 20, cursor: 'pointer', background: file ? '#f0f9ff' : '#f8fafc', transition: 'all 0.2s', flex: 1, minHeight: '180px' }}
-                                                onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'}
-                                                onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Attachment</label>
+                                            <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', border: '2px dashed var(--border-glass)', borderRadius: 20, cursor: 'pointer', background: file ? 'rgba(59,130,246,0.1)' : 'var(--bg-secondary)', transition: 'all 0.2s', flex: 1, minHeight: '180px' }}
                                             >
                                                 <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
-                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? '#e0f2fe' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-                                                    <Upload size={22} color={file ? '#3b82f6' : '#94a3b8'} />
+                                                <div style={{ width: 48, height: 48, borderRadius: '50%', background: file ? 'rgba(59,130,246,0.2)' : 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+                                                    <Upload size={22} color={file ? 'var(--accent-blue)' : 'var(--text-muted)'} />
                                                 </div>
-                                                <div style={{ fontWeight: 700, color: file ? '#0369a1' : '#475569', fontSize: '0.85rem', textAlign: 'center' }}>{file ? file.name : 'Upload instruction file'}</div>
-                                                <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 6 }}>PDF, DOCX, ZIP or Images (10MB)</div>
+                                                <div style={{ fontWeight: 700, color: file ? 'var(--accent-blue)' : 'var(--text-secondary)', fontSize: '0.85rem', textAlign: 'center' }}>{file ? file.name : 'Upload instruction file'}</div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6 }}>PDF, DOCX, ZIP or Images (10MB)</div>
                                             </label>
                                         </div>
                                     </div>
@@ -462,9 +459,9 @@ const TeacherAssignments: React.FC = () => {
                             </div>
 
                             {/* Footer */}
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1.5rem 2rem', background: '#f8fafc', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
-                                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.85rem 2rem', borderRadius: 16, border: 'none', background: '#fff', color: '#64748b', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>Cancel</button>
-                                <button type="submit" disabled={submitting} style={{ padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 8px 20px rgba(59,130,246,0.3)', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>{submitting ? 'Creating...' : 'Create Assignment'}</button>
+                            <div className="modal-actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1.5rem 2rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-glass)', flexShrink: 0 }}>
+                                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary" style={{ padding: '0.85rem 2rem', borderRadius: 16, fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.05)', width: 'auto' }}>Cancel</button>
+                                <button type="submit" disabled={submitting} className="btn btn-primary" style={{ padding: '0.85rem 2.5rem', borderRadius: 16, border: 'none', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 8px 20px rgba(59,130,246,0.3)', transition: 'all 0.2s', width: 'auto' }}>{submitting ? 'Creating...' : 'Create Assignment'}</button>
                             </div>
                         </form>
                     </div>
@@ -473,15 +470,15 @@ const TeacherAssignments: React.FC = () => {
 
             {/* Full Screen Assignment Detail Modal */}
             {selectedAssignment && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1200, background: '#fff', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 1200, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                     {/* Header */}
-                    <div style={{ padding: '1rem 2rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '2rem', background: '#fff' }}>
-                        <button onClick={() => setSelectedAssignment(null)} style={{ border: 'none', background: '#f1f5f9', borderRadius: 12, padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer' }}>
+                    <div style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '2rem', background: 'var(--bg-card)' }}>
+                        <button onClick={() => setSelectedAssignment(null)} className="btn btn-secondary" style={{ borderRadius: 12, padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer', width: 'auto' }}>
                             <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> Back
                         </button>
                         <div style={{ flex: 1 }}>
-                            <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>{selectedAssignment.title}</h2>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedAssignment.dueDate ? `Due ${new Date(selectedAssignment.dueDate).toLocaleString()}` : 'No deadline'}</div>
+                            <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedAssignment.title}</h2>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{selectedAssignment.dueDate ? `Due ${new Date(selectedAssignment.dueDate).toLocaleString()}` : 'No deadline'}</div>
                         </div>
                         <button onClick={() => { handleDelete(selectedAssignment.id); setSelectedAssignment(null); }} style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                             <Trash2 size={18} /> Delete Assignment
@@ -491,23 +488,23 @@ const TeacherAssignments: React.FC = () => {
                     {/* Content */}
                     <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 420px' }}>
                         {/* Left Side: Submissions */}
-                        <div style={{ padding: '2rem', borderRight: '1px solid #f1f5f9', overflowY: 'auto' }}>
+                        <div style={{ padding: '2rem', borderRight: '1px solid var(--border-glass)', overflowY: 'auto' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     {(['all', 'submitted', 'missing', 'graded'] as const).map(f => (
-                                        <button key={f} onClick={() => setSubmissionFilter(f)} style={{ padding: '0.4rem 1rem', borderRadius: 20, border: '1px solid', borderColor: submissionFilter === f ? '#3b82f6' : '#e2e8f0', background: submissionFilter === f ? '#3b82f6' : '#fff', color: submissionFilter === f ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{f}</button>
+                                        <button key={f} onClick={() => setSubmissionFilter(f)} style={{ padding: '0.4rem 1rem', borderRadius: 20, border: '1px solid', borderColor: submissionFilter === f ? 'var(--accent-blue)' : 'var(--border-glass)', background: submissionFilter === f ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: submissionFilter === f ? '#fff' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{f}</button>
                                     ))}
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>{getFullSubmissionList().length} Students</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{getFullSubmissionList().length} Students</div>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {getFullSubmissionList().map(({ student, submission, status }) => (
-                                    <div key={student.id} style={{ padding: '1rem 1.5rem', background: '#fff', borderRadius: 16, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div key={student.id} className="theme-card" style={{ padding: '1rem 1.5rem', borderRadius: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                             <Avatar firstName={student.firstName} lastName={student.lastName} size={40} />
                                             <div>
-                                                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{student.firstName} {student.lastName}</div>
+                                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{student.firstName} {student.lastName}</div>
                                                 <div style={{ fontSize: '0.7rem', color: status === 'missing' ? '#ef4444' : '#10b981', fontWeight: 800, textTransform: 'uppercase' }}>
                                                     {status === 'missing' ? (
                                                         selectedAssignment.dueDate && new Date(selectedAssignment.dueDate) < new Date() ? 'MISSING' : ''
@@ -518,33 +515,33 @@ const TeacherAssignments: React.FC = () => {
                                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                                             {submission ? (
                                                 <>
-                                                    {submission.fileName && <button onClick={() => handlePreview('submission', submission.id, submission.fileName)} style={{ padding: '0.5rem 1rem', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><FileText size={14} color="#3b82f6" /> View Work</button>}
-                                                    <button onClick={() => { setGradingId(submission.id); setGradeVal(submission.grade || ''); setFeedbackVal(submission.feedback || ''); }} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, background: status === 'graded' ? '#eff6ff' : '#3b82f6', color: status === 'graded' ? '#3b82f6' : '#fff', border: 'none', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>{status === 'graded' ? `Grade: ${submission.grade}%` : 'Grade Now'}</button>
+                                                    {submission.fileName && <button onClick={() => handlePreview('submission', submission.id, submission.fileName)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', width: 'auto' }}><FileText size={14} color="var(--accent-blue)" /> View Work</button>}
+                                                    <button onClick={() => { setGradingId(submission.id); setGradeVal(submission.grade || ''); setFeedbackVal(submission.feedback || ''); }} className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', borderRadius: 8, background: status === 'graded' ? 'rgba(59,130,246,0.1)' : 'var(--accent-blue)', color: status === 'graded' ? 'var(--accent-blue)' : '#fff', border: 'none', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', width: 'auto' }}>{status === 'graded' ? `Grade: ${submission.grade}%` : 'Grade Now'}</button>
                                                 </>
                                             ) : (
-                                                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No submission</span>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No submission</span>
                                             )}
                                         </div>
                                     </div>
                                 ))}
                                 {getFullSubmissionList().length === 0 && (
-                                    <div style={{ textAlign: 'center', padding: '3rem', background: '#fafbfc', borderRadius: 16, border: '1px dashed #e2e8f0' }}>
-                                        <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>No students match this filter.</p>
+                                    <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 16, border: '1px dashed var(--border-glass)' }}>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No students match this filter.</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {/* Right Side: Instructions & Discussion */}
-                        <div style={{ padding: '2rem', background: '#fafbfc', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
-                            <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                                <button onClick={() => setDetailTab('instructions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'instructions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'instructions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>Instructions</button>
-                                <button onClick={() => setDetailTab('submissions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'submissions' ? '#3b82f6' : '#94a3b8', borderBottom: `2px solid ${detailTab === 'submissions' ? '#3b82f6' : 'transparent'}`, cursor: 'pointer' }}>Discussion</button>
+                        <div style={{ padding: '2rem', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+                            <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border-glass)', marginBottom: '1.5rem' }}>
+                                <button onClick={() => setDetailTab('instructions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'instructions' ? 'var(--accent-blue)' : 'var(--text-muted)', borderBottom: `2px solid ${detailTab === 'instructions' ? 'var(--accent-blue)' : 'transparent'}`, cursor: 'pointer' }}>Instructions</button>
+                                <button onClick={() => setDetailTab('submissions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'submissions' ? 'var(--accent-blue)' : 'var(--text-muted)', borderBottom: `2px solid ${detailTab === 'submissions' ? 'var(--accent-blue)' : 'transparent'}`, cursor: 'pointer' }}>Discussion</button>
                             </div>
 
                             {detailTab === 'instructions' ? (
                                 <div style={{ animation: 'fadeIn 0.2s', flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-                                    {selectedAssignment.description && <div style={{ fontSize: '0.9rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.5rem', padding: '1rem', background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>{selectedAssignment.description}</div>}
+                                    {selectedAssignment.description && <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-glass)' }}>{selectedAssignment.description}</div>}
                                     {selectedAssignment.fileName && <FileCard fileName={selectedAssignment.fileName} fileSize={selectedAssignment.fileSize} onDownload={() => handlePreview('material', selectedAssignment.id, selectedAssignment.fileName)} />}
                                 </div>
                             ) : (
@@ -553,23 +550,23 @@ const TeacherAssignments: React.FC = () => {
                                         {comments.map((c: any) => (
                                             <div key={c.id} style={{ display: 'flex', gap: '0.75rem' }}>
                                                 <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={32} />
-                                                <div style={{ flex: 1, background: '#fff', padding: '0.75rem', borderRadius: '0 12px 12px 12px', border: '1px solid #e2e8f0' }}>
+                                                <div style={{ flex: 1, background: 'var(--bg-card)', padding: '0.75rem', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border-glass)' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                                                        <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{c.user?.firstName} {c.user?.lastName}</span>
-                                                        <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
+                                                        <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                                                     </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.4 }}>{c.content}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{c.content}</div>
                                                 </div>
                                             </div>
                                         ))}
-                                        {comments.length === 0 && <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic', marginTop: '2rem' }}>No comments yet.</p>}
+                                        {comments.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic', marginTop: '2rem' }}>No comments yet.</p>}
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.6rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#fff' }} placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
-                                        <button onClick={handleAddComment} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 12, padding: '0 1rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Post</button>
+                                        <input className="form-input" style={{ flex: 1, borderRadius: 12, padding: '0.6rem 1rem', fontSize: '0.85rem', outline: 'none' }} placeholder="Add a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
+                                        <button onClick={handleAddComment} className="btn btn-primary" style={{ borderRadius: 12, padding: '0 1rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', width: 'auto' }}>Post</button>
                                     </div>
                                 </div>
-                            )}
+                            ) }
                         </div>
                     </div>
                 </div>
@@ -578,20 +575,20 @@ const TeacherAssignments: React.FC = () => {
             {/* Inline Grading Modal */}
             {gradingId && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 1300, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-                    <div style={{ background: '#fff', width: '100%', maxWidth: 450, borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', padding: '2rem' }}>
-                        <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', fontWeight: 800 }}>Grade Submission</h3>
+                    <div className="theme-card" style={{ width: '100%', maxWidth: 450, borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', padding: '2rem' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Grade Submission</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>Score (0-100)</label>
-                                <input type="number" min="0" max="100" style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: '1rem', fontWeight: 700, outline: 'none' }} value={gradeVal} onChange={e => setGradeVal(e.target.value)} placeholder="e.g. 95" />
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Score (0-100)</label>
+                                <input type="number" min="0" max="100" className="form-input" style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: 12, fontSize: '1rem', fontWeight: 700, outline: 'none' }} value={gradeVal} onChange={e => setGradeVal(e.target.value)} placeholder="e.g. 95" />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>Feedback (Optional)</label>
-                                <textarea style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: '0.9rem', minHeight: 100, outline: 'none', resize: 'vertical' }} value={feedbackVal} onChange={e => setFeedbackVal(e.target.value)} placeholder="Well done! Very thorough analysis..." />
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Feedback (Optional)</label>
+                                <textarea className="form-input" style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: 12, fontSize: '0.9rem', minHeight: 100, outline: 'none', resize: 'vertical' }} value={feedbackVal} onChange={e => setFeedbackVal(e.target.value)} placeholder="Well done! Very thorough analysis..." />
                             </div>
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                                <button onClick={() => setGradingId(null)} style={{ flex: 1, padding: '0.85rem', borderRadius: 12, border: 'none', background: '#f1f5f9', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                                <button onClick={() => gradingId && handleGrade(gradingId, gradeVal, feedbackVal)} style={{ flex: 1, padding: '0.85rem', borderRadius: 12, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Save Grade</button>
+                            <div className="modal-actions" style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                                <button onClick={() => setGradingId(null)} className="btn btn-secondary" style={{ flex: 1, padding: '0.85rem', borderRadius: 12, fontWeight: 700 }}>Cancel</button>
+                                <button onClick={() => gradingId && handleGrade(gradingId, gradeVal, feedbackVal)} className="btn btn-primary" style={{ flex: 1, padding: '0.85rem', borderRadius: 12, fontWeight: 800 }}>Save Grade</button>
                             </div>
                         </div>
                     </div>

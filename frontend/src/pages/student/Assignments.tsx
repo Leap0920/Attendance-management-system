@@ -9,19 +9,18 @@ import Avatar from '../../components/Avatar';
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
+        className="theme-hover-secondary"
         style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
-            background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0', cursor: 'pointer',
+            background: 'var(--bg-secondary)', borderRadius: 14, border: '1px solid var(--border-glass)', cursor: 'pointer',
             transition: 'all .15s', marginBottom: '0.5rem'
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#93c5fd'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
     >
         <div style={{ width: 40, height: 40, borderRadius: 10, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <FileText size={18} color="#3b82f6" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
+            <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>
                 {fileSize ? (fileSize > 1048576 ? `${(fileSize / 1048576).toFixed(1)} MB` : `${Math.round(fileSize / 1024)} KB`) : 'File'}
             </div>
@@ -203,12 +202,12 @@ const StudentAssignments: React.FC = () => {
                     <div>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Tasks</h2>
-                                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 1.25rem 0' }}>Viewing all tasks across <strong>{courses.length} courses</strong>.</p>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Tasks</h2>
+                                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0 0 1.25rem 0' }}>Viewing all tasks across <strong>{courses.length} courses</strong>.</p>
                             </div>
                             
                             {/* Filter Chips */}
-                            <div style={{ display: 'flex', gap: '0.5rem', background: '#f1f5f9', padding: '0.4rem', borderRadius: 14, width: 'fit-content' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.4rem', borderRadius: 14, width: 'fit-content' }}>
                                     {[
                                         { id: 'all', label: 'All', icon: <History size={14} /> },
                                         { id: 'urgent', label: 'Urgent', icon: <Clock size={14} /> },
@@ -218,14 +217,12 @@ const StudentAssignments: React.FC = () => {
                                         <button
                                             key={f.id}
                                             onClick={() => setStatusFilter(f.id as any)}
+                                            className={`sa-filter-chip ${statusFilter === f.id ? 'active' : ''}`}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                                                 padding: '0.5rem 1rem', borderRadius: 10, border: 'none',
                                                 fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
                                                 transition: 'all .2s',
-                                                background: statusFilter === f.id ? '#fff' : 'transparent',
-                                                color: statusFilter === f.id ? '#3b82f6' : '#64748b',
-                                                boxShadow: statusFilter === f.id ? '0 2px 6px rgba(0,0,0,0.05)' : 'none'
                                             }}
                                         >
                                             {f.icon} {f.label}
@@ -236,9 +233,9 @@ const StudentAssignments: React.FC = () => {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {filtered.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '5rem', background: '#fafbfc', borderRadius: 24, border: '2px dashed #e2e8f0', animation: 'fadeIn 0.4s ease-out' }}>
+                                <div style={{ textAlign: 'center', padding: '5rem', background: 'var(--bg-secondary)', borderRadius: 24, border: '2px dashed #e2e8f0', animation: 'fadeIn 0.4s ease-out' }}>
                                     <Filter size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
-                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>No tasks found</h3>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No tasks found</h3>
                                     <p style={{ color: '#64748b' }}>Try changing your filter or search query.</p>
                                 </div>
                             ) : (
@@ -248,11 +245,10 @@ const StudentAssignments: React.FC = () => {
                                     const isPast = m.dueDate && new Date(m.dueDate) < new Date();
                                     
                                     return (
-                                        <div key={m.id} style={{ borderRadius: 16, border: '1px solid #f1f5f9', overflow: 'hidden', background: '#fff', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'slideUp 0.4s ease-out forwards' }}>
+                                        <div key={m.id} className="sa-assignment-card" style={{ borderRadius: 16, border: '1px solid var(--border-glass)', overflow: 'hidden', background: 'var(--bg-card)', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'slideUp 0.4s ease-out forwards' }}>
                                             <div onClick={() => handleViewAssignment(m)} 
-                                                onMouseEnter={e => { e.currentTarget.parentElement!.style.transform = 'translateY(-2px)'; e.currentTarget.parentElement!.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
-                                                onMouseLeave={e => { e.currentTarget.parentElement!.style.transform = 'translateY(0)'; e.currentTarget.parentElement!.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
-                                                style={{ padding: '1.25rem', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1.15rem', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}` }}>
+                                                className="theme-hover-secondary"
+                                                style={{ padding: '1.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1.15rem', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}` }}>
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 6 }}>
                                                         {(isDone || isPast || isUrgent) && (
@@ -260,10 +256,10 @@ const StudentAssignments: React.FC = () => {
                                                                 {isDone ? 'Done' : isPast ? 'Overdue' : isUrgent ? 'Urgent' : ''}
                                                             </span>
                                                         )}
-                                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={14} /> {m.dueDate ? new Date(m.dueDate).toLocaleDateString() : 'No deadline'}</span>
-                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b82f6', background: '#eff6ff', padding: '3px 10px', borderRadius: 8 }}>{m.course?.courseCode}</span>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={14} /> {m.dueDate ? new Date(m.dueDate).toLocaleDateString() : 'No deadline'}</span>
+                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-blue)', background: 'rgba(59,130,246,0.1)', padding: '3px 10px', borderRadius: 8 }}>{m.course?.courseCode}</span>
                                                     </div>
-                                                    <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</h4>
+                                                    <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</h4>
                                                 </div>
                                                 <ChevronRight size={20} color="#cbd5e1" />
                                             </div>
@@ -275,19 +271,19 @@ const StudentAssignments: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div style={{ background: '#fff', borderRadius: 24, padding: '1.75rem', border: '1px solid #f1f5f9' }}>
-                            <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f172a', marginBottom: '1.5rem' }}>Academic Record</h3>
+                        <div className="sa-sidebar-card" style={{ borderRadius: 24, padding: '1.75rem' }}>
+                            <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Academic Record</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>Total Assigned</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{assignments.length}</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>{assignments.length}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>Courses Enrolled</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{courses.length}</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>{courses.length}</span>
                                 </div>
-                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
-                                    <button onClick={() => navigate('/student/courses')} style={{ width: '100%', padding: '0.85rem', borderRadius: 14, border: '1px solid #3b82f6', color: '#3b82f6', background: '#fff', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', transition: 'all .2s' }} onMouseEnter={e => { e.currentTarget.style.background = '#eff6ff'; }} onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}>View All Courses</button>
+                                <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
+                                    <button onClick={() => navigate('/student/courses')} className="sd-link-btn" style={{ width: '100%', padding: '0.85rem', borderRadius: 14, fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', transition: 'all .2s' }}>View All Courses</button>
                                 </div>
                             </div>
                         </div>
@@ -297,15 +293,15 @@ const StudentAssignments: React.FC = () => {
 
             {/* Full Screen Assignment Detail Modal */}
             {selectedAssignment && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1200, background: '#fff', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                     {/* Header */}
-                    <div style={{ padding: '0.75rem 2.5rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '2rem', background: '#fff' }}>
-                        <button onClick={() => setSelectedAssignment(null)} style={{ border: 'none', background: '#f1f5f9', borderRadius: 10, padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
+                    <div style={{ padding: '0.75rem 2.5rem', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '2rem', background: 'var(--bg-card)' }}>
+                        <button onClick={() => setSelectedAssignment(null)} style={{ border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: 10, padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
                             <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} /> Back to Tasks
                         </button>
                         <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 2 }}>
-                                <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>{selectedAssignment.title}</h2>
+                                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedAssignment.title}</h2>
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: 6 }}>{selectedAssignment.course?.courseCode}</span>
                             </div>
                             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{selectedAssignment.dueDate ? `Due ${new Date(selectedAssignment.dueDate).toLocaleString()}` : 'No deadline'}</div>
@@ -315,11 +311,11 @@ const StudentAssignments: React.FC = () => {
                     {/* Content */}
                     <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 400px' }}>
                         {/* Left Side: Instructions */}
-                        <div style={{ padding: '1.5rem 2.5rem', borderRight: '1px solid #f1f5f9', overflowY: 'auto' }}>
+                        <div style={{ padding: '1.5rem 2.5rem', borderRight: '1px solid var(--border-glass)', overflowY: 'auto' }}>
                             <div style={{ marginBottom: '2rem' }}>
-                                <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3b82f6', borderBottom: '2px solid #3b82f6', display: 'inline-block', paddingBottom: '0.4rem', marginBottom: '1.25rem' }}>Assignment Instructions</h3>
+                                <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-blue)', borderBottom: '2px solid var(--accent-blue)', display: 'inline-block', paddingBottom: '0.4rem', marginBottom: '1.25rem' }}>Assignment Instructions</h3>
                                 {selectedAssignment.description && (
-                                    <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.25rem', padding: '1.15rem', background: '#f8fafc', borderRadius: 12, border: '1px solid #f1f5f9' }}>
+                                    <div className="sad-instruction-box" style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: '1.25rem', padding: '1.15rem', borderRadius: 12 }}>
                                         {selectedAssignment.description}
                                     </div>
                                 )}
@@ -330,42 +326,42 @@ const StudentAssignments: React.FC = () => {
                         </div>
 
                         {/* Right Side: Submission & Chats (Tabbed) */}
-                        <div style={{ background: '#fafbfc', borderLeft: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#fff', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
-                                <button onClick={() => setDetailTab('submission')} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'submission' ? '#3b82f6' : 'transparent', color: detailTab === 'submission' ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Submission</button>
-                                <button onClick={() => setDetailTab('discussion')} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'discussion' ? '#3b82f6' : 'transparent', color: detailTab === 'discussion' ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Discussion</button>
-                                <button onClick={() => setDetailTab('private')} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'private' ? '#3b82f6' : 'transparent', color: detailTab === 'private' ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Private</button>
+                        <div style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                            <div className="sad-sidebar-tabs" style={{ display: 'flex', gap: '0.5rem', padding: '1rem', borderBottom: '1px solid var(--border-glass)', flexShrink: 0 }}>
+                                <button onClick={() => setDetailTab('submission')} className={`sad-tab ${detailTab === 'submission' ? 'active' : ''}`} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'submission' ? 'var(--accent-blue)' : 'transparent', color: detailTab === 'submission' ? '#fff' : '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Submission</button>
+                                <button onClick={() => setDetailTab('discussion')} className={`sad-tab ${detailTab === 'discussion' ? 'active' : ''}`} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'discussion' ? 'var(--accent-blue)' : 'transparent', color: detailTab === 'discussion' ? '#fff' : '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Discussion</button>
+                                <button onClick={() => setDetailTab('private')} className={`sad-tab ${detailTab === 'private' ? 'active' : ''}`} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'private' ? 'var(--accent-blue)' : 'transparent', color: detailTab === 'private' ? '#fff' : '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Private</button>
                             </div>
 
                             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                                 {detailTab === 'submission' && (
                                     <div style={{ padding: '1.5rem', animation: 'fadeIn 0.2s' }}>
-                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', marginBottom: '1.25rem' }}>Your Submission</h4>
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1.25rem' }}>Your Submission</h4>
                                         {mySubmission ? (
-                                            <div style={{ background: '#fff', borderRadius: 16, padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                            <div style={{ background: 'var(--bg-card)', borderRadius: 16, padding: '1.25rem', border: '1px solid var(--border-glass)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                                     <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff', color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6' }}>{mySubmission.status}</span>
                                                     {mySubmission.grade !== null && <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>{mySubmission.grade}<span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>/100</span></div>}
                                                 </div>
                                                 {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => handlePreview('submission', mySubmission.id, mySubmission.fileName)} />}
-                                                {mySubmission.content && <div style={{ fontSize: '0.82rem', color: '#475569', background: '#f8fafc', padding: '1rem', borderRadius: 12, marginTop: '1rem', fontStyle: 'italic', border: '1px solid #f1f5f9' }}>"{mySubmission.content}"</div>}
+                                                {mySubmission.content && <div style={{ fontSize: '0.82rem', color: '#475569', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 12, marginTop: '1rem', fontStyle: 'italic', border: '1px solid var(--border-glass)' }}>"{mySubmission.content}"</div>}
                                                 {mySubmission.feedback && <div style={{ marginTop: '1.25rem', padding: '1.15rem', borderRadius: 14, background: '#fffbeb', border: '1px solid #fef3c7', fontSize: '0.82rem', color: '#92400e' }}><strong>Instructor Feedback:</strong><br/>{mySubmission.feedback}</div>}
                                             </div>
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                <textarea style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 12, padding: '1rem', fontSize: '0.85rem', minHeight: 120, outline: 'none', resize: 'none', background: '#fff' }} placeholder="Type your answer or response here..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} />
+                                                <textarea style={{ width: '100%', border: '1px solid var(--border-glass)', borderRadius: 12, padding: '1rem', fontSize: '0.85rem', minHeight: 120, outline: 'none', resize: 'none', background: 'var(--bg-card)' }} placeholder="Type your answer or response here..." value={submitContent} onChange={e => setSubmitContent(e.target.value)} />
                                                 <div style={{ position: 'relative' }}>
                                                     {submitFile ? (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.75rem', background: '#fff', borderRadius: 12, border: '1px solid #3b82f6', boxShadow: '0 4px 6px rgba(59,130,246,0.1)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.75rem', background: 'var(--bg-card)', borderRadius: 12, border: '1px solid #3b82f6', boxShadow: '0 4px 6px rgba(59,130,246,0.1)' }}>
                                                             <FileText size={16} color="#3b82f6" />
                                                             <span style={{ fontSize: '0.8rem', flex: 1, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{submitFile.name}</span>
                                                             <button onClick={() => setSubmitFile(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
                                                         </div>
                                                     ) : (
-                                                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem 1rem', border: '2px dashed #e2e8f0', borderRadius: 16, cursor: 'pointer', background: '#fff', gap: '0.5rem', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                                                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem 1rem', border: '2px dashed #e2e8f0', borderRadius: 16, cursor: 'pointer', background: 'var(--bg-card)', gap: '0.5rem', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                                                             <input type="file" style={{ display: 'none' }} onChange={e => setSubmitFile(e.target.files?.[0] || null)} />
                                                             <Upload size={20} color="#3b82f6" />
-                                                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>Attach Files</span>
+                                                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>Attach Files</span>
                                                             <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>PDF, DOCX, or Images</span>
                                                         </label>
                                                     )}
@@ -380,7 +376,7 @@ const StudentAssignments: React.FC = () => {
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem', animation: 'fadeIn 0.2s', overflow: 'hidden' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
                                             <MessageSquare size={16} color="#3b82f6" />
-                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Class Discussion</h4>
+                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Class Discussion</h4>
                                         </div>
                                         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
                                             {comments.filter(c => !c.isPrivate).map((c: any) => (
@@ -388,17 +384,17 @@ const StudentAssignments: React.FC = () => {
                                                     <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={28} />
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: 2 }}>
-                                                            <span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                            <span style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>{c.user?.firstName} {c.user?.lastName}</span>
                                                             <span style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                                                         </div>
-                                                        <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.5, background: '#fff', padding: '0.65rem 0.85rem', borderRadius: '0 12px 12px 12px', border: '1px solid #e2e8f0' }}>{c.content}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.5, background: 'var(--bg-card)', padding: '0.65rem 0.85rem', borderRadius: '0 12px 12px 12px', border: '1px solid var(--border-glass)' }}>{c.content}</div>
                                                     </div>
                                                 </div>
                                             ))}
                                             {comments.filter(c => !c.isPrivate).length === 0 && <p style={{ textAlign: 'center', padding: '2rem', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>No discussion yet.</p>}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#fff', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
-                                            <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.65rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#fff' }} placeholder="Ask a question..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
+                                        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-glass)', flexShrink: 0 }}>
+                                            <input style={{ flex: 1, border: '1px solid var(--border-glass)', borderRadius: 12, padding: '0.65rem 1rem', fontSize: '0.85rem', outline: 'none', background: 'var(--bg-card)' }} placeholder="Ask a question..." value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddComment(); }} />
                                             <button onClick={handleAddComment} disabled={!newComment.trim()} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 12, padding: '0 1.25rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Post</button>
                                         </div>
                                     </div>
@@ -408,7 +404,7 @@ const StudentAssignments: React.FC = () => {
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem', animation: 'fadeIn 0.2s', overflow: 'hidden' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
                                             <Shield size={16} color="#d97706" />
-                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Private Chat</h4>
+                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Private Chat</h4>
                                         </div>
                                         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
                                             {comments.filter(c => c.isPrivate).map((c: any) => {
@@ -425,8 +421,8 @@ const StudentAssignments: React.FC = () => {
                                             })}
                                             {comments.filter(c => c.isPrivate).length === 0 && <p style={{ textAlign: 'center', padding: '2rem', fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>Messages here are only seen by you and your instructor.</p>}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#fff', borderTop: '1px solid #f1f5f9', flexShrink: 0 }}>
-                                            <input style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.65rem 1rem', fontSize: '0.85rem', outline: 'none', background: '#fff' }} placeholder="Message instructor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
+                                        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-glass)', flexShrink: 0 }}>
+                                            <input style={{ flex: 1, border: '1px solid var(--border-glass)', borderRadius: 12, padding: '0.65rem 1rem', fontSize: '0.85rem', outline: 'none', background: 'var(--bg-card)' }} placeholder="Message instructor..." value={privateComment} onChange={e => setPrivateComment(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handlePrivateComment(); }} />
                                             <button onClick={handlePrivateComment} disabled={!privateComment.trim()} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 12, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Play size={18} fill="#fff" /></button>
                                         </div>
                                     </div>
@@ -454,7 +450,7 @@ const StudentAssignments: React.FC = () => {
                         {previewType === 'image' ? (
                             <img src={previewUrl} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} alt="Preview" />
                         ) : previewType === 'pdf' ? (
-                            <iframe src={previewUrl} style={{ width: '100%', height: '100%', border: 'none', background: '#fff', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} title="PDF Preview" />
+                            <iframe src={previewUrl} style={{ width: '100%', height: '100%', border: 'none', background: 'var(--bg-card)', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} title="PDF Preview" />
                         ) : (
                             <div style={{ textAlign: 'center', color: '#fff' }}>
                                 <FileText size={64} color="#3b82f6" style={{ marginBottom: '1rem' }} />
