@@ -293,3 +293,6 @@ This project is open source and available under the MIT License.
 ---
 
 - Java, Spring Boot, React, and PostgreSQL
+
+to run the ngrok 
+npx ngrok http 5173

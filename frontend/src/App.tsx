@@ -31,6 +31,7 @@ import StudentMaterials from './pages/student/Materials';
 import StudentAssignments from './pages/student/Assignments';
 import StudentMessages from './pages/student/Messages';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { DesktopOnlyGuard } from './components/DesktopOnlyGuard';
 import './styles/index.css';
 
 function RootRedirect() {
@@ -94,14 +95,14 @@ function App() {
             <Route path="/" element={<RootRedirect />} />
 
             {/* Admin */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute>} />
-            <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={['admin']}><AdminCourses /></ProtectedRoute>} />
-            <Route path="/admin/audit-log" element={<ProtectedRoute allowedRoles={['admin']}><AdminAuditLog /></ProtectedRoute>} />
-            <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><AdminAnalytics /></ProtectedRoute>} />
-            <Route path="/admin/security-alerts" element={<ProtectedRoute allowedRoles={['admin']}><AdminSecurityEvents /></ProtectedRoute>} />
-            <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><AdminSecurity /></ProtectedRoute>} />
-            <Route path="/admin/health" element={<ProtectedRoute allowedRoles={['admin']}><AdminHealth /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminDashboard /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminUsers /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminCourses /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/audit-log" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminAuditLog /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminAnalytics /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/security-alerts" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminSecurityEvents /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminSecurity /></DesktopOnlyGuard></ProtectedRoute>} />
+            <Route path="/admin/health" element={<ProtectedRoute allowedRoles={['admin']}><DesktopOnlyGuard><AdminHealth /></DesktopOnlyGuard></ProtectedRoute>} />
 
             {/* Teacher */}
             <Route path="/teacher" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
