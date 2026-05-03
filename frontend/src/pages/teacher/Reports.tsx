@@ -89,12 +89,13 @@ const TeacherReports: React.FC = () => {
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const reportsActions = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+    <div className="tr-topbar-actions-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       <div className="tr-course-selector" style={{ margin: 0, padding: 0 }}>
         <div className="tr-dropdown" onClick={() => setShowCourseDropdown(!showCourseDropdown)} style={{ margin: 0, padding: '6px 12px', height: 'auto', borderRadius: '10px' }}>
           <span className="tr-dropdown-dot" style={{ background: '#3b82f6' }}></span>
           <span className="tr-dropdown-text" style={{ fontSize: '0.85rem' }}>
-            {selectedCourseObj ? `${selectedCourseObj.courseCode} • ${selectedCourseObj.section || 'Sec A'}` : 'Select course'}
+            <span className="tr-course-full">{selectedCourseObj ? `${selectedCourseObj.courseCode} • ${selectedCourseObj.section || 'Sec A'}` : 'Select course'}</span>
+            <span className="tr-course-short">{selectedCourseObj ? selectedCourseObj.courseCode : 'Select'}</span>
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
           {showCourseDropdown && (

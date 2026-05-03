@@ -11107,4 +11107,21 @@ body {
   .ta-preview-actions button {
     padding: 0.5rem !important;
   }
+
+  /* Reports Topbar Mobile */
+  .tr-course-short {
+    display: none;
+  }
+  
+  @media (max-width: 600px) {
+    .top-navbar-search {
+      display: none !important;
+    }
+    .tr-course-full {
+      display: none;
+    }
+    .tr-course-short {
+      display: inline;
+    }
+  }
 }
