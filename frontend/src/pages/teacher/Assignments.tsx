@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
@@ -10,11 +11,11 @@ import { FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users,
 
 const FileCard = ({ fileName, fileSize, onDownload }: { fileName: string; fileSize?: number; onDownload: () => void }) => (
     <div onClick={e => { e.stopPropagation(); onDownload(); }}
-        className="theme-card"
+        className="theme-card ta-file-card"
         style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem',
             borderRadius: 14, cursor: 'pointer',
-            transition: 'all .15s', marginBottom: '0.5rem'
+            transition: 'all .15s', marginBottom: '0.5rem', width: '100%', boxSizing: 'border-box'
         }}
     >
         <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -302,7 +303,9 @@ const TeacherAssignments: React.FC = () => {
                         <div className="ta-assignment-list">
                             {filtered.length === 0 ? (
                                 <div className="empty-state-card ta-empty-state">
-                                    <Filter size={48} color="var(--text-muted)" className="empty-state-icon" style={{ marginBottom: '1rem' }} />
+                                    <div className="empty-state-icon-wrapper">
+                                        <Filter size={32} className="empty-state-icon" />
+                                    </div>
                                     <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No assignments found</h3>
                                     <p style={{ color: 'var(--text-muted)' }}>Try changing your filter or classroom.</p>
                                 </div>
@@ -460,30 +463,30 @@ const TeacherAssignments: React.FC = () => {
             )}
 
             {/* Full Screen Assignment Detail Modal */}
-            {selectedAssignment && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1200, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            {selectedAssignment && createPortal(
+                <div className="ta-detail-modal" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                     {/* Header */}
-                    <div style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '2rem', background: 'var(--bg-card)' }}>
-                        <button onClick={() => setSelectedAssignment(null)} className="btn btn-secondary" style={{ borderRadius: 12, padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer', width: 'auto' }}>
-                            <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> Back
+                    <div className="ta-detail-header" style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '2rem', background: 'var(--bg-card)' }}>
+                        <button onClick={() => setSelectedAssignment(null)} className="btn btn-secondary ta-detail-back" style={{ borderRadius: 12, padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer', width: 'auto' }}>
+                            <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> <span>Back</span>
                         </button>
-                        <div style={{ flex: 1 }}>
+                        <div className="ta-detail-title-col" style={{ flex: 1 }}>
                             <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>{selectedAssignment.title}</h2>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{selectedAssignment.dueDate ? `Due ${new Date(selectedAssignment.dueDate).toLocaleString()}` : 'No deadline'}</div>
                         </div>
-                        <button onClick={() => { handleDelete(selectedAssignment.id); setSelectedAssignment(null); }} style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                            <Trash2 size={18} /> Delete Assignment
+                        <button className="ta-detail-delete" onClick={() => { handleDelete(selectedAssignment.id); setSelectedAssignment(null); }} style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <Trash2 size={18} /> <span>Delete Assignment</span>
                         </button>
                     </div>
 
                     {/* Content */}
-                    <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 420px' }}>
+                    <div className="ta-detail-content" style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 420px' }}>
                         {/* Left Side: Submissions */}
-                        <div style={{ padding: '2rem', borderRight: '1px solid var(--border-glass)', overflowY: 'auto' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="ta-detail-left" style={{ padding: '2rem', borderRight: '1px solid var(--border-glass)', overflowY: 'auto' }}>
+                            <div className="ta-detail-filters" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <div className="ta-detail-filter-btns" style={{ display: 'flex', gap: '0.5rem' }}>
                                     {(['all', 'submitted', 'missing', 'graded'] as const).map(f => (
-                                        <button key={f} onClick={() => setSubmissionFilter(f)} style={{ padding: '0.4rem 1rem', borderRadius: 20, border: '1px solid', borderColor: submissionFilter === f ? 'var(--accent-blue)' : 'var(--border-glass)', background: submissionFilter === f ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: submissionFilter === f ? '#fff' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{f}</button>
+                                        <button key={f} className="ta-detail-filter-btn" onClick={() => setSubmissionFilter(f)} style={{ padding: '0.4rem 1rem', borderRadius: 20, border: '1px solid', borderColor: submissionFilter === f ? 'var(--accent-blue)' : 'var(--border-glass)', background: submissionFilter === f ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: submissionFilter === f ? '#fff' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>{f}</button>
                                     ))}
                                 </div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{getFullSubmissionList().length} Students</div>
@@ -491,8 +494,8 @@ const TeacherAssignments: React.FC = () => {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {getFullSubmissionList().map(({ student, submission, status }) => (
-                                    <div key={student.id} className="theme-card" style={{ padding: '1rem 1.5rem', borderRadius: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div key={student.id} className="theme-card ta-student-card" style={{ padding: '1rem 1.5rem', borderRadius: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div className="ta-student-info" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                             <Avatar firstName={student.firstName} lastName={student.lastName} size={40} />
                                             <div>
                                                 <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{student.firstName} {student.lastName}</div>
@@ -503,7 +506,7 @@ const TeacherAssignments: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                        <div className="ta-student-actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                                             {submission ? (
                                                 <>
                                                     {submission.fileName && <button onClick={() => handlePreview('submission', submission.id, submission.fileName)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', width: 'auto' }}><FileText size={14} color="var(--accent-blue)" /> View Work</button>}
@@ -524,8 +527,8 @@ const TeacherAssignments: React.FC = () => {
                         </div>
 
                         {/* Right Side: Instructions & Discussion */}
-                        <div style={{ padding: '2rem', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
-                            <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border-glass)', marginBottom: '1.5rem' }}>
+                        <div className="ta-detail-right" style={{ padding: '2rem', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+                            <div className="ta-detail-tabs" style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border-glass)', marginBottom: '1.5rem' }}>
                                 <button onClick={() => setDetailTab('instructions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'instructions' ? 'var(--accent-blue)' : 'var(--text-muted)', borderBottom: `2px solid ${detailTab === 'instructions' ? 'var(--accent-blue)' : 'transparent'}`, cursor: 'pointer' }}>Instructions</button>
                                 <button onClick={() => setDetailTab('submissions')} style={{ paddingBottom: '0.75rem', border: 'none', background: 'none', fontSize: '0.85rem', fontWeight: 700, color: detailTab === 'submissions' ? 'var(--accent-blue)' : 'var(--text-muted)', borderBottom: `2px solid ${detailTab === 'submissions' ? 'var(--accent-blue)' : 'transparent'}`, cursor: 'pointer' }}>Discussion</button>
                             </div>
@@ -561,11 +564,11 @@ const TeacherAssignments: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* Inline Grading Modal */}
-            {gradingId && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1300, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            {gradingId && createPortal(
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
                     <div className="theme-card" style={{ width: '100%', maxWidth: 450, borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', padding: '2rem' }}>
                         <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Grade Submission</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -584,17 +587,17 @@ const TeacherAssignments: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* File Preview Modal */}
-            {previewUrl && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 2100, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
-                    <div style={{ padding: '1rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {previewUrl && createPortal(
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
+                    <div className="ta-preview-header" style={{ padding: '1rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
+                        <div className="ta-preview-title-col" style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 0 }}>
                             <FileText size={20} color="#3b82f6" />
-                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{previewName}</h3>
+                            <h3 className="ta-preview-title" style={{ margin: 0, fontSize: '1rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{previewName}</h3>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div className="ta-preview-actions" style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
                             <button onClick={() => { if (previewUrl) { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); } }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Download</button>
                             <button onClick={() => { if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>
                         </div>
@@ -613,7 +616,7 @@ const TeacherAssignments: React.FC = () => {
                         )}
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             <style>{`
                 @keyframes fadeIn {
