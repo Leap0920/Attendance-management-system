@@ -11125,3 +11125,185 @@ body {
     }
   }
 }
+
+/* ── Student Dashboard Mobile ─────────────────────────────── */
+@media (max-width: 900px) {
+  .sd-welcome-header h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  .sd-active-session-banner {
+    padding: 1rem !important;
+  }
+  
+  .sd-attend-input-row {
+    flex-direction: column;
+  }
+  
+  .sd-submit-btn {
+    width: 100% !important;
+  }
+  
+  .sd-top-grid, .sd-bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  .sd-stats-section {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  /* Make the last stat card span full width if odd number */
+  .sd-stat-card:last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+
+  .sd-course-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Student Courses Mobile ────────────────────────────────── */
+@media (max-width: 768px) {
+  .tc-course-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .tc-filter-bar {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start !important;
+  }
+  
+  .tc-tabs {
+    width: 100%;
+    display: flex;
+  }
+  
+  .tc-tab {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* ── Student Attendance Mobile ─────────────────────────────── */
+@media (max-width: 768px) {
+  .ta-stats-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  
+  .ta-stat-card {
+    padding: 0.75rem !important;
+    min-height: auto !important;
+  }
+  
+  .ta-stat-value {
+    font-size: 1.25rem !important;
+    margin: 0.25rem 0 !important;
+  }
+  
+  .ta-stat-label {
+    font-size: 0.65rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .ta-stat-badge {
+    font-size: 0.55rem !important;
+    padding: 2px 4px !important;
+  }
+
+  .ta-stat-icon-box {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .ta-stat-icon-box svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  .ta-active-card {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1.5rem;
+  }
+  
+  .ta-access-code {
+    max-width: 100% !important;
+  }
+  
+  .ta-active-actions {
+    width: 100%;
+  }
+  
+  .ta-active-actions button {
+    width: 100% !important;
+  }
+}
+
+/* ── Student Materials & Assignments Mobile ────────────────── */
+@media (max-width: 1000px) {
+  /* Layout Grids */
+  .sm-materials-grid, 
+  .sa-assignments-grid,
+  div[style*="grid-template-columns: 1fr 340px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide sidebars or move them below */
+  .sm-sidebar-card, .sa-sidebar-card {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .sm-material-card, .sm-assignment-card, .sa-assignment-card {
+    margin-right: 1.25rem !important;
+    margin-left: 0.25rem !important;
+  }
+  
+  .sm-material-card {
+    padding: 0.5rem !important;
+  }
+  
+  .sm-material-card > div {
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+  }
+  
+  .sm-material-card img {
+    display: none; /* Hide YT thumbnail on very small screens to save space */
+  }
+
+  /* Full Screen Assignment Detail Mobile */
+  .sad-modal-container, .sa-detail-modal-portal {
+    padding-top: 0 !important;
+  }
+
+  .sa-detail-content,
+  div[style*="grid-template-columns: 1fr 400px"] {
+    grid-template-columns: 1fr !important;
+    overflow-y: auto !important;
+  }
+
+  div[style*="padding: 0.75rem 2.5rem"] {
+    padding: 0.75rem 1rem !important;
+    gap: 1rem !important;
+  }
+
+  div[style*="padding: 1.5rem 2.5rem"] {
+    padding: 1.5rem 1rem !important;
+  }
+
+  div[style*="padding: 1rem 2.5rem"] {
+    padding: 1rem !important;
+  }
+
+  .sad-sidebar-tabs {
+    padding: 0.5rem !important;
+  }
+}

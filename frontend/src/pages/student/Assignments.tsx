@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi, fileApi } from '../../api';
@@ -198,7 +199,7 @@ const StudentAssignments: React.FC = () => {
             {loading ? (
                 <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading all assignments...</p></div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
+                <div className="sa-assignments-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
                     <div>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <div>
@@ -270,7 +271,7 @@ const StudentAssignments: React.FC = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="sa-sidebar-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div className="sa-sidebar-card" style={{ borderRadius: 24, padding: '1.75rem' }}>
                             <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Academic Record</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -292,8 +293,8 @@ const StudentAssignments: React.FC = () => {
             )}
 
             {/* Full Screen Assignment Detail Modal */}
-            {selectedAssignment && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            {selectedAssignment && createPortal(
+                <div className="sa-detail-modal-portal" style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                     {/* Header */}
                     <div style={{ padding: '0.75rem 2.5rem', borderBottom: '1px solid var(--border-glass)', display: 'flex', alignItems: 'center', gap: '2rem', background: 'var(--bg-card)' }}>
                         <button onClick={() => setSelectedAssignment(null)} style={{ border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-primary)', borderRadius: 10, padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
@@ -309,9 +310,9 @@ const StudentAssignments: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <div style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 400px' }}>
+                    <div className="sa-detail-content" style={{ flex: 1, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 400px' }}>
                         {/* Left Side: Instructions */}
-                        <div style={{ padding: '1.5rem 2.5rem', borderRight: '1px solid var(--border-glass)', overflowY: 'auto' }}>
+                        <div className="sa-detail-instructions" style={{ padding: '1.5rem 2.5rem', borderRight: '1px solid var(--border-glass)', overflowY: 'auto' }}>
                             <div style={{ marginBottom: '2rem' }}>
                                 <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-blue)', borderBottom: '2px solid var(--accent-blue)', display: 'inline-block', paddingBottom: '0.4rem', marginBottom: '1.25rem' }}>Assignment Instructions</h3>
                                 {selectedAssignment.description && (
@@ -326,7 +327,7 @@ const StudentAssignments: React.FC = () => {
                         </div>
 
                         {/* Right Side: Submission & Chats (Tabbed) */}
-                        <div style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                        <div className="sa-detail-sidebar" style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                             <div className="sad-sidebar-tabs" style={{ display: 'flex', gap: '0.5rem', padding: '1rem', borderBottom: '1px solid var(--border-glass)', flexShrink: 0 }}>
                                 <button onClick={() => setDetailTab('submission')} className={`sad-tab ${detailTab === 'submission' ? 'active' : ''}`} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'submission' ? 'var(--accent-blue)' : 'transparent', color: detailTab === 'submission' ? '#fff' : '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Submission</button>
                                 <button onClick={() => setDetailTab('discussion')} className={`sad-tab ${detailTab === 'discussion' ? 'active' : ''}`} style={{ flex: 1, padding: '0.65rem', borderRadius: 10, border: 'none', background: detailTab === 'discussion' ? 'var(--accent-blue)' : 'transparent', color: detailTab === 'discussion' ? '#fff' : '#94a3b8', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}>Discussion</button>
@@ -430,20 +431,21 @@ const StudentAssignments: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* File Preview Modal */}
-            {previewUrl && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 2100, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
+            {previewUrl && createPortal(
+                <div style={{ position: 'fixed', inset: 0, zIndex: 100001, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
                     <div style={{ padding: '1rem 2.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <FileText size={20} color="#3b82f6" />
-                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{previewName}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                            <FileText size={20} color="#3b82f6" style={{ flexShrink: 0 }} />
+                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewName}</h3>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Download</button>
-                            <button onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontWeight: 700, cursor: 'pointer' }}>Close Preview</button>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                            <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Download"><Download size={20} /></button>
+                            <button onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Close"><X size={20} /></button>
                         </div>
                     </div>
                     <div style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
@@ -459,7 +461,8 @@ const StudentAssignments: React.FC = () => {
                             </div>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <style>{`

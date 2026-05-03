@@ -144,6 +144,11 @@ const StudentMaterials: React.FC = () => {
     const [privateComment, setPrivateComment] = useState('');
     const [detailTab, setDetailTab] = useState<'instructions' | 'submissions'>('instructions');
 
+    /* preview state */
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'other' | null>(null);
+    const [previewName, setPreviewName] = useState('');
+
     /* ── Data ──────────────────────────────────────────────── */
     useEffect(() => {
         studentApi.getCourses().then(r => {
@@ -262,6 +267,21 @@ const StudentMaterials: React.FC = () => {
         } catch (err: any) { showApiError(err); } finally { setSubmitting(false); }
     };
 
+    const handlePreview = async (type: 'material' | 'submission', id: number, fileName: string) => {
+        try {
+            const res = type === 'material' ? await fileApi.downloadMaterial(id) : await fileApi.downloadSubmission(id);
+            const blob = new Blob([res.data], { type: fileName.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*' });
+            const url = URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            setPreviewName(fileName);
+            
+            const ext = fileName.split('.').pop()?.toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) setPreviewType('image');
+            else if (ext === 'pdf') setPreviewType('pdf');
+            else setPreviewType('other');
+        } catch { showAlert('Error', 'Could not load preview', 'error'); }
+    };
+
     /* ══════════════════════════════════════════════════════════
        DETAIL MODAL
        ══════════════════════════════════════════════════════════ */
@@ -341,7 +361,7 @@ const StudentMaterials: React.FC = () => {
             {loading ? (
                 <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading repository...</p></div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
+                <div className="sm-materials-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
                     {/* ── LEFT COLUMN ── */}
                     <div>
                         <div style={{ marginBottom: '1.5rem' }}>
@@ -509,7 +529,7 @@ const StudentMaterials: React.FC = () => {
                                 const ytId = mLink ? getYouTubeId(mLink) : null;
 
                                 return (
-                                    <div key={m.id} style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#3b82f6' : 'var(--border-glass)'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
+                                    <div key={m.id} className="sm-assignment-card" style={{ borderRadius: 18, border: `1px solid ${isExpanded ? '#3b82f6' : 'var(--border-glass)'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? '0 8px 24px rgba(59,130,246,.1)' : '0 1px 3px rgba(0,0,0,.04)' }}>
                                         <div onClick={() => toggleExpand(m)} style={{ padding: '1.25rem', background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                             <div style={{ width: 48, height: 48, borderRadius: 12, background: isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                 <BookOpen size={20} color={isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'} />
@@ -540,7 +560,7 @@ const StudentMaterials: React.FC = () => {
                                                         <div style={{ animation: 'fadeIn .2s' }}>
                                                             {m.description && <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{m.description}</p>}
                                                             {ytId && <VideoPreview url={mLink} />}
-                                                            {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => downloadFile('material', m.id, m.fileName)} />}
+                                                            {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => handlePreview('material', m.id, m.fileName)} />}
                                                         </div>
                                                     ) : (
                                                         <div style={{ animation: 'fadeIn .2s' }}>
@@ -550,7 +570,7 @@ const StudentMaterials: React.FC = () => {
                                                                         <span style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', padding: '3px 8px', borderRadius: 6, background: mySubmission.status === 'graded' ? '#f0fdf4' : '#eff6ff', color: mySubmission.status === 'graded' ? '#16a34a' : '#3b82f6' }}>{mySubmission.status}</span>
                                                                         {mySubmission.grade !== null && <span style={{ fontWeight: 900, color: 'var(--text-primary)' }}>{mySubmission.grade}/100</span>}
                                                                     </div>
-                                                                    {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => downloadFile('submission', mySubmission.id, mySubmission.fileName)} />}
+                                                                    {mySubmission.fileName && <FileCard fileName={mySubmission.fileName} fileSize={mySubmission.fileSize} onDownload={() => handlePreview('submission', mySubmission.id, mySubmission.fileName)} />}
                                                                     {mySubmission.content && <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '0.75rem', borderRadius: 8, border: '1px solid var(--border-glass)' }}>{mySubmission.content}</p>}
                                                                     {mySubmission.feedback && (
                                                                         <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: 8, background: '#fffbeb', border: '1px solid #fef3c7' }}>
@@ -619,7 +639,7 @@ const StudentMaterials: React.FC = () => {
                     </div>
 
                     {/* ── RIGHT SIDEBAR ── */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div className="sm-sidebar-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         {/* Library Insights */}
                         <div className="sm-sidebar-card" style={{ borderRadius: 22, padding: '1.5rem' }}>
                             <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Library Insights</h3>
@@ -673,6 +693,39 @@ const StudentMaterials: React.FC = () => {
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
+            `}</style>
+            {/* File Preview Modal */}
+            {previewUrl && createPortal(
+                <div style={{ position: 'fixed', inset: 0, zIndex: 100001, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)', animation: 'fadeIn 0.2s' }}>
+                    <div style={{ padding: '1rem 2.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                            <FileText size={20} color="#3b82f6" style={{ flexShrink: 0 }} />
+                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewName}</h3>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                            <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Download"><Download size={20} /></button>
+                            <button onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Close"><X size={20} /></button>
+                        </div>
+                    </div>
+                    <div style={{ flex: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
+                        {previewType === 'image' ? (
+                            <img src={previewUrl} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} alt="Preview" />
+                        ) : previewType === 'pdf' ? (
+                            <iframe src={previewUrl} style={{ width: '100%', height: '100%', border: 'none', background: 'var(--bg-card)', borderRadius: 8, boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} title="PDF Preview" />
+                        ) : (
+                            <div style={{ textAlign: 'center', color: '#fff' }}>
+                                <FileText size={64} color="#3b82f6" style={{ marginBottom: '1rem' }} />
+                                <p>Preview not available for this file type.</p>
+                                <button onClick={() => { const a = document.createElement('a'); a.href = previewUrl; a.download = previewName; a.click(); }} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '0.75rem 2rem', fontWeight: 700, cursor: 'pointer', marginTop: '1rem' }}>Download to View</button>
+                            </div>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            <style>{`
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             `}</style>
         </DashboardLayout>
     );
