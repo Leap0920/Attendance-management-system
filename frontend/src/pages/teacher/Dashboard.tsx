@@ -16,11 +16,9 @@ import {
   CircleDashed,
   ExternalLink,
   Calendar,
-  UserCheck,
-  Palette,
-  Image as ImageIcon,
   Upload,
-  QrCode
+  QrCode,
+  UserCheck
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -52,16 +50,10 @@ const COURSE_GRADIENTS = [
   'linear-gradient(135deg, #FF5722 0%, #FF8A65 100%)',
 ];
 
-const CATEGORY_COLORS = [
-  '#4285F4', '#F4A742', '#7B68EE', '#EA4335',
-  '#34A853', '#00BCD4', '#9C27B0', '#FF5722',
-];
+// Removed CATEGORY_COLORS
 
 const getGradient = (index: number) => COURSE_GRADIENTS[index % COURSE_GRADIENTS.length];
-const getCategoryLabel = (index: number) => [
-  'ENGINEERING', 'SOCIAL SCIENCES', 'MANDATORY', 'COMPUTER SCIENCE',
-  'BUSINESS', 'ARTS', 'EDUCATION', 'GENERAL',
-][index % 8];
+// Removed getCategoryLabel
 
 
 function timeAgo(dateStr: string): string {
@@ -159,7 +151,6 @@ const TeacherDashboard: React.FC = () => {
   const [reopenDuration, setReopenDuration] = useState('10');
   const [reopeningId, setReopeningId] = useState<number | null>(null);
   const [coverTab, setCoverTab] = useState<'colors' | 'presets' | 'upload'>('colors');
-  const [uploadingCover, setUploadingCover] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,16 +160,13 @@ const TeacherDashboard: React.FC = () => {
       showAlert('Error', 'Image too large. Max 2MB.', 'error');
       return;
     }
-    setUploadingCover(true);
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
       setCourseForm({ ...courseForm, coverColor: result });
-      setUploadingCover(false);
     };
     reader.onerror = () => {
       showAlert('Error', 'Failed to read file', 'error');
-      setUploadingCover(false);
     };
     reader.readAsDataURL(file);
   };
@@ -813,7 +801,7 @@ const TeacherDashboard: React.FC = () => {
               </button>
             </div>
             <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '2rem', display: 'inline-block', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+              <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '2rem', display: 'inline-block', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border-glass)' }}>
                 <QRCodeSVG
                   value={`${window.location.origin}/student/dashboard?attendSessionId=${showQrModal.sessionId}&code=${showQrModal.code}`}
                   size={240}

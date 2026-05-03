@@ -116,6 +116,8 @@ const TeacherCourses: React.FC = () => {
   const [showNewSession, setShowNewSession] = useState(false);
   const [sessionForm, setSessionForm] = useState({ courseId: '', sessionTitle: '', duration: '10', allowLate: true, lateMinutes: '15' });
   const [coverTab, setCoverTab] = useState<'colors' | 'presets' | 'upload'>('colors');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const loadCourses = () => {
@@ -130,13 +132,49 @@ const TeacherCourses: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await teacherApi.createCourse({ ...form, schedule: buildSchedule() });
+      const payload = { ...form, schedule: buildSchedule() };
+      if (isEditing && editingId) {
+        await teacherApi.updateCourse(editingId, payload);
+        showAlert('Success', 'Course updated successfully!', 'success');
+      } else {
+        await teacherApi.createCourse(payload);
+        showAlert('Success', 'Course created successfully!', 'success');
+      }
       setShowModal(false);
-      setForm({ courseCode: '', courseName: '', section: '', room: '', coverColor: '#3b82f6' });
-      setSelectedDays([]); setStartTime('09:00'); setEndTime('10:30');
-      showAlert('Success', 'Course created successfully!', 'success');
+      resetForm();
       loadCourses();
     } catch (err: any) { showApiError(err); }
+  };
+
+  const resetForm = () => {
+    setIsEditing(false);
+    setEditingId(null);
+    setForm({ courseCode: '', courseName: '', section: '', room: '', coverColor: '#3b82f6' });
+    setSelectedDays([]); setStartTime('09:00'); setEndTime('10:30');
+  };
+
+  const openEditModal = (e: React.MouseEvent, course: any) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    setEditingId(course.id);
+    setForm({
+      courseCode: course.courseCode || '',
+      courseName: course.courseName || '',
+      section: course.section || '',
+      room: course.room || '',
+      coverColor: course.coverColor || '#3b82f6'
+    });
+    
+    // Simple schedule parsing
+    if (course.schedule) {
+      const foundDays: string[] = [];
+      DAYS.forEach(d => {
+        if (course.schedule.includes(d.key)) foundDays.push(d.key);
+      });
+      setSelectedDays(foundDays);
+    }
+    
+    setShowModal(true);
   };
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,7 +234,7 @@ const TeacherCourses: React.FC = () => {
       <button className="btn btn-secondary td-topbar-btn transition-all active:scale-95" onClick={() => setShowNewSession(true)}>
         <Plus size={16} className="mr-1" /> New Session
       </button>
-      <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => setShowModal(true)}>
+      <button className="btn btn-primary td-topbar-btn shadow-sm hover:shadow-md transition-all active:scale-95" onClick={() => { resetForm(); setShowModal(true); }}>
         <Plus size={16} className="mr-1" /> Create Course
       </button>
     </>
@@ -242,7 +280,7 @@ const TeacherCourses: React.FC = () => {
                     <div className="tc-card-cover overflow-hidden" style={getCourseBg(c.coverColor, idx)}>
 
                       <div className="tc-card-actions opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => { e.stopPropagation(); navigate(`/teacher/materials?courseId=${c.id}`); }}>
+                        <button className="tc-action-icon hover:scale-110 transition-transform" title="Edit" onClick={(e) => openEditModal(e, c)}>
                           <Edit2 size={14} color="white" />
                         </button>
                         <button className="tc-action-icon hover:scale-110 transition-transform hover:bg-red-500" title="Delete/Archive" onClick={(e) => activeTab === 'active' ? handleArchive(e, c.id) : handleDelete(e, c.id)}>
@@ -312,7 +350,7 @@ const TeacherCourses: React.FC = () => {
 
             {/* ── Empty State / Add Card ────────────────── */}
             {activeTab === 'active' && viewMode === 'grid' && (
-              <div className="tc-add-card group hover:border-blue-300 hover:bg-blue-50/30 transition-all border-dashed border-2" onClick={() => setShowModal(true)}>
+              <div className="tc-add-card group hover:border-blue-300 hover:bg-blue-50/30 transition-all border-dashed border-2" onClick={() => { resetForm(); setShowModal(true); }}>
                 <div className="tc-add-icon group-hover:scale-110 group-active:scale-95 transition-transform bg-gray-50 border group-hover:bg-white group-hover:border-blue-200">
                   <Plus size={24} className="text-gray-400 group-hover:text-blue-500" />
                 </div>
@@ -336,7 +374,7 @@ const TeacherCourses: React.FC = () => {
       )}
 
       {/* ── Floating Add Button ───────────────────────────── */}
-      <button className="tc-fab shadow-lg hover:shadow-xl hover:scale-110 active:scale-90 transition-all rotate-hover" onClick={() => setShowModal(true)} title="Create Course">
+      <button className="tc-fab shadow-lg hover:shadow-xl hover:scale-110 active:scale-90 transition-all rotate-hover" onClick={() => { resetForm(); setShowModal(true); }} title="Create Course">
         <Plus size={24} color="white" />
       </button>
 
@@ -345,7 +383,7 @@ const TeacherCourses: React.FC = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="modal-header border-b pb-4">
-              <h3 className="modal-title">Create New Course</h3>
+              <h3 className="modal-title">{isEditing ? 'Edit Course' : 'Create New Course'}</h3>
               <button className="modal-close hover:rotate-90 transition-transform" onClick={() => setShowModal(false)}><X size={20} /></button>
             </div>
             <form onSubmit={handleCreate} className="mt-4">
@@ -423,7 +461,9 @@ const TeacherCourses: React.FC = () => {
               </div>
               <div className="modal-actions border-t pt-4 mt-6">
                 <button type="button" className="btn btn-secondary transition-colors" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>Create Course</button>
+                <button type="submit" className="btn btn-primary shadow-sm hover:shadow-md transition-all active:scale-95" style={{ width: 'auto' }}>
+                  {isEditing ? 'Save Changes' : 'Create Course'}
+                </button>
               </div>
             </form>
           </div>

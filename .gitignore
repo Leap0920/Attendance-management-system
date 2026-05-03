@@ -1,0 +1,55 @@
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependencies
+node_modules/
+**/node_modules/
+target/
+**/target/
+.mvn/
+!**/src/main/resources/.mvn/
+**/bin/
+
+# Build Outputs
+dist/
+build/
+out/
+*.log
+hs_err_pid*.log
+
+# Environment and Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Application Specific
+uploads/
+**/uploads/
+.vite/
+.kiro/
+temp/
+tmp/
+
+# Maven/Java
+.mvn/wrapper/maven-wrapper.jar
+.metadata/
+.recommenders/
+.project
+.classpath
+.settings/
+*.class
+*.jar
+*.war
+*.ear

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { studentApi, fileApi } from '../../api';
-import { useAuth } from '../../auth/AuthContext';
+// Removed unused useAuth import
 import { showAlert, showApiError } from '../../utils/feedback';
 import { FileText, Download, Play, X, Upload, ChevronRight, MessageSquare, Clock, Filter, CheckCircle2, AlertCircle, History, Shield } from 'lucide-react';
 import Avatar from '../../components/Avatar';

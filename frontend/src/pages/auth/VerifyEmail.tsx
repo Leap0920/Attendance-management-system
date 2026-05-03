@@ -96,7 +96,7 @@ const VerifyEmail: React.FC = () => {
 
     return (
         <div
-            className={`login-page${staticRingsFallback ? ' login-page--static-rings' : ''}`}
+            className={`login-page light-theme-only${staticRingsFallback ? ' login-page--static-rings' : ''}`}
             style={tiltStyle}
             onMouseMove={handlePageMove}
             onMouseLeave={() => setTilt({ x: 0, y: 0 })}

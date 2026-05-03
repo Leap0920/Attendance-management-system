@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, User, Mail, Lock, Phone, Calendar, Info, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import MagicRings from '../../components/MagicRings/MagicRings';
 import { AssistedPasswordConfirmation } from '../../components/ui/assisted-password-confirmation';
@@ -53,8 +53,8 @@ const Register: React.FC = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const nextStep = () => setStep(s => s + 1);
-    const prevStep = () => setStep(s => s - 1);
+    const nextStep = () => setStep((s: number) => s + 1);
+    const prevStep = () => setStep((s: number) => s - 1);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

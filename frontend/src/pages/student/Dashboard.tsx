@@ -92,7 +92,7 @@ const StudentDashboard: React.FC = () => {
                 showAlert('Error', 'Invalid QR Code URL', 'error');
               }
             },
-            (error) => {} // ignore
+            () => {} // ignore
           );
         } catch (err) {
           console.error(err);

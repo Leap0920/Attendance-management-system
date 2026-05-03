@@ -5,7 +5,7 @@ import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronRight, ChevronDown, Users, Clock, MessageSquare } from 'lucide-react';
+import { Bell, FileText, Play, Link as LinkIcon, Download, Plus, Share, Trash2, X, Upload, BookOpen, ArrowUpRight, ChevronDown, Users, Clock, MessageSquare } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
    Helpers
@@ -351,7 +351,7 @@ const TeacherMaterials: React.FC = () => {
                     {isMenuOpen && (
                         <div style={{
                             position: 'absolute', top: '100%', right: 0, marginTop: '10px',
-                            background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16,
+                            background: 'var(--bg-card)', border: '1px solid var(--border-glass)', borderRadius: 16,
                             boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px',
                             zIndex: 100
                         }}>
@@ -363,11 +363,11 @@ const TeacherMaterials: React.FC = () => {
                                         onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }}
                                         style={{
                                             padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
-                                            background: selectedCourse === c.id ? '#eff6ff' : 'transparent',
-                                            color: selectedCourse === c.id ? '#3b82f6' : '#334155',
+                                            background: selectedCourse === c.id ? 'rgba(59,130,246,0.1)' : 'transparent',
+                                            color: selectedCourse === c.id ? '#3b82f6' : 'var(--text-secondary)',
                                             display: 'flex', flexDirection: 'column', gap: '2px'
                                         }}
-                                        onMouseEnter={e => { if (selectedCourse !== c.id) e.currentTarget.style.background = '#f8fafc'; }}
+                                        onMouseEnter={e => { if (selectedCourse !== c.id) e.currentTarget.style.background = 'var(--bg-secondary)'; }}
                                         onMouseLeave={e => { if (selectedCourse !== c.id) e.currentTarget.style.background = 'transparent'; }}
                                     >
                                         <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
@@ -575,19 +575,19 @@ const TeacherMaterials: React.FC = () => {
                                 return (
                                     <div key={m.id} style={{
                                         borderRadius: 20,
-                                        border: `1px solid ${isExpanded ? '#3b82f6' : '#f1f5f9'}`,
+                                        border: `1px solid ${isExpanded ? '#3b82f6' : 'var(--border-glass)'}`,
                                         overflow: 'hidden', transition: 'all .2s',
                                         boxShadow: isExpanded ? '0 10px 25px rgba(59,130,246,.08)' : '0 1px 3px rgba(0,0,0,0.04)',
-                                        background: '#fff'
+                                        background: 'var(--bg-card)'
                                     }}>
                                         <div onClick={() => toggleExpand(m)} style={{
                                             display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem',
-                                            background: isExpanded ? '#f8fafc' : '#fff',
+                                            background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)',
                                             cursor: 'pointer', transition: 'all .2s',
                                             borderLeft: `6px solid ${isPast ? '#ef4444' : isUrgent ? '#f97316' : '#3b82f6'}`
                                         }}
-                                            onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#fafbfc'; }}
-                                            onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = '#fff'; }}
+                                            onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+                                            onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'var(--bg-card)'; }}
                                         >
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
@@ -604,10 +604,10 @@ const TeacherMaterials: React.FC = () => {
                                                         {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No due date'}
                                                     </span>
                                                 </div>
-                                                <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: '#0f172a' }}>{m.title}</h3>
+                                                <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: 'var(--text-primary)' }}>{m.title}</h3>
                                             </div>
                                             <div style={{
-                                                width: 32, height: 32, borderRadius: '50%', background: isExpanded ? '#eff6ff' : '#f8fafc',
+                                                width: 32, height: 32, borderRadius: '50%', background: isExpanded ? 'rgba(59,130,246,0.1)' : 'var(--bg-secondary)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: isExpanded ? '#3b82f6' : '#94a3b8',
                                                 transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s'
@@ -617,10 +617,10 @@ const TeacherMaterials: React.FC = () => {
                                         </div>
 
                                         {isExpanded && (
-                                            <div style={{ padding: '2rem', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
+                                            <div style={{ padding: '2rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-glass)' }}>
                                                 {/* Navigation Tabs */}
                                                 <div style={{
-                                                    display: 'flex', gap: '2rem', borderBottom: '2px solid #f1f5f9', marginBottom: '2rem',
+                                                    display: 'flex', gap: '2rem', borderBottom: '2px solid var(--border-glass)', marginBottom: '2rem',
                                                     position: 'relative'
                                                 }}>
                                                     {['Instructions', 'Submissions'].map(t => {
@@ -650,9 +650,9 @@ const TeacherMaterials: React.FC = () => {
                                                     <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                                                         {m.description && (
                                                             <div style={{
-                                                                fontSize: '1.05rem', color: '#334155', lineHeight: 1.8,
+                                                                fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: 1.8,
                                                                 whiteSpace: 'pre-wrap', marginBottom: '2rem',
-                                                                padding: '1.5rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #f1f5f9'
+                                                                padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border-glass)'
                                                             }}>
                                                                 {m.description}
                                                             </div>
@@ -661,7 +661,7 @@ const TeacherMaterials: React.FC = () => {
 
                                                         <div style={{ marginTop: '2.5rem' }}>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                                                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Class Comments</h4>
+                                                                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Class Comments</h4>
                                                                 <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600 }}>{comments.length} Discussion{comments.length !== 1 ? 's' : ''}</span>
                                                             </div>
                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -670,10 +670,10 @@ const TeacherMaterials: React.FC = () => {
                                                                         <Avatar firstName={c.user?.firstName} lastName={c.user?.lastName} size={36} />
                                                                         <div style={{ flex: 1 }}>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: 2 }}>
-                                                                                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1e293b' }}>{c.user?.firstName} {c.user?.lastName}</span>
+                                                                                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{c.user?.firstName} {c.user?.lastName}</span>
                                                                                 <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                                                                             </div>
-                                                                            <div style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.5 }}>{c.content}</div>
+                                                                            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{c.content}</div>
                                                                         </div>
                                                                     </div>
                                                                 ))}
@@ -689,19 +689,19 @@ const TeacherMaterials: React.FC = () => {
                                                 ) : (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'fadeIn 0.3s ease-out' }}>
                                                         {submissions.length === 0 ? (
-                                                            <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#fafbfc', borderRadius: 20, border: '2px dashed #e2e8f0' }}>
-                                                                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                                            <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-secondary)', borderRadius: 20, border: '2px dashed var(--border-glass)' }}>
+                                                                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                                                                     <Users size={32} color="#94a3b8" />
                                                                 </div>
-                                                                <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>No submissions yet</h4>
-                                                                <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '300px', margin: '0 auto' }}>Wait for students to upload their work for this assignment.</p>
+                                                                <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No submissions yet</h4>
+                                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', maxWidth: '300px', margin: '0 auto' }}>Wait for students to upload their work for this assignment.</p>
                                                             </div>
                                                         ) : (
                                                             <div style={{ display: 'grid', gap: '1rem' }}>
                                                                 {submissions.map((s: any) => (
                                                                     <div key={s.id} style={{
-                                                                        padding: '1.25rem 1.5rem', background: '#fff', borderRadius: 20,
-                                                                        border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                                        padding: '1.25rem 1.5rem', background: 'var(--bg-card)', borderRadius: 20,
+                                                                        border: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                                                         boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'all .2s'
                                                                     }}
                                                                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(59,130,246,0.06)'; }}
@@ -710,8 +710,8 @@ const TeacherMaterials: React.FC = () => {
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                                                                             <Avatar firstName={s.student?.firstName} lastName={s.student?.lastName} size={48} />
                                                                             <div>
-                                                                                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>{s.student?.firstName} {s.student?.lastName}</div>
-                                                                                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{s.student?.firstName} {s.student?.lastName}</div>
+                                                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                                                                     <Clock size={14} />
                                                                                     Submitted {new Date(s.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                                                 </div>
@@ -720,9 +720,9 @@ const TeacherMaterials: React.FC = () => {
                                                                         <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                                             {s.filePath && (
                                                                                 <button onClick={(e) => { e.stopPropagation(); handlePreview('submission', s.id, s.fileName); }} style={{
-                                                                                    padding: '0.7rem 1.25rem', borderRadius: 12, background: '#f8fafc',
-                                                                                    border: '1px solid #e2e8f0', fontSize: '0.88rem', fontWeight: 700,
-                                                                                    cursor: 'pointer', color: '#475569', transition: 'all .2s',
+                                                                                    padding: '0.7rem 1.25rem', borderRadius: 12, background: 'var(--bg-secondary)',
+                                                                                    border: '1px solid var(--border-glass)', fontSize: '0.88rem', fontWeight: 700,
+                                                                                    cursor: 'pointer', color: 'var(--text-secondary)', transition: 'all .2s',
                                                                                     display: 'flex', alignItems: 'center', gap: '0.5rem'
                                                                                 }}
                                                                                     onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; }}
@@ -994,16 +994,16 @@ const TeacherMaterials: React.FC = () => {
             {showForward && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 1001, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,.4)', backdropFilter: 'blur(6px)' }} onClick={() => setShowForward(false)} />
-                    <div className="modal-window-responsive" style={{ position: 'relative', zIndex: 1, background: '#fff', borderRadius: 24, padding: '2rem', width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,.18)' }}>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.35rem' }}>Forward Material</h3>
-                        <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.25rem' }}>Select sections to share this content:</p>
+                    <div className="modal-window-responsive" style={{ position: 'relative', zIndex: 1, background: 'var(--bg-card)', borderRadius: 24, padding: '2rem', width: '100%', maxWidth: 420, boxShadow: '0 25px 60px rgba(0,0,0,.18)' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>Forward Material</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>Select sections to share this content:</p>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                             {courses.filter(c => c.id !== selectedCourse).map(c => (
                                 <label key={c.id} style={{
                                     padding: '0.5rem 1rem', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
-                                    border: `1px solid ${fwdCourses.includes(c.id) ? '#3b82f6' : '#e2e8f0'}`,
-                                    background: fwdCourses.includes(c.id) ? '#eff6ff' : '#fff',
-                                    color: fwdCourses.includes(c.id) ? '#2563eb' : '#64748b',
+                                    border: `1px solid ${fwdCourses.includes(c.id) ? '#3b82f6' : 'var(--border-glass)'}`,
+                                    background: fwdCourses.includes(c.id) ? 'rgba(59,130,246,0.1)' : 'var(--bg-secondary)',
+                                    color: fwdCourses.includes(c.id) ? '#2563eb' : 'var(--text-secondary)',
                                 }}>
                                     <input type="checkbox" style={{ display: 'none' }} checked={fwdCourses.includes(c.id)} onChange={e => setFwdCourses(prev => e.target.checked ? [...prev, c.id] : prev.filter(x => x !== c.id))} />
                                     {c.courseCode} {c.section}

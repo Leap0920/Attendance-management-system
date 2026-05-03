@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, ShieldCheck, ArrowRight, RefreshCw, AlertCircle, KeyRound, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, ShieldCheck, RefreshCw, AlertCircle, KeyRound, Lock, Eye, EyeOff } from 'lucide-react';
 import { authApi } from '../../api';
 import MagicRings from '../../components/MagicRings/MagicRings';
 import './Login.css';
@@ -95,7 +95,7 @@ const ForgotPassword: React.FC = () => {
 
     return (
         <div
-            className={`login-page${staticRingsFallback ? ' login-page--static-rings' : ''}`}
+            className={`login-page light-theme-only${staticRingsFallback ? ' login-page--static-rings' : ''}`}
             style={tiltStyle}
             onMouseMove={handlePageMove}
             onMouseLeave={() => setTilt({ x: 0, y: 0 })}
