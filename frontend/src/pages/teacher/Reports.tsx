@@ -144,8 +144,8 @@ const TeacherReports: React.FC = () => {
                     <span className="tr-stat-cat">CAPACITY</span>
                   </div>
                   <div className="tr-stat-value">{report.totalStudents}</div>
-                  <div className="tr-stat-sub" style={{ color: 'var(--accent-blue)' }}>Active Student{report.totalStudents !== 1 ? 's' : ''}</div>
-                  <span className="tr-stat-desc">Enrolled Students</span>
+                  <div className="tr-stat-sub">Students</div>
+                  <span className="tr-stat-desc">Enrolled</span>
                 </div>
                 <div className="tr-stat-card">
                   <div className="tr-stat-header">
@@ -155,8 +155,8 @@ const TeacherReports: React.FC = () => {
                     <span className="tr-stat-cat">CONSISTENCY</span>
                   </div>
                   <div className="tr-stat-value">{report.totalSessions}</div>
-                  <div className="tr-stat-sub">Completed</div>
-                  <span className="tr-stat-desc">Total Sessions</span>
+                  <div className="tr-stat-sub">Sessions</div>
+                  <span className="tr-stat-desc">Completed</span>
                 </div>
                 <div className="tr-stat-card">
                   <div className="tr-stat-header">
@@ -167,9 +167,9 @@ const TeacherReports: React.FC = () => {
                   </div>
                   <div className="tr-stat-value">
                     {avgRate}%
-                    <span className="tr-stat-trend-badge" style={{ color: avgRate >= 80 ? '#16a34a' : '#f59e0b' }}>+2.4%</span>
                   </div>
-                  <div className="tr-stat-sub">Avg Attendance Rate</div>
+                  <div className="tr-stat-sub">Attendance</div>
+                  <span className="tr-stat-desc">Average Rate</span>
                 </div>
               </div>
 
@@ -180,14 +180,14 @@ const TeacherReports: React.FC = () => {
                     <h2>Student Attendance Report</h2>
                     <span className="tr-table-sub">FULL CLASS ROSTER • SEMESTER 2024</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div className="tr-table-actions">
                     <button className="ta-action-btn" title="Filter">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
                     </button>
                     <button className="ta-action-btn" title="More">⋮</button>
                   </div>
                 </div>
-                <div className="data-table-wrapper">
+                <div className="tr-table-scroll">
                   <table className="data-table">
                     <thead>
                       <tr>
@@ -196,7 +196,7 @@ const TeacherReports: React.FC = () => {
                         <th>PRESENT</th>
                         <th>LATE</th>
                         <th>ABSENT</th>
-                        <th>ATTENDANCE RATE</th>
+                        <th>RATE</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -212,25 +212,15 @@ const TeacherReports: React.FC = () => {
                             </div>
                           </td>
                           <td>
-                            <span style={{ fontFamily: 'monospace', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                              #{s.studentId || 'N/A'}
-                            </span>
+                            <span className="tr-sid-monospace">#{s.studentId || 'N/A'}</span>
                           </td>
+                          <td><span className="tr-count-badge tr-count-green">{s.present}</span></td>
+                          <td><span className="tr-count-badge tr-count-yellow">{s.late}</span></td>
+                          <td><span className="tr-count-badge tr-count-red">{s.absent}</span></td>
                           <td>
-                            <span className="tr-count-badge tr-count-green">{s.present}</span>
-                          </td>
-                          <td>
-                            <span className="tr-count-badge tr-count-yellow">{s.late}</span>
-                          </td>
-                          <td>
-                            <span className="tr-count-badge tr-count-red">{s.absent}</span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <span style={{ fontWeight: 700, color: getRateColor(s.rate), fontSize: '0.9rem', minWidth: '42px' }}>{s.rate}%</span>
-                              <div className="progress-bar-bg" style={{ maxWidth: '150px', minWidth: '80px' }}>
-                                <div className="progress-bar-fill" style={{ width: `${s.rate}%`, background: getRateColor(s.rate) }}></div>
-                              </div>
+                            <div className="tr-rate-cell">
+                              <span style={{ fontWeight: 700, color: getRateColor(s.rate), fontSize: '0.9rem' }}>{s.rate}%</span>
+                              <div className="tr-progress-mini"><div style={{ width: `${s.rate}%`, background: getRateColor(s.rate) }}></div></div>
                             </div>
                           </td>
                         </tr>

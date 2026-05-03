@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { teacherApi } from '../../api';
-import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
 
 
@@ -23,7 +22,7 @@ const TeacherAttendance: React.FC = () => {
 
   const load = () => {
     Promise.all([
-      teacherApi.getSessions(), 
+      teacherApi.getSessions(),
       teacherApi.getCourses(),
       teacherApi.getAttendanceSettings()
     ]).then(([sessRes, courseRes, settingsRes]) => {
@@ -41,7 +40,7 @@ const TeacherAttendance: React.FC = () => {
     const activeSessions = sessions.filter(s => s.status === 'active');
     if (activeSessions.length === 0) return;
     const interval = setInterval(() => {
-      teacherApi.getSessions().then(res => setSessions(res.data.data || [])).catch(() => {});
+      teacherApi.getSessions().then(res => setSessions(res.data.data || [])).catch(() => { });
     }, 5000);
     return () => clearInterval(interval);
   }, [sessions]);
@@ -49,17 +48,17 @@ const TeacherAttendance: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = { 
-        courseId: Number(form.courseId), 
-        sessionTitle: form.sessionTitle, 
+      const payload: any = {
+        courseId: Number(form.courseId),
+        sessionTitle: form.sessionTitle,
         duration: Number(form.duration)
       };
-      
+
       // Include lateMinutes only if custom override is enabled
       if (form.customLate && form.lateMinutes) {
         payload.lateMinutes = Number(form.lateMinutes);
       }
-      
+
       const res = await teacherApi.createAttendance(payload);
       setShowModal(false);
       setForm({ courseId: '', sessionTitle: '', duration: '10', customLate: false, lateMinutes: '' });
@@ -140,7 +139,7 @@ const TeacherAttendance: React.FC = () => {
               <div className="ta-stat-top">
                 <span className="ta-stat-label">Total Sessions</span>
                 <div className="ta-stat-icon-box ta-stat-icon-gray">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                 </div>
               </div>
               <div className="ta-stat-value">{sessions.length}</div>
@@ -150,7 +149,7 @@ const TeacherAttendance: React.FC = () => {
               <div className="ta-stat-top">
                 <span className="ta-stat-label">Active Now</span>
                 <div className="ta-stat-icon-box ta-stat-icon-yellow">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
                 </div>
               </div>
               <div className="ta-stat-value">{activeSessions.length}</div>
@@ -163,7 +162,7 @@ const TeacherAttendance: React.FC = () => {
               <div className="ta-stat-top">
                 <span className="ta-stat-label">Completed</span>
                 <div className="ta-stat-icon-box ta-stat-icon-green">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                 </div>
               </div>
               <div className="ta-stat-value">{closedSessions.length}</div>
@@ -191,11 +190,11 @@ const TeacherAttendance: React.FC = () => {
                   </div>
                   <div className="ta-active-actions">
                     <button className="btn btn-secondary" onClick={() => viewRecords(s)} style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
                       Records
                     </button>
                     <button className="btn btn-danger" onClick={() => closeSession(s.id)} style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                       Close
                     </button>
                   </div>
@@ -208,8 +207,8 @@ const TeacherAttendance: React.FC = () => {
           <div className="ta-table-section">
             <div className="ta-table-header">
               <h2>All Sessions</h2>
-              <div className="td-search-wrapper" style={{ maxWidth: '260px' }}>
-                <svg className="td-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <div className="ta-search-wrapper">
+                <svg className="td-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                 <input className="td-search-input" placeholder="Search sessions..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
               </div>
             </div>
@@ -230,8 +229,8 @@ const TeacherAttendance: React.FC = () => {
                   {paginatedSessions.map(s => (
                     <tr key={s.id}>
                       <td>
-                        <div style={{ fontWeight: 600 }}>{s.course?.courseName || '—'}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{s.course?.courseCode} • {s.course?.section || ''}</div>
+                        <div className="ta-table-course-name">{s.course?.courseName || '—'}</div>
+                        <div className="ta-table-course-meta">{s.course?.courseCode} • {s.course?.section || ''}</div>
                       </td>
                       <td>{s.sessionTitle || 'Regular Session'}</td>
                       <td>
@@ -251,17 +250,17 @@ const TeacherAttendance: React.FC = () => {
                           {s.status === 'active' ? (
                             <>
                               <button className="ta-action-btn" title="View Records" onClick={() => viewRecords(s)}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                               </button>
                               <button className="btn btn-danger btn-sm" onClick={() => closeSession(s.id)} style={{ width: 'auto', borderRadius: '20px', fontSize: '0.7rem' }}>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                               </button>
                             </>
                           ) : (
                             <>
                               <button className="ta-reopen-btn" onClick={() => openReopenModal(s)}>REOPEN</button>
                               <button className="ta-action-btn" title="History" onClick={() => viewRecords(s)}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
                               </button>
                             </>
                           )}
@@ -280,13 +279,13 @@ const TeacherAttendance: React.FC = () => {
               <span className="ta-page-info">Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredSessions.length)} to {Math.min(currentPage * itemsPerPage, filteredSessions.length)} of {filteredSessions.length} entries</span>
               <div className="ta-page-btns">
                 <button className="ta-page-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button key={i} className={`ta-page-num ${currentPage === i + 1 ? 'active' : ''}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
                 ))}
                 <button className="ta-page-btn" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => p + 1)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
                 </button>
               </div>
             </div>
@@ -308,18 +307,18 @@ const TeacherAttendance: React.FC = () => {
               </div>
               <div className="form-group"><label className="form-label">Session Title (optional)</label><input className="form-input" value={form.sessionTitle} onChange={e => setForm({ ...form, sessionTitle: e.target.value })} placeholder="e.g. Week 5" /></div>
               <div className="form-group"><label className="form-label">Duration (minutes)</label><input className="form-input" type="number" min="1" max="120" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} /></div>
-              
+
               {/* Late Threshold Settings */}
-              <div className="form-group" style={{ 
-                marginTop: '1rem', 
-                padding: '1rem', 
-                background: 'var(--bg-secondary)', 
-                borderRadius: '8px', 
-                border: '1px solid var(--border-glass)' 
+              <div className="form-group" style={{
+                marginTop: '1rem',
+                padding: '1rem',
+                background: 'var(--bg-secondary)',
+                borderRadius: '8px',
+                border: '1px solid var(--border-glass)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="customLate"
                     checked={form.customLate}
                     onChange={e => setForm({ ...form, customLate: e.target.checked, lateMinutes: e.target.checked ? String(teacherSettings.lateMinutes) : '' })}
@@ -329,7 +328,7 @@ const TeacherAttendance: React.FC = () => {
                     Custom late threshold for this session
                   </label>
                 </div>
-                
+
                 {!form.customLate && (
                   <div style={{ fontSize: '0.875rem', color: '#64748b', marginLeft: '1.5rem' }}>
                     {teacherSettings.lateEnabled ? (
@@ -339,16 +338,16 @@ const TeacherAttendance: React.FC = () => {
                     )}
                   </div>
                 )}
-                
+
                 {form.customLate && (
                   <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
                     <label className="form-label" style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Late threshold (minutes)</label>
-                    <input 
-                      className="form-input" 
-                      type="number" 
-                      min="1" 
+                    <input
+                      className="form-input"
+                      type="number"
+                      min="1"
                       max="1440"
-                      value={form.lateMinutes} 
+                      value={form.lateMinutes}
                       onChange={e => setForm({ ...form, lateMinutes: e.target.value })}
                       placeholder={String(teacherSettings.lateMinutes)}
                       style={{ maxWidth: '150px' }}
@@ -359,7 +358,7 @@ const TeacherAttendance: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button><button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>Start Session</button></div>
             </form>
           </div>

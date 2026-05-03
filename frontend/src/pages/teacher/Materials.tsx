@@ -216,7 +216,7 @@ const TeacherMaterials: React.FC = () => {
         }
         return true;
     });
-    
+
     const nonAssignments = filtered.filter(m => figureOutType(m) !== 'assignment');
     const displayMaterials = showAll ? nonAssignments : nonAssignments.slice(0, 5);
     const assignments = filtered.filter(m => figureOutType(m) === 'assignment');
@@ -383,8 +383,8 @@ const TeacherMaterials: React.FC = () => {
     );
 
     return (
-        <DashboardLayout 
-            role="teacher" 
+        <DashboardLayout
+            role="teacher"
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             actions={materialsActions}
@@ -392,13 +392,13 @@ const TeacherMaterials: React.FC = () => {
             {loading ? (
                 <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading repository...</p></div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
+                <div className="tm-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
                     {/* ── LEFT COLUMN ── */}
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                    <div className="tm-left-column">
+                        <div className="tm-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                             <div>
                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Academic Repository</h2>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                <div className="tm-header-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                                     <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0 }}>Curated materials for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode || 'this course'}</strong>.</p>
                                     {activeCourseData?.joinCode && (
                                         <div className="tm-join-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-secondary)', padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border-glass)', cursor: 'pointer' }}
@@ -452,7 +452,7 @@ const TeacherMaterials: React.FC = () => {
                                 return (
                                     <div key={m.id} className="theme-card" style={{ borderRadius: 18, border: `1px solid ${isExpanded ? 'var(--accent-blue)' : 'var(--border-glass)'}`, overflow: 'hidden', transition: 'all .2s', boxShadow: isExpanded ? 'var(--shadow-lg)' : 'var(--shadow-sm)' }}>
                                         {/* Row */}
-                                        <div onClick={() => toggleExpand(m)} style={{
+                                        <div onClick={() => toggleExpand(m)} className="tm-material-row" style={{
                                             display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.25rem',
                                             background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all .2s',
                                         }}
@@ -463,7 +463,7 @@ const TeacherMaterials: React.FC = () => {
                                             )}
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <h3 style={{ fontWeight: 700, fontSize: '1.02rem', margin: 0, marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{m.title}</h3>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                <div className="tm-material-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                                                     <span style={{ color: tc.color }}>{getDynamicLabel(m)}</span>
                                                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--border-glass)' }} />
                                                     <span>Resource</span>
@@ -477,7 +477,7 @@ const TeacherMaterials: React.FC = () => {
                                         {isExpanded && (
                                             <div style={{ borderTop: '1px solid var(--border-glass)', padding: '1.5rem', background: 'var(--bg-card)' }}>
                                                 {/* Action buttons */}
-                                                <div style={{ display: 'flex', gap: 6, marginBottom: '1rem' }}>
+                                                <div className="tm-action-btns" style={{ display: 'flex', gap: 6, marginBottom: '1rem', flexWrap: 'wrap' }}>
                                                     <button title="Forward" onClick={() => { setFwdId(m.id); setFwdCourses([]); setShowForward(true); }}
                                                         className="btn btn-secondary"
                                                         style={{ padding: '0.4rem 0.8rem', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.78rem', fontFamily: 'inherit', width: 'auto' }}>
@@ -552,7 +552,7 @@ const TeacherMaterials: React.FC = () => {
                                 </button>
                             )}
                         </div>
-                        <div id="assignments-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', marginTop: '0.5rem' }}>
+                        <div id="assignments-section" className="tm-assignments-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', marginTop: '0.5rem' }}>
                             <div>
                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Active Assignments</h2>
                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.1rem 0 0', fontWeight: 500 }}>Manage student submissions</p>
@@ -573,14 +573,14 @@ const TeacherMaterials: React.FC = () => {
                                 const isPast = m.dueDate && new Date(m.dueDate) < new Date();
                                 const isExpanded = expandedId === m.id;
                                 return (
-                                    <div key={m.id} style={{
+                                    <div key={m.id} className="tm-material-card" style={{
                                         borderRadius: 20,
                                         border: `1px solid ${isExpanded ? '#3b82f6' : 'var(--border-glass)'}`,
                                         overflow: 'hidden', transition: 'all .2s',
                                         boxShadow: isExpanded ? '0 10px 25px rgba(59,130,246,.08)' : '0 1px 3px rgba(0,0,0,0.04)',
                                         background: 'var(--bg-card)'
                                     }}>
-                                        <div onClick={() => toggleExpand(m)} style={{
+                                        <div onClick={() => toggleExpand(m)} className="tm-material-row" style={{
                                             display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem',
                                             background: isExpanded ? 'var(--bg-secondary)' : 'var(--bg-card)',
                                             cursor: 'pointer', transition: 'all .2s',
@@ -590,7 +590,7 @@ const TeacherMaterials: React.FC = () => {
                                             onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'var(--bg-card)'; }}
                                         >
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
+                                                <div className="tm-material-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
                                                     <span style={{
                                                         fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em',
                                                         padding: '3px 8px', borderRadius: 6,
@@ -617,9 +617,9 @@ const TeacherMaterials: React.FC = () => {
                                         </div>
 
                                         {isExpanded && (
-                                            <div style={{ padding: '2rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-glass)' }}>
+                                            <div className="tm-expanded-panel" style={{ padding: '2rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-glass)' }}>
                                                 {/* Navigation Tabs */}
-                                                <div style={{
+                                                <div className="tm-nav-tabs" style={{
                                                     display: 'flex', gap: '2rem', borderBottom: '2px solid var(--border-glass)', marginBottom: '2rem',
                                                     position: 'relative'
                                                 }}>
@@ -648,6 +648,7 @@ const TeacherMaterials: React.FC = () => {
 
                                                 {detailTab === 'instructions' ? (
                                                     <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+
                                                         {m.description && (
                                                             <div style={{
                                                                 fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: 1.8,
@@ -660,7 +661,7 @@ const TeacherMaterials: React.FC = () => {
                                                         {m.fileName && <FileCard fileName={m.fileName} fileSize={m.fileSize} onDownload={() => handlePreview('material', m.id, m.fileName)} />}
 
                                                         <div style={{ marginTop: '2.5rem' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                                            <div className="tm-comments-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                                                 <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Class Comments</h4>
                                                                 <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600 }}>{comments.length} Discussion{comments.length !== 1 ? 's' : ''}</span>
                                                             </div>
@@ -699,7 +700,7 @@ const TeacherMaterials: React.FC = () => {
                                                         ) : (
                                                             <div style={{ display: 'grid', gap: '1rem' }}>
                                                                 {submissions.map((s: any) => (
-                                                                    <div key={s.id} style={{
+                                                                    <div key={s.id} className="tm-submission-row" style={{
                                                                         padding: '1.25rem 1.5rem', background: 'var(--bg-card)', borderRadius: 20,
                                                                         border: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                                                         boxShadow: '0 2px 4px rgba(0,0,0,0.02)', transition: 'all .2s'
@@ -707,7 +708,7 @@ const TeacherMaterials: React.FC = () => {
                                                                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(59,130,246,0.06)'; }}
                                                                         onMouseLeave={e => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'; }}
                                                                     >
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                                                                        <div className="tm-submission-student" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                                                                             <Avatar firstName={s.student?.firstName} lastName={s.student?.lastName} size={48} />
                                                                             <div>
                                                                                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{s.student?.firstName} {s.student?.lastName}</div>
@@ -717,7 +718,7 @@ const TeacherMaterials: React.FC = () => {
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                                        <div className="tm-submission-actions" style={{ display: 'flex', gap: '0.75rem' }}>
                                                                             {s.filePath && (
                                                                                 <button onClick={(e) => { e.stopPropagation(); handlePreview('submission', s.id, s.fileName); }} style={{
                                                                                     padding: '0.7rem 1.25rem', borderRadius: 12, background: 'var(--bg-secondary)',
@@ -765,7 +766,7 @@ const TeacherMaterials: React.FC = () => {
 
                     {/* ── RIGHT SIDEBAR ── */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                        
+
                         {/* Course Stats Sidebar */}
                         <div id="course-sidebar" className="theme-card shadow-sm" style={{ borderRadius: 22, padding: '1.5rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -795,7 +796,7 @@ const TeacherMaterials: React.FC = () => {
                         </div>
 
                         {/* Assignments Summary */}
-                        <div id="assignments-sidebar" className="theme-card shadow-sm" style={{ borderRadius: 22, padding: '1.5rem' }}>
+                        <div id="assignments-sidebar" className="theme-card shadow-sm tm-hide-mobile" style={{ borderRadius: 22, padding: '1.5rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                                 <h3 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>Active Assignments</h3>
                                 <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -820,7 +821,7 @@ const TeacherMaterials: React.FC = () => {
             {showModal && (
                 <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowModal(false)}>
                     <div className="theme-card" style={{ position: 'relative', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
-                        
+
                         {/* Header */}
                         <div className="modal-header" style={{ padding: '1.5rem 2rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                             <div>
@@ -842,7 +843,7 @@ const TeacherMaterials: React.FC = () => {
                                             { id: 'announcement', label: 'Notice', icon: <Bell size={18} />, color: '#f59e0b' },
                                             { id: 'assignment', label: 'Assignment', icon: <BookOpen size={18} />, color: '#3b82f6' },
                                         ].map(t => (
-                                            <div key={t.id} onClick={() => { setForm({ ...form, type: t.id }); setFile(null); }} 
+                                            <div key={t.id} onClick={() => { setForm({ ...form, type: t.id }); setFile(null); }}
                                                 className={`tm-type-chip ${form.type === t.id ? 'active' : ''}`}
                                                 style={{
                                                     padding: '1rem', borderRadius: 16, border: `2px solid ${form.type === t.id ? t.color : 'var(--border-glass)'}`,

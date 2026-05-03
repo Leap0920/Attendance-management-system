@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, LogOut, ChevronDown, User, Settings, Shield } from 'lucide-react';
+import { Search, LogOut, ChevronDown, User, Settings, Shield, Menu } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Avatar from './Avatar';
@@ -10,9 +10,10 @@ interface TopNavbarProps {
   actions?: React.ReactNode;
   onProfileClick?: () => void;
   onLogoutClick?: () => void;
+  onMenuClick?: () => void;
 }
 
-const TopNavbar: React.FC<TopNavbarProps> = ({ searchQuery, onSearchChange, actions, onProfileClick, onLogoutClick }) => {
+const TopNavbar: React.FC<TopNavbarProps> = ({ searchQuery, onSearchChange, actions, onProfileClick, onLogoutClick, onMenuClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -20,6 +21,11 @@ const TopNavbar: React.FC<TopNavbarProps> = ({ searchQuery, onSearchChange, acti
   return (
     <header className="top-navbar">
       <div className="top-navbar-left">
+        {onMenuClick && (
+          <button className="mobile-menu-btn" onClick={onMenuClick} aria-label="Open menu">
+            <Menu size={22} />
+          </button>
+        )}
         {onSearchChange && (
           <div className="top-navbar-search">
             <Search className="search-icon" size={18} />

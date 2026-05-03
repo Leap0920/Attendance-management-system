@@ -3,9 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import Avatar from '../../components/Avatar';
 import { teacherApi, fileApi } from '../../api';
-import { useAuth } from '../../auth/AuthContext';
 import { showAlert, showConfirm, showApiError } from '../../utils/feedback';
-import { FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History, Trash2 } from 'lucide-react';
+import { FileText, Download, Plus, X, Upload, ArrowUpRight, ChevronRight, Users, Clock, Filter, CheckCircle2, AlertCircle, History, Trash2, BookOpen } from 'lucide-react';
 
 
 
@@ -92,7 +91,7 @@ const TeacherAssignments: React.FC = () => {
         teacherApi.getMaterials(id).then(r => {
             const all = r.data.data || [];
             setAssignments(all.filter((m: any) => m.type === 'assignment'));
-        }).catch(() => {});
+        }).catch(() => { });
     };
 
     const handleViewAssignment = async (m: any) => {
@@ -101,8 +100,8 @@ const TeacherAssignments: React.FC = () => {
         setNewComment('');
         setGradingId(null);
         setSubmissionFilter('all');
-        try { const r = await teacherApi.getComments(m.id); setComments(r.data.data || []); } catch {}
-        try { const r = await teacherApi.getSubmissions(m.id); setSubmissions(r.data.data || []); } catch {}
+        try { const r = await teacherApi.getComments(m.id); setComments(r.data.data || []); } catch { }
+        try { const r = await teacherApi.getSubmissions(m.id); setSubmissions(r.data.data || []); } catch { }
     };
 
     const getFullSubmissionList = () => {
@@ -164,7 +163,7 @@ const TeacherAssignments: React.FC = () => {
         if (!title && file) title = file.name;
         if (!title) { showAlert('Error', 'Please enter a title or attach a file', 'error'); return; }
         if (!selectedCourse) { showAlert('Error', 'No course selected', 'error'); return; }
-        
+
         setSubmitting(true);
         const fd = new FormData();
         fd.append('courseIds', targetCourses.join(','));
@@ -207,9 +206,9 @@ const TeacherAssignments: React.FC = () => {
     const handleGrade = async (subId: number, grade: string, feedback: string) => {
         try {
             await teacherApi.gradeSubmission(subId, { grade, feedback });
-            if (selectedAssignment) { 
-                const r = await teacherApi.getSubmissions(selectedAssignment.id); 
-                setSubmissions(r.data.data || []); 
+            if (selectedAssignment) {
+                const r = await teacherApi.getSubmissions(selectedAssignment.id);
+                setSubmissions(r.data.data || []);
                 if (selectedCourse) loadAssignments(selectedCourse);
             }
             showAlert('Graded', 'Submission graded successfully!');
@@ -224,7 +223,7 @@ const TeacherAssignments: React.FC = () => {
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
             setPreviewName(fileName);
-            
+
             const ext = fileName.split('.').pop()?.toLowerCase();
             if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '')) setPreviewType('image');
             else if (ext === 'pdf') setPreviewType('pdf');
@@ -233,21 +232,22 @@ const TeacherAssignments: React.FC = () => {
     };
 
     const assignmentsActions = (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', fontWeight: 700, alignItems: 'center', marginRight: '1rem' }}>
+        <div className="ta-topbar-actions-container">
+            <nav className="ta-course-nav">
                 <div style={{ position: 'relative' }} ref={menuRef}>
-                    <div style={{ color: isMenuOpen ? 'var(--accent-blue)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', background: isMenuOpen ? 'rgba(59,130,246,0.1)' : 'transparent', padding: '6px 12px', borderRadius: '10px', transition: 'all 0.2s', border: '1px solid', borderColor: isMenuOpen ? 'var(--accent-blue)' : 'transparent' }} onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeCourseData?.courseCode || 'Select Course'}</span>
-                        <ChevronRight size={14} style={{ transform: isMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                    <div className="ta-course-selector" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                        <BookOpen size={16} />
+                        <span className="ta-course-code">{activeCourseData?.courseCode || 'Select Course'}</span>
+                        <ChevronRight size={14} className={`ta-chevron ${isMenuOpen ? 'open' : ''}`} />
                     </div>
                     {isMenuOpen && (
-                        <div className="theme-card" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '10px', borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', width: '280px', padding: '8px', zIndex: 100 }}>
-                            <div style={{ padding: '8px 12px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Classrooms</div>
-                            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <div className="theme-card ta-course-dropdown">
+                            <div className="ta-dropdown-header">Your Classrooms</div>
+                            <div className="ta-dropdown-list">
                                 {courses.map(c => (
-                                    <div key={c.id} onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }} style={{ padding: '10px 12px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', background: selectedCourse === c.id ? 'rgba(59,130,246,0.1)' : 'transparent', color: selectedCourse === c.id ? 'var(--accent-blue)' : 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{c.courseName}</div>
-                                        <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{c.courseCode} · {c.section}</div>
+                                    <div key={c.id} className={`ta-dropdown-item ${selectedCourse === c.id ? 'active' : ''}`} onClick={() => { setSelectedCourse(c.id); setIsMenuOpen(false); }}>
+                                        <div className="ta-item-name">{c.courseName}</div>
+                                        <div className="ta-item-code">{c.courseCode} · {c.section}</div>
                                     </div>
                                 ))}
                             </div>
@@ -255,15 +255,15 @@ const TeacherAssignments: React.FC = () => {
                     )}
                 </div>
             </nav>
-            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.25rem', fontWeight: 700, fontSize: '0.85rem', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit', width: 'auto' }}>
-                <Plus size={16} /> New Assignment
+            <button onClick={() => { setShowModal(true); setTargetCourses(selectedCourse ? [selectedCourse] : []); }} className="btn btn-primary ta-new-assignment-btn">
+                <Plus size={16} /> <span>New Assignment</span>
             </button>
         </div>
     );
 
     return (
-        <DashboardLayout 
-            role="teacher" 
+        <DashboardLayout
+            role="teacher"
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             actions={assignmentsActions}
@@ -271,43 +271,37 @@ const TeacherAssignments: React.FC = () => {
             {loading ? (
                 <div className="loading-screen" style={{ padding: '5rem 0' }}><div className="spinner" style={{ marginBottom: '1rem' }} /><p style={{ color: '#94a3b8' }}>Loading assignments...</p></div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                            <div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>Assignments</h2>
-                                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0 0 1.25rem 0' }}>Review and grade work for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode}</strong>.</p>
-                                
-                                <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.4rem', borderRadius: 14, width: 'fit-content' }}>
-                                    {[
-                                        { id: 'all', label: 'All', icon: <History size={14} /> },
-                                        { id: 'urgent', label: 'Urgent', icon: <Clock size={14} /> },
-                                        { id: 'overdue', label: 'Overdue', icon: <AlertCircle size={14} /> },
-                                        { id: 'done', label: 'Completed', icon: <CheckCircle2 size={14} /> }
-                                    ].map(f => (
-                                        <button
-                                            key={f.id}
-                                            onClick={() => setStatusFilter(f.id as any)}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                                padding: '0.5rem 1rem', borderRadius: 10, border: 'none',
-                                                fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                                                transition: 'all .2s',
-                                                background: statusFilter === f.id ? 'var(--bg-card)' : 'transparent',
-                                                color: statusFilter === f.id ? 'var(--accent-blue)' : 'var(--text-muted)',
-                                                boxShadow: statusFilter === f.id ? '0 2px 6px rgba(0,0,0,0.05)' : 'none'
-                                            }}
-                                        >
-                                            {f.icon} {f.label}
-                                        </button>
-                                    ))}
+                <div className="ta-layout-grid">
+                    <div className="ta-main-col">
+                        <div className="ta-header">
+                            <div className="ta-header-info">
+                                <h2 className="ta-title">Assignments</h2>
+                                <p className="ta-subtitle">Review and grade work for <strong>{activeCourseData?.courseName || activeCourseData?.courseCode}</strong>.</p>
+
+                                <div className="ta-filters-scroll">
+                                    <div className="ta-filters-inner">
+                                        {[
+                                            { id: 'all', label: 'All', icon: <History size={14} /> },
+                                            { id: 'urgent', label: 'Urgent', icon: <Clock size={14} /> },
+                                            { id: 'overdue', label: 'Overdue', icon: <AlertCircle size={14} /> },
+                                            { id: 'done', label: 'Completed', icon: <CheckCircle2 size={14} /> }
+                                        ].map(f => (
+                                            <button
+                                                key={f.id}
+                                                onClick={() => setStatusFilter(f.id as any)}
+                                                className={`ta-filter-pill ${statusFilter === f.id ? 'active' : ''}`}
+                                            >
+                                                {f.icon} {f.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="ta-assignment-list">
                             {filtered.length === 0 ? (
-                                <div className="empty-state-card" style={{ textAlign: 'center', padding: '5rem', background: 'var(--bg-secondary)', borderRadius: 24, border: '2px dashed var(--border-glass)' }}>
+                                <div className="empty-state-card ta-empty-state">
                                     <Filter size={48} color="var(--text-muted)" className="empty-state-icon" style={{ marginBottom: '1rem' }} />
                                     <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No assignments found</h3>
                                     <p style={{ color: 'var(--text-muted)' }}>Try changing your filter or classroom.</p>
@@ -317,30 +311,27 @@ const TeacherAssignments: React.FC = () => {
                                     const isUrgent = m.dueDate && new Date(m.dueDate).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000 && new Date(m.dueDate) > new Date();
                                     const isPast = m.dueDate && new Date(m.dueDate) < new Date();
                                     const isDone = enrollments.length > 0 && (m.submissionCount || 0) >= enrollments.length;
-                                    
+
                                     return (
-                                        <div key={m.id} className="theme-card" style={{ borderRadius: 16, overflow: 'hidden', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'slideUp 0.4s ease-out forwards' }}>
-                                            <div onClick={() => handleViewAssignment(m)} 
-                                                onMouseEnter={e => { e.currentTarget.parentElement!.style.transform = 'translateY(-2px)'; e.currentTarget.parentElement!.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
-                                                onMouseLeave={e => { e.currentTarget.parentElement!.style.transform = 'translateY(0)'; e.currentTarget.parentElement!.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; }}
-                                                style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.15rem 1.5rem', background: 'transparent', cursor: 'pointer', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : 'var(--accent-blue)'}` }}>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: 4 }}>
+                                        <div key={m.id} className="theme-card ta-assignment-card" style={{ animation: 'slideUp 0.4s ease-out forwards', borderLeft: `6px solid ${isDone ? '#10b981' : isPast ? '#ef4444' : isUrgent ? '#f97316' : 'var(--accent-blue)'}` }}>
+                                            <div onClick={() => handleViewAssignment(m)} className="ta-card-inner">
+                                                <div className="ta-card-main">
+                                                    <div className="ta-card-badges">
                                                         {(isDone || isPast || isUrgent) && (
-                                                            <span style={{ fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 6, background: isDone ? '#f0fdf4' : isPast ? '#fef2f2' : isUrgent ? '#fff7ed' : 'rgba(59,130,246,0.1)', color: isDone ? '#10b981' : isPast ? '#dc2626' : isUrgent ? '#ea580c' : 'var(--accent-blue)' }}>
+                                                            <span className={`ta-status-tag ${isDone ? 'done' : isPast ? 'overdue' : 'urgent'}`}>
                                                                 {isDone ? 'COMPLETED' : isPast ? 'OVERDUE' : isUrgent ? 'URGENT' : ''}
                                                             </span>
                                                         )}
-                                                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
+                                                        <span className="ta-due-date"><Clock size={12} /> {m.dueDate ? `Due ${new Date(m.dueDate).toLocaleDateString()}` : 'No deadline'}</span>
                                                     </div>
-                                                    <h3 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, color: 'var(--text-primary)' }}>{m.title}</h3>
+                                                    <h3 className="ta-card-title">{m.title}</h3>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Submissions</div>
-                                                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>{m.submissionCount || 0} / {enrollments.length}</div>
+                                                <div className="ta-card-right">
+                                                    <div className="ta-submission-stats">
+                                                        <div className="ta-stats-label">Submissions</div>
+                                                        <div className="ta-stats-value">{m.submissionCount || 0} / {enrollments.length}</div>
                                                     </div>
-                                                    <ChevronRight size={18} color="var(--text-muted)" />
+                                                    <ChevronRight size={18} className="ta-card-chevron" />
                                                 </div>
                                             </div>
                                         </div>
@@ -350,23 +341,23 @@ const TeacherAssignments: React.FC = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div className="theme-card shadow-sm" style={{ borderRadius: 24, padding: '1.75rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div className="ta-side-col">
+                        <div className="theme-card ta-overview-card">
+                            <div className="ta-overview-header">
                                 <Users size={18} color="var(--accent-blue)" />
-                                <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)', margin: 0 }}>Class Overview</h3>
+                                <h3>Class Overview</h3>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Students</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>{enrollments.length}</span>
+                            <div className="ta-overview-body">
+                                <div className="ta-overview-item">
+                                    <span>Total Students</span>
+                                    <span className="ta-overview-val">{enrollments.length}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Active Assignments</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>{assignments.length}</span>
+                                <div className="ta-overview-item">
+                                    <span>Active Assignments</span>
+                                    <span className="ta-overview-val">{assignments.length}</span>
                                 </div>
-                                <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
-                                    <button onClick={() => navigate(`/teacher/reports?courseId=${selectedCourse}`)} className="btn btn-secondary" style={{ width: '100%', padding: '0.85rem', borderRadius: 14, fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                <div className="ta-overview-footer">
+                                    <button onClick={() => navigate(`/teacher/reports?courseId=${selectedCourse}`)} className="btn btn-secondary ta-report-btn">
                                         <ArrowUpRight size={16} /> View Full Report
                                     </button>
                                 </div>
@@ -379,7 +370,7 @@ const TeacherAssignments: React.FC = () => {
             {showModal && (
                 <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowModal(false)}>
                     <div className="theme-card" style={{ position: 'relative', width: '100%', maxWidth: '650px', maxHeight: '90vh', borderRadius: '24px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', animation: 'scaleIn 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
-                        
+
                         {/* Header */}
                         <div className="modal-header" style={{ padding: '1.5rem 2rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                             <div>
@@ -395,13 +386,13 @@ const TeacherAssignments: React.FC = () => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                                     <div>
                                         <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.05em' }}>Title & Instructions</label>
-                                        <textarea 
-                                            required 
+                                        <textarea
+                                            required
                                             className="form-input"
-                                            style={{ width: '100%', borderRadius: 16, padding: '1.25rem', fontSize: '0.95rem', minHeight: 150, outline: 'none', transition: 'all 0.2s', fontFamily: 'inherit' }} 
-                                            placeholder="Assignment title (first line)&#10;Detailed instructions..." 
-                                            value={form.content} 
-                                            onChange={e => setForm({ ...form, content: e.target.value })} 
+                                            style={{ width: '100%', borderRadius: 16, padding: '1.25rem', fontSize: '0.95rem', minHeight: 150, outline: 'none', transition: 'all 0.2s', fontFamily: 'inherit' }}
+                                            placeholder="Assignment title (first line)&#10;Detailed instructions..."
+                                            value={form.content}
+                                            onChange={e => setForm({ ...form, content: e.target.value })}
                                         />
                                     </div>
 
@@ -409,15 +400,15 @@ const TeacherAssignments: React.FC = () => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                             <div>
                                                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Due Date</label>
-                                                <input 
-                                                    type="datetime-local" 
+                                                <input
+                                                    type="datetime-local"
                                                     className="form-input"
-                                                    style={{ width: '100%', borderRadius: 16, padding: '0.85rem 1.25rem', fontSize: '0.9rem', outline: 'none' }} 
-                                                    value={form.dueDate} 
-                                                    onChange={e => setForm({ ...form, dueDate: e.target.value })} 
+                                                    style={{ width: '100%', borderRadius: 16, padding: '0.85rem 1.25rem', fontSize: '0.9rem', outline: 'none' }}
+                                                    value={form.dueDate}
+                                                    onChange={e => setForm({ ...form, dueDate: e.target.value })}
                                                 />
                                             </div>
-                                            
+
                                             <div>
                                                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Target Sections</label>
                                                 <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border-glass)' }}>
@@ -566,7 +557,7 @@ const TeacherAssignments: React.FC = () => {
                                         <button onClick={handleAddComment} className="btn btn-primary" style={{ borderRadius: 12, padding: '0 1rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', width: 'auto' }}>Post</button>
                                     </div>
                                 </div>
-                            ) }
+                            )}
                         </div>
                     </div>
                 </div>

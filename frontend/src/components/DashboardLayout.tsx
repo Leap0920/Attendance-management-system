@@ -492,6 +492,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           actions={actions} 
           onProfileClick={() => setShowProfile(true)}
           onLogoutClick={() => setShowLogout(true)}
+          onMenuClick={() => setSidebarOpen(true)}
         />
         <main className="main-content">{children}</main>
       </div>
