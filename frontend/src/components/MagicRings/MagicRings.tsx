@@ -17,7 +17,7 @@ uniform float uBaseRadius, uRadiusStep, uScaleRate;
 uniform float uOpacity, uNoiseAmount, uRotation, uRingGap;
 uniform float uFadeIn, uFadeOut;
 uniform float uMouseInfluence, uHoverAmount, uHoverScale, uParallax, uBurst;
-uniform vec2 uResolution, uMouse;
+uniform vec2 uResolution, uMouse, uCenterOffset;
 uniform vec3 uColor, uColorTwo;
 uniform int uRingCount;
 
@@ -41,7 +41,8 @@ float ring(vec2 p, float ri, float cut, float t0, float px) {
 
 void main() {
   float px = 1.0 / min(uResolution.x, uResolution.y);
-  vec2 p = (gl_FragCoord.xy - 0.5 * uResolution.xy) * px;
+  vec2 center = (vec2(0.5, 0.5) + uCenterOffset) * uResolution.xy;
+  vec2 p = (gl_FragCoord.xy - center) * px;
   float cr = cos(uRotation), sr = sin(uRotation);
   p = mat2(cr, -sr, sr, cr) * p;
   p -= uMouse * uMouseInfluence;
@@ -85,6 +86,8 @@ export interface MagicRingsProps {
   hoverScale?: number;
   parallax?: number;
   clickBurst?: boolean;
+  centerX?: number;
+  centerY?: number;
   /** Called when WebGL/shader init fails so the host can show a static fallback */
   onInitError?: () => void;
 }
@@ -111,6 +114,8 @@ export default function MagicRings({
   hoverScale = 1.2,
   parallax = 0.05,
   clickBurst = false,
+  centerX = 0,
+  centerY = 0,
   onInitError,
 }: MagicRingsProps) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -137,6 +142,8 @@ export default function MagicRings({
     hoverScale,
     parallax,
     clickBurst,
+    centerX,
+    centerY,
   });
   const mouseRef = useRef<[number, number]>([0, 0]);
   const smoothMouseRef = useRef<[number, number]>([0, 0]);
@@ -165,6 +172,8 @@ export default function MagicRings({
     hoverScale,
     parallax,
     clickBurst,
+    centerX,
+    centerY,
   };
 
   useEffect(() => {
@@ -197,6 +206,7 @@ export default function MagicRings({
       uTime: { value: 0 },
       uAttenuation: { value: 0 },
       uResolution: { value: new THREE.Vector2() },
+      uCenterOffset: { value: new THREE.Vector2() },
       uColor: { value: new THREE.Color() },
       uColorTwo: { value: new THREE.Color() },
       uLineThickness: { value: 0 },
@@ -302,6 +312,7 @@ export default function MagicRings({
       uniforms.uRingGap.value = p.ringGap ?? 1.5;
       uniforms.uFadeIn.value = p.fadeIn ?? 0.7;
       uniforms.uFadeOut.value = p.fadeOut ?? 0.5;
+      uniforms.uCenterOffset.value.set(p.centerX ?? 0, p.centerY ?? 0);
       uniforms.uMouse.value.set(smoothMouseRef.current[0], smoothMouseRef.current[1]);
       uniforms.uMouseInfluence.value = p.followMouse ? (p.mouseInfluence ?? 0.2) : 0;
       uniforms.uHoverAmount.value = hoverAmountRef.current;

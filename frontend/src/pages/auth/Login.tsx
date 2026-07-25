@@ -93,6 +93,8 @@ const Login: React.FC = () => {
           hoverScale={1.2}
           parallax={0.05}
           clickBurst={false}
+          centerX={-0.24}
+          centerY={0.0}
           onInitError={() => setStaticRingsFallback(true)}
         />
       </div>
