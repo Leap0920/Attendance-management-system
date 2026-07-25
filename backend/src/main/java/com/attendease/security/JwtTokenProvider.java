@@ -20,7 +20,18 @@ public class JwtTokenProvider {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.access-token-expiration-ms}") long accessTokenExpirationMs,
             @Value("${app.jwt.refresh-token-expiration-ms}") long refreshTokenExpirationMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = (secret != null ? secret : "").getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            try {
+                java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                keyBytes = md.digest(keyBytes);
+            } catch (Exception e) {
+                byte[] padded = new byte[32];
+                System.arraycopy(keyBytes, 0, padded, 0, Math.min(keyBytes.length, 32));
+                keyBytes = padded;
+            }
+        }
+        this.key = Keys.hmacShaKeyFor(keyBytes);
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }

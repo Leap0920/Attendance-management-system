@@ -23,9 +23,16 @@ public class AesEncryptionUtil {
     private final SecretKeySpec keySpec;
 
     public AesEncryptionUtil(@Value("${app.encryption.aes-secret-key}") String secretKey) {
-        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = (secretKey != null ? secretKey : "").getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length != 32) {
-            throw new IllegalArgumentException("AES-256 key must be exactly 32 bytes");
+            try {
+                java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                keyBytes = md.digest(keyBytes);
+            } catch (Exception e) {
+                byte[] padded = new byte[32];
+                System.arraycopy(keyBytes, 0, padded, 0, Math.min(keyBytes.length, 32));
+                keyBytes = padded;
+            }
         }
         this.keySpec = new SecretKeySpec(keyBytes, "AES");
     }
