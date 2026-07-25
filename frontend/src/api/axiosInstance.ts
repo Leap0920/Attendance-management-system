@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (!envUrl) return '/api';
+  let envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl || envUrl === 'https://attendease-backend.onrender.com' || envUrl === 'https://attendease-backend.onrender.com/') {
+    envUrl = 'https://attendease-backend-53oj.onrender.com';
+  }
   const cleanUrl = envUrl.replace(/\/+$/, '');
   return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
 };
