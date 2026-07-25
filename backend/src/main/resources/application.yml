@@ -68,7 +68,7 @@ app:
     aes-secret-key: ${AES_SECRET_KEY:${AES_SECRET:AttendEaseAES256SecretKey@Dev32!}}
 
   cors:
-    allowed-origins: https://eattendease.vercel.app,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5220,http://localhost:8138,http://192.168.1.2:5173,http://192.168.137.1:5173,http://192.168.137.7:5173,http://192.168.1.122:5173,http://192.168.100.41:5173,http://192.168.100.41:8080,http://192.168.100.45:5173,https://*.ngrok-free.dev,http://192.168.100.45:5173,http://192.168.0.105:5173,http://192.168.0.101:8138,http://192.168.0.101:5220
+    allowed-origins: https://eattendease.vercel.app,https://*.vercel.app,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5220,http://localhost:8138,http://192.168.1.2:5173,http://192.168.137.1:5173,http://192.168.137.7:5173,http://192.168.1.122:5173,http://192.168.100.41:5173,http://192.168.100.41:8080,http://192.168.100.45:5173,https://*.ngrok-free.dev,http://192.168.100.45:5173,http://192.168.0.105:5173,http://192.168.0.101:8138,http://192.168.0.101:5220
 
   upload:
     dir: ./uploads
