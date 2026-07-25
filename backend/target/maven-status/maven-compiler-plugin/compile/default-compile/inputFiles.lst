@@ -1,5 +1,6 @@
 C:\codes\Attendance-management-system\backend\src\main\java\com\attendease\AttendeaseApplication.java
 C:\codes\Attendance-management-system\backend\src\main\java\com\attendease\config\CorsConfig.java
+C:\codes\Attendance-management-system\backend\src\main\java\com\attendease\config\DemoDataSeeder.java
 C:\codes\Attendance-management-system\backend\src\main\java\com\attendease\config\JacksonConfig.java
 C:\codes\Attendance-management-system\backend\src\main\java\com\attendease\config\JpaConfig.java
 C:\codes\Attendance-management-system\backend\src\main\java\com\attendease\config\SecurityConfig.java

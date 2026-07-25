@@ -87,6 +87,7 @@ com\attendease\entity\UserMfaSecret$UserMfaSecretBuilder.class
 com\attendease\config\JpaConfig.class
 com\attendease\entity\CourseMessage.class
 com\attendease\entity\LoginAttempt.class
+com\attendease\config\DemoDataSeeder.class
 com\attendease\security\JwtAuthFilter.class
 com\attendease\repository\IPGeolocationCacheRepository.class
 com\attendease\dto\SystemHealthDto$ApplicationMetric.class
