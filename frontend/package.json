@@ -12,9 +12,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.0.0-rc.15",
     "@types/react-router-dom": "^5.3.3",
-    "attendance-management-system": "file:..",
     "axios": "^1.13.6",
     "framer-motion": "^12.38.0",
     "html5-qrcode": "^2.3.8",
