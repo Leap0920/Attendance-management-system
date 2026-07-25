@@ -1,38 +1,45 @@
 @echo off
-TITLE Attendance Management System - Launcher
-COLOR 0B
+SETLOCAL EnableDelayedExpansion
+TITLE Attendance Management System - Auto Launcher
+COLOR 0A
+
+:: Smart IP Detection
+set "MYIP=localhost"
+echo [1/4] Detecting Network IP...
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4 Address"') do (
+    set "tempip=%%a"
+    set "tempip=!tempip: =!"
+    if "!tempip:~0,3!"=="192" set "MYIP=!tempip!"
+    if "!tempip:~0,3!"=="10." set "MYIP=!tempip!"
+    if "!tempip:~0,3!"=="172" set "MYIP=!tempip!"
+)
+
+cls
+echo.
+echo   [94m########################################################## [0m
+echo   [94m# [0m                                                         [94m# [0m
+echo   [94m# [0m   [97mATTENDANCE MANAGEMENT SYSTEM - AUTO START [0m            [94m# [0m
+echo   [94m# [0m                                                         [94m# [0m
+echo   [94m########################################################## [0m
+echo.
+echo   [95mDetected IP: !MYIP! [0m
+echo.
+
+:: Step 1: Start Backend
+echo   [92m[2/4] [0m Launching Backend...
+start "Backend - Spring Boot" cmd /k "echo Initializing Maven... && cd /d %~dp0backend && .\mvnw.cmd spring-boot:run"
+
+:: Wait a bit for backend to initialize
+echo   [93m[WAIT] [0m Waiting for backend to spin up...
+timeout /t 5 /nobreak > nul
+
+:: Step 2: Start Frontend
+echo   [92m[3/4] [0m Launching Frontend...
+start "Frontend - Vite" cmd /k "echo Initializing Vite... && cd /d %~dp0frontend && npm run dev"
 
 echo.
-echo  ##########################################################
-echo  #                                                        #
-echo  #          ATTENDANCE MANAGEMENT SYSTEM                  #
-echo  #          Server: 192.168.0.101  (Pi Server)           #
-echo  #                                                        #
-echo  ##########################################################
-echo.
+echo   [92m[4/4] [0m Opening dashboard at http://!MYIP!:8138 in 5 seconds...
+timeout /t 5 /nobreak > nul
+start http://!MYIP!:8138
 
-echo [1/3] Starting backend on Raspberry Pi (192.168.0.101)...
-echo       (A terminal will open - enter password: $@me2ALL)
-echo       NOTE: The app runs on PORT 8138
-echo.
-
-:: Open a separate window to SSH into 192.168.0.101 and start the backend
-:: The window stays open so you can monitor the logs
-start "Backend - Pi Server" cmd /k "ssh supershyboy@192.168.0.101 -t "sudo systemctl restart postgresql 2>/dev/null; pkill java 2>/dev/null; sleep 2; cd /home/supershyboy/GROUP8-SBIT3C && nohup java -jar attendease-backend-1.0.0.jar > app.log 2>&1 & sleep 5 && tail -f app.log"""
-
-echo [2/3] Waiting 20 seconds for the backend to initialize...
-timeout /t 20 /nobreak > nul
-
-echo [3/3] Opening Dashboard at http://192.168.0.101:8138/login
-start http://192.168.0.101:8138/login
-
-echo.
-echo ==========================================================
-echo  SYSTEM LAUNCHED SUCCESSFULLY
-echo  Dashboard: http://192.168.0.101:8138/login
-echo  Backend logs are in the SSH window (app.log)
-echo ==========================================================
-echo.
-echo Press any key to close this launcher window.
-pause > nul
 exit
