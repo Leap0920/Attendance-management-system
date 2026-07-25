@@ -23,6 +23,12 @@ public class AesEncryptionUtil {
     private final SecretKeySpec keySpec;
 
     public AesEncryptionUtil(@Value("${app.encryption.aes-secret-key}") String secretKey) {
+        if (secretKey != null && secretKey.startsWith("${") && secretKey.endsWith("}")) {
+            int colonIndex = secretKey.indexOf(':');
+            if (colonIndex != -1) {
+                secretKey = secretKey.substring(colonIndex + 1, secretKey.length() - 1);
+            }
+        }
         byte[] keyBytes = (secretKey != null ? secretKey : "").getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length != 32) {
             try {

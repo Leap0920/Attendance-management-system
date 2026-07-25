@@ -20,6 +20,12 @@ public class JwtTokenProvider {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.access-token-expiration-ms}") long accessTokenExpirationMs,
             @Value("${app.jwt.refresh-token-expiration-ms}") long refreshTokenExpirationMs) {
+        if (secret != null && secret.startsWith("${") && secret.endsWith("}")) {
+            int colonIndex = secret.indexOf(':');
+            if (colonIndex != -1) {
+                secret = secret.substring(colonIndex + 1, secret.length() - 1);
+            }
+        }
         byte[] keyBytes = (secret != null ? secret : "").getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < 32) {
             try {
