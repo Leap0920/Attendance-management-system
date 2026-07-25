@@ -42,31 +42,32 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
+        String cleanEmail = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
         // Check rate limiting
         long recentFailures = loginAttemptRepository.countByEmailAndSuccessAndAttemptedAtAfter(
-                request.getEmail(), false, LocalDateTime.now().minusMinutes(LOCKOUT_MINUTES));
+                cleanEmail, false, LocalDateTime.now().minusMinutes(LOCKOUT_MINUTES));
 
         if (recentFailures >= MAX_ATTEMPTS) {
             throw new UnauthorizedException("Account temporarily locked. Try again in " + LOCKOUT_MINUTES + " minutes.");
         }
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(cleanEmail)
                 .orElseThrow(() -> {
-                    loginSecurityService.recordAttempt(request.getEmail(), httpRequest, false);
+                    loginSecurityService.recordAttempt(cleanEmail, httpRequest, false);
                     return new UnauthorizedException("Invalid email or password");
                 });
 
         if (!"active".equals(user.getStatus())) {
-            throw new UnauthorizedException("Account is not active");
+            throw new UnauthorizedException("Account is not active (" + user.getStatus() + ")");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            loginSecurityService.recordAttempt(request.getEmail(), httpRequest, false);
+            loginSecurityService.recordAttempt(cleanEmail, httpRequest, false);
             throw new UnauthorizedException("Invalid email or password");
         }
 
         // Successful login
-        loginSecurityService.recordAttempt(request.getEmail(), httpRequest, true);
+        loginSecurityService.recordAttempt(cleanEmail, httpRequest, true);
         
         // SECURITY POLICY: Single Session for Admins
         String sessionId = UUID.randomUUID().toString();
@@ -79,7 +80,11 @@ public class AuthService {
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        auditService.log(user, "login", "user", user.getId(), httpRequest);
+        try {
+            auditService.log(user, "login", "user", user.getId(), httpRequest);
+        } catch (Exception e) {
+            System.err.println("Audit log error on login: " + e.getMessage());
+        }
 
         // Check if MFA is enabled
         if (user.getMfaEnabled() != null && user.getMfaEnabled()) {
@@ -96,7 +101,8 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request, HttpServletRequest httpRequest) {
-        java.util.Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        String cleanEmail = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+        java.util.Optional<User> existingUser = userRepository.findByEmail(cleanEmail);
         if (existingUser.isPresent()) {
             String status = existingUser.get().getStatus();
             if (!"pending".equals(status)) {
@@ -115,7 +121,7 @@ public class AuthService {
         validatePassword(request.getPassword());
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(cleanEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -132,11 +138,23 @@ public class AuthService {
 
         String code = String.format("%06d", secureRandom.nextInt(1000000));
         user.setVerificationCode(code);
-        user.setEmailCodeExpiry(LocalDateTime.now().plusMinutes(5));
+        user.setEmailCodeExpiry(LocalDateTime.now().plusMinutes(15));
 
         user = userRepository.save(java.util.Objects.requireNonNull(user));
-        emailService.sendVerificationCode(user.getEmail(), code);
-        auditService.log(user, "register", "user", user.getId(), httpRequest);
+        
+        try {
+            emailService.sendVerificationCode(user.getEmail(), code);
+        } catch (Exception e) {
+            System.err.println("Email sending failed during registration: " + e.getMessage());
+        }
+        
+        System.out.println("[REGISTRATION CODE] Email: " + user.getEmail() + " | Code: " + code);
+
+        try {
+            auditService.log(user, "register", "user", user.getId(), httpRequest);
+        } catch (Exception e) {
+            System.err.println("Audit log error on register: " + e.getMessage());
+        }
 
         return AuthResponse.builder()
                 .emailVerificationRequired(true)
