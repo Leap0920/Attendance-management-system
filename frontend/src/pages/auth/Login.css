@@ -56,23 +56,23 @@
   top: 50%;
   transform: translateY(-50%);
   background:
-    repeating-radial-gradient(circle at 28% 42%,
+    repeating-radial-gradient(circle at 75% 50%,
       transparent 0,
       transparent 38px,
       rgba(59, 130, 246, 0.11) 38px,
       rgba(59, 130, 246, 0.11) 40px),
-    repeating-radial-gradient(circle at 28% 42%,
+    repeating-radial-gradient(circle at 75% 50%,
       transparent 0,
       transparent 78px,
       rgba(37, 99, 235, 0.08) 78px,
       rgba(37, 99, 235, 0.08) 80px),
-    repeating-radial-gradient(circle at 28% 42%,
+    repeating-radial-gradient(circle at 75% 50%,
       transparent 0,
       transparent 118px,
       rgba(59, 130, 246, 0.06) 118px,
       rgba(59, 130, 246, 0.06) 120px);
-  mask-image: radial-gradient(ellipse 55% 50% at 28% 42%, black 0%, transparent 72%);
-  -webkit-mask-image: radial-gradient(ellipse 55% 50% at 28% 42%, black 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse 55% 50% at 75% 50%, black 0%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse 55% 50% at 75% 50%, black 0%, transparent 72%);
 }
 
 @media (max-width: 899px) {
